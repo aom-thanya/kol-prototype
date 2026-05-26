@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import BriefFlow from "./BriefFlow";
 import {
   Search,
   Plus,
@@ -20,6 +21,7 @@ import {
   ExternalLink,
   Loader2,
   Menu,
+  FileText,
 } from "lucide-react";
 
 const primary = "#6D5DF6";
@@ -262,11 +264,12 @@ function Toast({ toast, onClose }) {
   );
 }
 
-function Sidebar({ mobileOpen, setMobileOpen }) {
+function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
   const items = [
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
-    { label: "Example List", icon: ClipboardList, active: true },
+    { label: "Example List", id: "exampleList", icon: ClipboardList, active: activeTab === "exampleList" },
+    { label: "Brief", id: "brief", icon: FileText, active: activeTab === "brief" },
   ];
 
   return (
@@ -294,8 +297,14 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
               href={item.href || "#"}
               target={item.href ? "_blank" : undefined}
               rel={item.href ? "noopener noreferrer" : undefined}
+              onClick={() => {
+                if (item.id) {
+                  setActiveTab(item.id);
+                  setMobileOpen(false);
+                }
+              }}
               className={cn(
-                "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition",
+                "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition cursor-pointer",
                 item.active
                   ? "bg-violet-50 text-[#6D5DF6] ring-1 ring-violet-100"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
@@ -319,11 +328,11 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
   );
 }
 
-function AppShell({ children }) {
+function AppShell({ children, activeTab, setActiveTab }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="lg:pl-[180px]">
         <div className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/85 px-4 backdrop-blur lg:px-8">
           <div className="flex items-center gap-3">
@@ -332,7 +341,7 @@ function AppShell({ children }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">Example List Flow</div>
+              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : "Brief Flow"}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1090,6 +1099,7 @@ function CreateListModal({ open, onClose, onSubmit }) {
 }
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState("brief");
   const [lists, setLists] = useState(exampleListsSeed);
   const [currentList, setCurrentList] = useState(null);
   const [toast, setToast] = useState(null);
@@ -1118,26 +1128,35 @@ export default function App() {
   };
 
   return (
-    <AppShell>
+    <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <CreateListModal 
-        open={createModalOpen} 
-        onClose={() => setCreateModalOpen(false)} 
-        onSubmit={handleCreateNewList} 
-      />
-      {!currentList ? (
-        <ListingPage
-          lists={lists}
-          onView={setCurrentList}
-          onDuplicate={(list) => {
-            const copy = { ...list, id: `EXL${Date.now().toString().slice(-9)}`, name: `${list.name} Copy`, createdAt: "2026-05-25" };
-            setLists((prev) => [copy, ...prev]);
-            showToast("Example List duplicated.");
-          }}
-          onCreate={() => setCreateModalOpen(true)}
-        />
-      ) : (
-        <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} />
+      
+      {activeTab === "brief" && (
+        <BriefFlow showToast={showToast} />
+      )}
+
+      {activeTab === "exampleList" && (
+        <>
+          <CreateListModal 
+            open={createModalOpen} 
+            onClose={() => setCreateModalOpen(false)} 
+            onSubmit={handleCreateNewList} 
+          />
+          {!currentList ? (
+            <ListingPage
+              lists={lists}
+              onView={setCurrentList}
+              onDuplicate={(list) => {
+                const copy = { ...list, id: `EXL${Date.now().toString().slice(-9)}`, name: `${list.name} Copy`, createdAt: "2026-05-25" };
+                setLists((prev) => [copy, ...prev]);
+                showToast("Example List duplicated.");
+              }}
+              onCreate={() => setCreateModalOpen(true)}
+            />
+          ) : (
+            <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} />
+          )}
+        </>
       )}
     </AppShell>
   );
