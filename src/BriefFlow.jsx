@@ -353,6 +353,81 @@ const influencerSeed = [
   },
 ];
 
+function GroupSelectionModal({ open, onClose, onConfirm, initialSelected = [] }) {
+  const predefinedGroups = ["Hero", "Hub", "Help", "Macro", "Micro", "Nano"];
+  const [selectedGroups, setSelectedGroups] = useState(initialSelected);
+  const [customGroup, setCustomGroup] = useState("");
+
+  useEffect(() => {
+    if (open) setSelectedGroups(initialSelected);
+  }, [open, initialSelected]);
+
+  const toggleGroup = (grp) => {
+    if (selectedGroups.includes(grp)) {
+      setSelectedGroups(selectedGroups.filter(g => g !== grp));
+    } else {
+      setSelectedGroups([...selectedGroups, grp]);
+    }
+  };
+
+  const handleAddCustom = () => {
+    if (customGroup.trim() && !selectedGroups.includes(customGroup.trim())) {
+      setSelectedGroups([...selectedGroups, customGroup.trim()]);
+    }
+    setCustomGroup("");
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl flex flex-col">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h2 className="text-lg font-semibold text-slate-900">Select Groups</h2>
+          <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="p-6 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 mb-6">
+            {predefinedGroups.map(grp => (
+              <button 
+                key={grp}
+                onClick={() => toggleGroup(grp)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${selectedGroups.includes(grp) ? 'border-[#6D5DF6] bg-[#6D5DF6] text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'}`}
+              >
+                {grp}
+              </button>
+            ))}
+            {selectedGroups.filter(g => !predefinedGroups.includes(g)).map(grp => (
+              <button 
+                key={grp}
+                onClick={() => toggleGroup(grp)}
+                className="px-3 py-1.5 rounded-full text-sm font-medium transition border border-[#6D5DF6] bg-[#6D5DF6] text-white flex items-center gap-1"
+              >
+                {grp} <X className="h-3 w-3" />
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              value={customGroup}
+              onChange={e => setCustomGroup(e.target.value)}
+              placeholder="Custom group name..."
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]"
+              onKeyDown={e => { if (e.key === 'Enter') handleAddCustom(); }}
+            />
+            <Button variant="secondary" onClick={handleAddCustom}>Add</Button>
+          </div>
+        </div>
+        <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onConfirm(selectedGroups)} disabled={selectedGroups.length === 0}>Confirm Groups</Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function InfluencerSelectModal({ open, onClose, onSelect }) {
   const [search, setSearch] = useState("");
 
@@ -1448,9 +1523,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Column (Main Content) */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
         <div className="mb-8 border-b border-slate-100 pb-6">
           <div className="flex items-center gap-3 mb-3">
@@ -1572,7 +1647,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       </div>
 
       {/* Right Column (Actions & Timeline) */}
-        <div className="lg:col-span-1">
+        <div className="w-full lg:w-1/4 shrink-0">
           <div className="sticky top-6 space-y-6">
             
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
@@ -1655,8 +1730,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 }
 
 // --- Sub-components for Tracker ---
-function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick }) {
   const influencers = trackerData.influencers || [];
+  const submittedSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
+    ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
+    : (brief.scopeOfWorks || []);
 
   const updateInf = (id, field, value) => {
     const updated = influencers.map(inf => inf.id === id ? { ...inf, [field]: value } : inf);
@@ -1694,6 +1772,22 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
     onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
+  const STATUS_OPTIONS = [
+    { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
+    { value: "ทักแล้ว", label: "ทักแล้ว", bg: "bg-[#FDE68A]", text: "text-[#92400E]" },
+    { value: "โทรแล้ว", label: "โทรแล้ว", bg: "bg-[#FFDCC8]", text: "text-[#8C3A10]" },
+    { value: "ตอบแล้ว", label: "ตอบแล้ว", bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
+    { value: "Done", label: "Done", bg: "bg-[#047857]", text: "text-white" },
+    { value: "ข้อมูลไม่ครบ", label: "ข้อมูลไม่ครบ", bg: "bg-[#DBEAFE]", text: "text-[#1E3A8A]" },
+    { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" },
+  ];
+
+  const getStatusColor = (statusValue) => {
+    const opt = STATUS_OPTIONS.find(o => o.value === statusValue);
+    if (!opt || !opt.value) return "bg-slate-100 text-slate-600 border-slate-200";
+    return `${opt.bg} ${opt.text} border-transparent font-medium`;
+  };
+
   const updateInfBrandSupport = (id, supportName, value) => {
     const updated = influencers.map(inf => inf.id === id ? { ...inf, brandSupports: { ...inf.brandSupports, [supportName]: value } } : inf);
     onUpdateTracker({ ...trackerData, influencers: updated });
@@ -1728,28 +1822,11 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">{sow.name}</h2>
-          <p className="text-sm text-slate-500 mt-1">{sow.details || "No details provided"}</p>
+          <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
+          <p className="text-sm text-slate-500 mt-1">Influencers in this group</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-slate-700">Group:</label>
-            <select 
-              value={trackerData.group || ""} 
-              onChange={e => onUpdateTracker({ ...trackerData, group: e.target.value })}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]"
-            >
-              <option value="">Select Group</option>
-              <option value="Beauty">Beauty</option>
-              <option value="Lifestyle">Lifestyle</option>
-              <option value="Food">Food</option>
-              <option value="Fashion">Fashion</option>
-              <option value="Tech">Tech</option>
-              <option value="MC">MC</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-          <Button onClick={() => onAddClick(sow.id)}><Plus className="h-4 w-4" /> Add Influencer</Button>
+          <Button onClick={() => onAddClick(groupName)}><Plus className="h-4 w-4" /> Add Influencer</Button>
         </div>
       </div>
       <div className="w-full overflow-x-auto">
@@ -1757,6 +1834,7 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
             <thead className="bg-slate-50">
               <tr>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-emerald-50/50">Status</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50/50">Contact</th>
                 <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-blue-50/50">Payment</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Service (Price or "ไม่รับ")</th>}
@@ -1768,6 +1846,7 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
               <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 uppercase tracking-wider">
                 <th className="px-3 py-2 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-slate-50">No.</th>
                 <th className="px-5 py-4 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
                 <th className="px-3 py-2 border-r border-slate-200">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
                 <th className="px-3 py-2 border-r border-slate-200">Credit Term (Days)</th>
@@ -1813,6 +1892,17 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
                         </div>
                       </div>
                     </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
+                      <select 
+                        value={inf.contactStatus || ""} 
+                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
+                        className={`w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none ${getStatusColor(inf.contactStatus)}`}
+                      >
+                        {STATUS_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="Email, Line, Tel" /></td>
                     <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
                     <td className="px-3 py-2 border-r border-slate-100">
@@ -1850,7 +1940,14 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
                         </td>
                       );
                     })}
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.scopeOfWork || ""} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100">
+                      <select value={inf.scopeOfWork || ""} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                        <option value="">Select SOW</option>
+                        {submittedSows.map(sow => (
+                          <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
                     {brandSupports.map(bs => (
                       <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
@@ -1872,50 +1969,51 @@ function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) 
 
 // --- Planner Tracker Page Component ---
 function PlannerTrackerPage({ brief, onUpdateBrief }) {
-  const [sowTrackers, setSowTrackers] = useState(brief.sowTrackers || {});
+  const [groupTrackers, setGroupTrackers] = useState(brief.groupTrackers || {});
   const [selectModalOpen, setSelectModalOpen] = useState(false);
-  const [currentSowId, setCurrentSowId] = useState(null);
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
-  const [selectedSows, setSelectedSows] = useState([]);
+  const [selectGroupModalOpen, setSelectGroupModalOpen] = useState(false);
+  const [currentGroupId, setCurrentGroupId] = useState(null);
 
-  const handleSubmitToBuyer = () => {
+  const activeGroups = Object.keys(groupTrackers);
+
+  const handleConfirmGroups = (groups) => {
+    const newTrackers = { ...groupTrackers };
+    groups.forEach(g => {
+      if (!newTrackers[g]) newTrackers[g] = { influencers: [] };
+    });
+    // Remove groups that were unselected
+    Object.keys(newTrackers).forEach(g => {
+      if (!groups.includes(g)) delete newTrackers[g];
+    });
+    
+    setGroupTrackers(newTrackers);
+    onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+    setSelectGroupModalOpen(false);
+  };
+
+  const handleConfirmPillar = () => {
     const log = {
       date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      action: "Sales submitted Brief V1",
-      details: "Initial submission to buyer."
+      action: "Sales confirmed Pillar",
+      details: "Pillar structure confirmed by Sales."
     };
     onUpdateBrief({
       ...brief,
-      version: 1,
-      internalStatus: "Submitted to Buyer",
-      submittedSows: selectedSows,
+      internalStatus: "Pillar Confirmed",
       activityLog: [...(brief.activityLog || []), log]
     });
-    setSubmitModalOpen(false);
   };
 
-  const toggleSowSelection = (sowId) => {
-    if (selectedSows.includes(sowId)) {
-      setSelectedSows(selectedSows.filter(id => id !== sowId));
-    } else {
-      setSelectedSows([...selectedSows, sowId]);
-    }
-  };
-
-  const activeSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
-    ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
-    : (brief.scopeOfWorks || []);
-
-  const handleAddInfluencerClick = (sowId) => {
-    setCurrentSowId(sowId);
+  const handleAddInfluencerClick = (groupId) => {
+    setCurrentGroupId(groupId);
     setSelectModalOpen(true);
   };
 
   const handleSelectInfluencer = (inf) => {
     setSelectModalOpen(false);
-    if (!currentSowId) return;
+    if (!currentGroupId) return;
 
-    const currentData = sowTrackers[currentSowId] || { group: "", influencers: [] };
+    const currentData = groupTrackers[currentGroupId] || { influencers: [] };
     const newInfluencer = {
       id: Date.now() + Math.random(),
       accountName: inf ? inf.username : "",
@@ -1942,35 +2040,44 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
       ...currentData,
       influencers: [...(currentData.influencers || []), newInfluencer]
     };
-    setSowTrackers({
-      ...sowTrackers,
-      [currentSowId]: newData
-    });
+    const newTrackers = {
+      ...groupTrackers,
+      [currentGroupId]: newData
+    };
+    setGroupTrackers(newTrackers);
+    onUpdateBrief({ ...brief, groupTrackers: newTrackers });
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
-            <div className="mb-6 border-b border-slate-100 pb-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Example List</h1>
-              <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
+            <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Example List</h1>
+                <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
+              </div>
             </div>
 
-            {activeSows.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
-                No Scope of Work was submitted to the Buyer.
+            {activeGroups.length === 0 ? (
+              <div className="text-center py-16 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                <p className="mb-4 text-slate-600">Please select groups to start assigning influencers.</p>
+                <Button onClick={() => setSelectGroupModalOpen(true)}>Select Group</Button>
               </div>
             ) : (
               <div className="space-y-8">
-                {activeSows.map(sow => (
+                {activeGroups.map(grp => (
                   <TrackerTable 
-                    key={sow.id}
-                    sow={sow}
+                    key={grp}
+                    groupName={grp}
                     brief={brief}
-                    trackerData={sowTrackers[sow.id] || { group: "", influencers: [] }}
-                    onUpdateTracker={(newData) => setSowTrackers({ ...sowTrackers, [sow.id]: newData })}
+                    trackerData={groupTrackers[grp] || { influencers: [] }}
+                    onUpdateTracker={(newData) => {
+                      const newTrackers = { ...groupTrackers, [grp]: newData };
+                      setGroupTrackers(newTrackers);
+                      onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+                    }}
                     onAddClick={handleAddInfluencerClick}
                   />
                 ))}
@@ -1979,51 +2086,36 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="w-full lg:w-1/4 shrink-0">
           <div className="sticky top-6 space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
+              <div className="flex flex-col gap-3">
+                {activeGroups.length === 0 ? (
+                  <Button className="w-full" onClick={() => setSelectGroupModalOpen(true)}>Select Group</Button>
+                ) : (
+                  <>
+                    {brief.internalStatus !== "Pillar Confirmed" && (
+                      <Button className="w-full" onClick={handleConfirmPillar}>Confirm Pillar</Button>
+                    )}
+                    <Button variant="secondary" className="w-full" onClick={() => setSelectGroupModalOpen(true)}>Edit Groups</Button>
+                  </>
+                )}
+              </div>
+            </div>
             <ActivityTimeline logs={brief.activityLog || []} />
           </div>
         </div>
       </div>
 
       <AnimatePresence>
-        {submitModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-              <div className="bg-[#6D5DF6] px-6 py-4 text-white flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Submit Brief to Buyer</h2>
-                <button onClick={() => setSubmitModalOpen(false)} className="text-white/80 hover:text-white"><X className="h-5 w-5" /></button>
-              </div>
-              <div className="p-6 text-sm text-slate-600">
-                <p className="mb-4">Select the Scope of Works you want to include in this submission:</p>
-                
-                <div className="space-y-2 border border-slate-200 rounded-lg p-1">
-                  {brief.scopeOfWorks?.map(sow => (
-                    <label key={sow.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-md cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedSows.includes(sow.id)}
-                        onChange={() => toggleSowSelection(sow.id)}
-                        className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900">{sow.platform}</p>
-                        <p className="text-xs text-slate-500">Tier: {sow.influencerTier}, Format: {sow.format}</p>
-                      </div>
-                    </label>
-                  ))}
-                  {(!brief.scopeOfWorks || brief.scopeOfWorks.length === 0) && (
-                    <div className="p-4 text-center text-slate-500">No Scope of Works available to submit.</div>
-                  )}
-                </div>
-
-                <div className="mt-8 flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSubmitToBuyer} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>Submit Brief</Button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+        {selectGroupModalOpen && (
+          <GroupSelectionModal 
+            open={selectGroupModalOpen} 
+            onClose={() => setSelectGroupModalOpen(false)} 
+            onConfirm={handleConfirmGroups} 
+            initialSelected={activeGroups}
+          />
         )}
       </AnimatePresence>
 
@@ -2086,7 +2178,7 @@ export default function BriefFlow({ showToast, listOnly = false }) {
           listOnly={listOnly}
         />
       ) : (
-        <div className="w-full max-w-7xl mx-auto">
+        <div className="w-full">
           <BriefStepProgress 
             activeTab={currentBrief.activeTab || "brief"} 
             onTabChange={(tab) => handleUpdateBrief({ ...currentBrief, activeTab: tab })} 
