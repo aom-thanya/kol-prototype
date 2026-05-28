@@ -561,6 +561,12 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [tiktokShopDuration, setTiktokShopDuration] = useState(initialData?.tiktokShopDuration || []);
   const [crossPostingRequired, setCrossPostingRequired] = useState(initialData?.crossPostingRequired || false);
   const [crossPostingDuration, setCrossPostingDuration] = useState(initialData?.crossPostingDuration || []);
+  const [youtubeDiscoveryRequired, setYoutubeDiscoveryRequired] = useState(initialData?.youtubeDiscoveryRequired || false);
+  const [youtubeDiscoveryDuration, setYoutubeDiscoveryDuration] = useState(initialData?.youtubeDiscoveryDuration || []);
+  const [fbBrandedContentRequired, setFbBrandedContentRequired] = useState(initialData?.fbBrandedContentRequired || false);
+  const [fbBrandedContentDuration, setFbBrandedContentDuration] = useState(initialData?.fbBrandedContentDuration || []);
+  const [xWhitelistingRequired, setXWhitelistingRequired] = useState(initialData?.xWhitelistingRequired || false);
+  const [xWhitelistingDuration, setXWhitelistingDuration] = useState(initialData?.xWhitelistingDuration || []);
 
   // Step 5: Brand Support & Condition
   const [brandSupport, setBrandSupport] = useState(initialData?.brandSupport || []);
@@ -591,6 +597,8 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
       buyoutRequired, buyoutDuration, boostRequired, boostDuration, addAdsRequired, addAdsDuration, 
       paidPartnershipRequired, paidPartnershipDuration, genCodeRequired, genCodeDuration, 
       tiktokShopRequired, tiktokShopDuration, crossPostingRequired, crossPostingDuration,
+      youtubeDiscoveryRequired, youtubeDiscoveryDuration, fbBrandedContentRequired, fbBrandedContentDuration,
+      xWhitelistingRequired, xWhitelistingDuration,
       // Step 5
       brandSupport, influencerBuyValue, influencerPickupLocation, condition
     });
@@ -950,10 +958,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                         <div className="md:col-span-2">
                           <label className="mb-2 block text-sm font-medium text-slate-700">Platform</label>
                           <div className="grid grid-cols-2 gap-3 mb-2">
-                            {[
-                              "Instagram", "Tiktok", "Facebook", "Facebook Page",
-                              "Twitter/X", "Youtube", "Buddy Boost", "Lemon8", "Others"
-                            ].map(plat => (
+                            {platform.length > 0 ? platform.map(plat => (
                               <label key={plat} className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" checked={scope.platforms.includes(plat)} onChange={e => {
                                   let newPlats = [...scope.platforms];
@@ -961,9 +966,11 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                                   else newPlats = newPlats.filter(p => p !== plat);
                                   handleUpdateScope(scope.id, 'platforms', newPlats);
                                 }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
-                                <span className="text-sm text-slate-700">{plat}</span>
+                                <span className="text-sm text-slate-700">{plat === "Others" && platformOther ? `Others (${platformOther})` : plat}</span>
                               </label>
-                            ))}
+                            )) : (
+                              <span className="text-sm text-slate-500 italic col-span-2">Please select platforms in Step 1 first</span>
+                            )}
                           </div>
                         </div>
                         <div className="md:col-span-2">
@@ -1002,7 +1009,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {buyoutRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={buyoutDuration} onChange={setBuyoutDuration} options={["7 days", "30 days", "60 days", "90 days", "1 month", "3 months", "6 months", "1 year", "Permanent"]} placeholder="Duration" />
+                        <MultiSelect value={buyoutDuration} onChange={setBuyoutDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
 
@@ -1012,7 +1019,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {boostRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={boostDuration} onChange={setBoostDuration} options={["1 week", "2 weeks", "1 month", "3 months"]} placeholder="Duration" />
+                        <MultiSelect value={boostDuration} onChange={setBoostDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
 
@@ -1022,7 +1029,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {addAdsRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={addAdsDuration} onChange={setAddAdsDuration} options={["1 week", "1 month", "3 months"]} placeholder="Duration" />
+                        <MultiSelect value={addAdsDuration} onChange={setAddAdsDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
                     
@@ -1032,7 +1039,17 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {paidPartnershipRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={paidPartnershipDuration} onChange={setPaidPartnershipDuration} options={["1 week", "1 month", "3 months"]} placeholder="Duration" />
+                        <MultiSelect value={paidPartnershipDuration} onChange={setPaidPartnershipDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-3 cursor-pointer pt-2">
+                      <input type="checkbox" checked={youtubeDiscoveryRequired} onChange={e => setYoutubeDiscoveryRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                      <span className="text-sm font-medium text-slate-700">Youtube Discovery</span>
+                    </label>
+                    {youtubeDiscoveryRequired && (
+                      <div className="pl-7 mt-2">
+                        <MultiSelect value={youtubeDiscoveryDuration} onChange={setYoutubeDiscoveryDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
                   </div>
@@ -1044,7 +1061,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {genCodeRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={genCodeDuration} onChange={setGenCodeDuration} options={["1 month", "3 months", "6 months"]} placeholder="Duration" />
+                        <MultiSelect value={genCodeDuration} onChange={setGenCodeDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
 
@@ -1054,7 +1071,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {tiktokShopRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={tiktokShopDuration} onChange={setTiktokShopDuration} options={["1 month", "3 months", "6 months"]} placeholder="Duration" />
+                        <MultiSelect value={tiktokShopDuration} onChange={setTiktokShopDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
 
@@ -1064,7 +1081,27 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                     </label>
                     {crossPostingRequired && (
                       <div className="pl-7 mt-2">
-                        <MultiSelect value={crossPostingDuration} onChange={setCrossPostingDuration} options={["1 month", "3 months", "Permanent"]} placeholder="Duration" />
+                        <MultiSelect value={crossPostingDuration} onChange={setCrossPostingDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-3 cursor-pointer pt-2">
+                      <input type="checkbox" checked={fbBrandedContentRequired} onChange={e => setFbBrandedContentRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                      <span className="text-sm font-medium text-slate-700">FB Branded Content</span>
+                    </label>
+                    {fbBrandedContentRequired && (
+                      <div className="pl-7 mt-2">
+                        <MultiSelect value={fbBrandedContentDuration} onChange={setFbBrandedContentDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-3 cursor-pointer pt-2">
+                      <input type="checkbox" checked={xWhitelistingRequired} onChange={e => setXWhitelistingRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                      <span className="text-sm font-medium text-slate-700">X/Twitter Whitelisting</span>
+                    </label>
+                    {xWhitelistingRequired && (
+                      <div className="pl-7 mt-2">
+                        <MultiSelect value={xWhitelistingDuration} onChange={setXWhitelistingDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                       </div>
                     )}
                   </div>
@@ -1469,6 +1506,7 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                     }}
                     onAddClick={() => {}} // Disabled adding in dealsheet view
                     hideAddButton={true} // We'll add this prop to TrackerTable to hide the add button
+                    readOnly={true} // Prevent editing any data in this view
                   />
                 ))}
               </div>
@@ -1521,7 +1559,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       paidPartnershipRequired: "ต้องการ Paid Partnership", paidPartnershipDuration: "ระยะเวลา Paid Partnership",
       genCodeRequired: "ต้องการ Gen Code", genCodeDuration: "ระยะเวลา Gen Code", tiktokShopRequired: "ต้องการ Tiktok Shop",
       tiktokShopDuration: "ระยะเวลา Tiktok Shop", crossPostingRequired: "ต้องการ Cross Posting",
-      crossPostingDuration: "ระยะเวลา Cross Posting", brandSupport: "การสนับสนุนจากแบรนด์",
+      crossPostingDuration: "ระยะเวลา Cross Posting", 
+      youtubeDiscoveryRequired: "ต้องการ Youtube Discovery", youtubeDiscoveryDuration: "ระยะเวลา Youtube Discovery",
+      fbBrandedContentRequired: "ต้องการ FB Branded Content", fbBrandedContentDuration: "ระยะเวลา FB Branded Content",
+      xWhitelistingRequired: "ต้องการ X/Twitter Whitelisting", xWhitelistingDuration: "ระยะเวลา X/Twitter Whitelisting",
+      brandSupport: "การสนับสนุนจากแบรนด์",
       influencerBuyValue: "มูลค่าที่ Influencer ซื้อได้", influencerPickupLocation: "สถานที่รับสินค้า",
       condition: "เงื่อนไข (Condition)"
     };
@@ -1700,6 +1742,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <div><dt className="text-slate-500 mb-1">Gen Code</dt><dd className="font-medium text-slate-900">{brief.genCodeRequired ? `Yes (${renderList(brief.genCodeDuration)})` : "No"}</dd></div>
               <div><dt className="text-slate-500 mb-1">TikTok Shop</dt><dd className="font-medium text-slate-900">{brief.tiktokShopRequired ? `Yes (${renderList(brief.tiktokShopDuration)})` : "No"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Cross Posting</dt><dd className="font-medium text-slate-900">{brief.crossPostingRequired ? `Yes (${renderList(brief.crossPostingDuration)})` : "No"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Youtube Discovery</dt><dd className="font-medium text-slate-900">{brief.youtubeDiscoveryRequired ? `Yes (${renderList(brief.youtubeDiscoveryDuration)})` : "No"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">FB Branded Content</dt><dd className="font-medium text-slate-900">{brief.fbBrandedContentRequired ? `Yes (${renderList(brief.fbBrandedContentDuration)})` : "No"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">X/Twitter Whitelisting</dt><dd className="font-medium text-slate-900">{brief.xWhitelistingRequired ? `Yes (${renderList(brief.xWhitelistingDuration)})` : "No"}</dd></div>
             </div>
           </div>
 
@@ -1810,7 +1855,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 }
 
 // --- Sub-components for Tracker ---
-function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false, readOnly = false }) {
   const influencers = trackerData.influencers || [];
   const submittedSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
     ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
@@ -1893,6 +1938,9 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
   addServiceColumns("crossPostingRequired", "crossPostingDuration", "Cross Posting");
   addServiceColumns("paidPartnershipRequired", "paidPartnershipDuration", "Paid Partnership");
   addServiceColumns("addAdsRequired", "addAdsDuration", "Add Ads");
+  addServiceColumns("youtubeDiscoveryRequired", "youtubeDiscoveryDuration", "Youtube Discovery");
+  addServiceColumns("fbBrandedContentRequired", "fbBrandedContentDuration", "FB Branded Content");
+  addServiceColumns("xWhitelistingRequired", "xWhitelistingDuration", "X/Twitter Whitelisting");
   requiredServices.push({ key: "Affiliate", label: "Affiliate" });
   
   const brandSupports = Array.isArray(brief.brandSupport) ? brief.brandSupport : [];
@@ -1957,10 +2005,10 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
                         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                          <input type="text" value={inf.accountName} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-white px-1.5 py-1 rounded outline-none border border-transparent hover:border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                          <input type="text" value={inf.accountName} disabled={readOnly} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-white px-1.5 py-1 rounded outline-none border border-transparent hover:border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
                           <div className="flex items-center gap-2 w-full">
-                             <input type="text" value={inf.follower} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
-                             <select value={inf.channel} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]">
+                             <input type="text" value={inf.follower} disabled={readOnly} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                             <select value={inf.channel} disabled={readOnly} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]">
                                <option value="">Platform</option>
                                <option value="Instagram">IG</option>
                                <option value="TikTok">TT</option>
@@ -1970,14 +2018,14 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                                <option value="Other">Other</option>
                              </select>
                           </div>
-                          <input type="text" value={inf.accountLink} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                          <input type="text" value={inf.accountLink} disabled={readOnly} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
                       <select 
                         value={inf.contactStatus || ""} 
-                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
+                        disabled={readOnly} onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
                         className={`w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none ${getStatusColor(inf.contactStatus)}`}
                       >
                         {STATUS_OPTIONS.map(opt => (
@@ -1985,13 +2033,13 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="Email, Line, Tel" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} disabled={readOnly} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="Email, Line, Tel" /></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
                     <td className="px-3 py-2 border-r border-slate-100">
-                      <input type="text" value={inf.creditTerm} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
+                      <input type="text" value={inf.creditTerm} disabled={readOnly} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100">
-                      <select value={inf.paymentType || ""} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
+                      <select value={inf.paymentType || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
                         <option value="">Select...</option>
                         <option value="บุคคล">บุคคล</option>
                         <option value="บริษัท">บริษัท</option>
@@ -2023,22 +2071,22 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                       );
                     })}
                     <td className="px-3 py-2 border-r border-slate-100">
-                      <select value={inf.scopeOfWork || ""} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                      <select value={inf.scopeOfWork || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
                         <option value="">Select SOW</option>
                         {submittedSows.map(sow => (
                           <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                     {brandSupports.map(bs => (
                       <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
                     ))}
                     {hasCompetitor && (
-                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} disabled={readOnly} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                     )}
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
-                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} disabled={readOnly} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                   </tr>
                 ))
               )}
