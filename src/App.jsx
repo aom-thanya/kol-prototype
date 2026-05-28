@@ -268,7 +268,6 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
   const items = [
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
-    { label: "Example List", id: "exampleList", icon: ClipboardList, active: activeTab === "exampleList" },
     { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
   ];
 

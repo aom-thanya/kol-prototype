@@ -160,9 +160,9 @@ const briefsSeed = [
     country: "Thailand",
     province: "Bangkok",
     ageRange: "25 ++ ขึ้นไป",
-    lifestyle: "General, Lifestyle",
-    persona: "วัยทำงาน / นักศึกษาที่มีกำลังทรัพย์",
-    occupation: "พนักงานบริษัท รองลงมา นักศึกษา",
+    infContent: "General, Lifestyle",
+    infPersona: "สนุกสนาน, เป็นกันเอง",
+    infOccupation: "พนักงานออฟฟิศ, ฟรีแลนซ์",
     campaignStartDate: "2025-04-01",
     campaignEndDate: "2025-04-30",
     platform: ["Instagram", "Tiktok", "Facebook"],
@@ -253,9 +253,9 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     country: "Thailand",
     province: "Bangkok",
     ageRange: "18 - 35 ปี",
-    lifestyle: "Foodie, Cafe Hopper",
-    persona: "วัยรุ่นชอบลองของใหม่",
-    occupation: "นักศึกษา, พนักงานบริษัท",
+    infContent: "Foodie, Cafe Hopper",
+    infPersona: "วัยรุ่นชอบลองของใหม่",
+    infOccupation: "นักศึกษา, พนักงานบริษัท",
     campaignStartDate: "2025-05-01",
     campaignEndDate: "2025-05-15",
     platform: ["Tiktok", "Facebook"],
@@ -496,14 +496,15 @@ function InfluencerSelectModal({ open, onClose, onSelect }) {
 function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1 }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   useEffect(() => { if (open) setCurrentStep(initialStep); }, [open, initialStep]);
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   // Step 1: Client & Project Details
   const [brand, setBrand] = useState(initialData?.brand || "");
   const [clientStatus, setClientStatus] = useState(initialData?.clientStatus || "New");
   const [customerType, setCustomerType] = useState(initialData?.customerType || "Key Account");
-  const [salesOwner, setSalesOwner] = useState(initialData?.salesOwner || "planner.beauty@buddyreview.co");
-  
+  const [salesOwner, setSalesOwner] = useState(initialData?.salesOwner || "พี่ bankie");
+  const [planner, setPlanner] = useState(initialData?.planner || "");
+  const [buyer, setBuyer] = useState(initialData?.buyer || "");
   const [campaignName, setCampaignName] = useState(initialData?.campaignName || "");
   const [packageType, setPackageType] = useState(initialData?.packageType ? (Array.isArray(initialData.packageType) ? initialData.packageType : [initialData.packageType]) : []);
   const [packageTypeOther, setPackageTypeOther] = useState(initialData?.packageTypeOther || "");
@@ -513,10 +514,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [objectiveNote, setObjectiveNote] = useState(initialData?.objectiveNote || "");
   
   const [gender, setGender] = useState(initialData?.gender || []);
-  const [ageRange, setAgeRange] = useState(initialData?.ageRange || []);
-  const [lifestyle, setLifestyle] = useState(initialData?.lifestyle || "");
-  const [persona, setPersona] = useState(initialData?.persona || "");
-  const [occupation, setOccupation] = useState(initialData?.occupation || "");
+    const [ageRange, setAgeRange] = useState(initialData?.ageRange || "");
   const [country, setCountry] = useState(initialData?.country || "");
   const [province, setProvince] = useState(initialData?.province || "");
   
@@ -540,13 +538,18 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [expectedNumInfluencers, setExpectedNumInfluencers] = useState(initialData?.expectedNumInfluencers || "");
   const [expectedReach, setExpectedReach] = useState(initialData?.expectedReach || "");
 
-  // Step 3: SOW
+  // Step 3: Influencer Persona
+  const [infContent, setInfContent] = useState(initialData?.infContent || "");
+  const [infPersona, setInfPersona] = useState(initialData?.infPersona || "");
+  const [infOccupation, setInfOccupation] = useState(initialData?.infOccupation || "");
+
+  // Step 4: SOW
   const [scopeOfWorks, setScopeOfWorks] = useState(initialData?.scopeOfWorks || [{ id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
   const handleAddScope = () => setScopeOfWorks(prev => [...prev, { id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
   const handleRemoveScope = (id) => setScopeOfWorks(prev => prev.filter(s => s.id !== id));
   const handleUpdateScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
 
-  // Step 4: Service Scope
+  // Step 5: Service Scope
   const [buyoutRequired, setBuyoutRequired] = useState(initialData?.buyoutRequired || false);
   const [buyoutDuration, setBuyoutDuration] = useState(initialData?.buyoutDuration || []);
   const [boostRequired, setBoostRequired] = useState(initialData?.boostRequired || false);
@@ -568,7 +571,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [xWhitelistingRequired, setXWhitelistingRequired] = useState(initialData?.xWhitelistingRequired || false);
   const [xWhitelistingDuration, setXWhitelistingDuration] = useState(initialData?.xWhitelistingDuration || []);
 
-  // Step 5: Brand Support & Condition
+  // Step 6: Brand Support & Condition
   const [brandSupport, setBrandSupport] = useState(initialData?.brandSupport || []);
   const [influencerBuyValue, setInfluencerBuyValue] = useState(initialData?.influencerBuyValue || "");
   const [influencerPickupLocation, setInfluencerPickupLocation] = useState(initialData?.influencerPickupLocation || "");
@@ -584,22 +587,24 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
   const handleSubmit = () => {
     onSubmit({
       // Step 1
-      brand, clientStatus, customerType, salesOwner, 
+      brand, clientStatus, customerType, salesOwner, planner, buyer,
       campaignName, packageType, packageTypeOther, product, objective, objectiveNote, 
-      gender, country, province, ageRange, lifestyle, persona, occupation, 
+      gender, country, province, ageRange,
       campaignStartDate, campaignEndDate, platform, platformOther,
       previousCampaign, competitor, additionalInfo,
       // Step 2
       budgetSpending, budgetBoostSpending, vat, budgetCondition, estimatedBrandSpending, budgetPerInfluencer, expectedNumInfluencers, expectedReach,
       // Step 3
-      scopeOfWorks,
+      infContent, infPersona, infOccupation,
       // Step 4
+      scopeOfWorks,
+      // Step 5
       buyoutRequired, buyoutDuration, boostRequired, boostDuration, addAdsRequired, addAdsDuration, 
       paidPartnershipRequired, paidPartnershipDuration, genCodeRequired, genCodeDuration, 
       tiktokShopRequired, tiktokShopDuration, crossPostingRequired, crossPostingDuration,
       youtubeDiscoveryRequired, youtubeDiscoveryDuration, fbBrandedContentRequired, fbBrandedContentDuration,
       xWhitelistingRequired, xWhitelistingDuration,
-      // Step 5
+      // Step 6
       brandSupport, influencerBuyValue, influencerPickupLocation, condition
     });
   };
@@ -680,9 +685,29 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                       </label>
                     </div>
                   </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Sales Owner *</label>
-                    <input type="text" value={salesOwner} onChange={e => setSalesOwner(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-slate-700">Sales Owner *</label>
+                      <input type="text" value={salesOwner} onChange={e => setSalesOwner(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-slate-700">Planner *</label>
+                      <Select 
+                        value={planner} 
+                        onChange={setPlanner} 
+                        options={["planner.beauty@buddyreview.co", "planner.mc@buddyreview.co", "senior.planner@buddyreview.co"]} 
+                        label="Select Planner" 
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-slate-700">Buyer *</label>
+                      <Select 
+                        value={buyer} 
+                        onChange={setBuyer} 
+                        options={["buyer.team@buddyreview.co", "buyer.lead@buddyreview.co", "beauty.buyer@buddyreview.co"]} 
+                        label="Select Buyer" 
+                      />
+                    </div>
                   </div>
                   
                   <div className="border-t border-slate-100 pt-6 mt-2">
@@ -765,18 +790,8 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                             </div>
                           </div>
                           <div>
-                            <label className="mb-2 block text-sm font-medium text-slate-700">Age</label>
-                            <div className="flex flex-wrap items-center gap-3">
-                              {["13-17", "18-24", "25-34", "35-44", "45-64"].map(a => (
-                                <label key={a} className="flex items-center gap-1.5 cursor-pointer">
-                                  <input type="checkbox" checked={ageRange.includes(a)} onChange={e => {
-                                    if (e.target.checked) setAgeRange([...ageRange, a]);
-                                    else setAgeRange(ageRange.filter(i => i !== a));
-                                  }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
-                                  <span className="text-sm text-slate-700">{a}</span>
-                                </label>
-                              ))}
-                            </div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Age Range</label>
+                            <input type="text" value={ageRange} onChange={e => setAgeRange(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                           </div>
                           <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">Country</label>
@@ -904,6 +919,30 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">3</span> 
+                  Influencer Persona
+                </h3>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Content</label>
+                    <input type="text" value={infContent} onChange={e => setInfContent(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. Lifestyle, Foodie" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Persona</label>
+                    <input type="text" value={infPersona} onChange={e => setInfPersona(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. สนุกสนาน, เป็นกันเอง" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Occupation</label>
+                    <input type="text" value={infOccupation} onChange={e => setInfOccupation(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. พนักงานออฟฟิศ, ฟรีแลนซ์" />
+                  </div>
+                </div>
+              </section>
+              )}
+
+              {/* Section 4 */}
+              {currentStep === 4 && (
+              <section>
+                <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">4</span> 
                   Scope of Work (SOW)
                 </h3>
                 <div className="flex flex-col gap-4">
@@ -994,11 +1033,11 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
               </section>
               )}
 
-              {/* Section 4 */}
-              {currentStep === 4 && (
+              {/* Section 5 */}
+              {currentStep === 5 && (
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">4</span> 
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">5</span> 
                   Service Scope
                 </h3>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -1109,11 +1148,11 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
               </section>
               )}
 
-              {/* Section 5 */}
-              {currentStep === 5 && (
+              {/* Section 6 */}
+              {currentStep === 6 && (
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">5</span> 
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">6</span> 
                   Brand Support & Condition
                 </h3>
                 <div className="flex flex-col gap-6">
@@ -1672,6 +1711,8 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Customer Type</dt><dd className="font-medium text-slate-900">{brief.customerType || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Sales Owner</dt><dd className="font-medium text-slate-900">{brief.salesOwner || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Planner</dt><dd className="font-medium text-slate-900">{brief.planner || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Buyer</dt><dd className="font-medium text-slate-900">{brief.buyer || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Package Type</dt><dd className="font-medium text-slate-900">{brief.packageType || "-"}</dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Product Details</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.product || "-" }}></dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Objective</dt><dd className="font-medium text-slate-900">{renderList(brief.objective)}</dd></div>
@@ -1680,9 +1721,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <div><dt className="text-slate-500 mb-1">Target Age</dt><dd className="font-medium text-slate-900">{brief.ageRange || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Country</dt><dd className="font-medium text-slate-900">{brief.country || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Province</dt><dd className="font-medium text-slate-900">{brief.province || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Lifestyle</dt><dd className="font-medium text-slate-900">{brief.lifestyle || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{brief.persona || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{brief.occupation || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Campaign Date</dt><dd className="font-medium text-slate-900">{brief.campaignStartDate ? `${brief.campaignStartDate} to ${brief.campaignEndDate}` : "-"}</dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.otherPlatform ? `(${brief.otherPlatform})` : ""}</dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Previous Campaign / Work Ref</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.previousCampaign || "-" }}></dd></div>
@@ -1708,7 +1746,21 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Section 3 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Influencer Persona</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div><dt className="text-slate-500 mb-1">Demographic</dt><dd className="font-medium text-slate-900">{brief.infDemographic || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Location</dt><dd className="font-medium text-slate-900">{brief.infLocation || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{brief.infOccupation || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{brief.infPersona || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Content</dt><dd className="font-medium text-slate-900">{brief.infContent || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Story Telling</dt><dd className="font-medium text-slate-900">{brief.infStoryTelling || "-"}</dd></div>
+              <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Influencer or KOL Preference</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.infPreference || "-" }}></dd></div>
+            </div>
+          </div>
+
+          {/* Section 4 */}
+          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="space-y-4">
               {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
                 brief.scopeOfWorks.map((sow, idx) => (
@@ -1731,9 +1783,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             </div>
           </div>
 
-          {/* Section 4 */}
+          {/* Section 5 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Service Scope</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">5. Service Scope</h3><button onClick={() => handleEditSection(5)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Buyout</dt><dd className="font-medium text-slate-900">{brief.buyoutRequired ? `Yes (${renderList(brief.buyoutDuration)})` : "No"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Boost Post</dt><dd className="font-medium text-slate-900">{brief.boostRequired ? `Yes (${renderList(brief.boostDuration)})` : "No"}</dd></div>
@@ -1748,9 +1800,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             </div>
           </div>
 
-          {/* Section 5 */}
+          {/* Section 6 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">5. Brand Support & Condition</h3><button onClick={() => handleEditSection(5)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">6. Brand Support & Condition</h3><button onClick={() => handleEditSection(6)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="space-y-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Brand Support Selected</dt><dd className="font-medium text-slate-900">{renderList(brief.brandSupport)}</dd></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
