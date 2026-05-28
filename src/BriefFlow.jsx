@@ -10,6 +10,8 @@ import {
   ChevronDown,
   ArrowUpDown,
   Check,
+  ArrowLeft,
+  Download
 } from "lucide-react";
 
 // Helper utilities
@@ -138,6 +140,13 @@ function SimpleHtmlEditor({ value, onChange }) {
 const briefsSeed = [
   {
     id: "NRP202501020",
+    internalStatus: "Submitted to Buyer",
+    version: 1,
+    activityLog: [{
+      date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      action: "Sales submitted Brief V1",
+      details: "Initial submission to buyer."
+    }],
     campaignName: "XXX",
     brand: "XXX",
     product: "เป็น Skincare ใหม่ ภายใต้แบรนด์ XXX ค่ะ โดยจะ launch สินค้าในช่วง April 2025 ค่ะ มีสินค้าทั้งหมด 5 SKU : Cleanser / ครีมกันแดด / serum ผลัดเซลล์ผิว / serum booster เพิ่มความกระจ่างใส / Moisturizer สินค้าราคาขายเริ่มที่ 390++",
@@ -148,12 +157,14 @@ const briefsSeed = [
     objective: ["Awareness (Reach)", "Interest (Engagement)"],
     objectiveNote: "เป้าหมายหลัก ต้องการให้เกิดยอดขาย เป้าหมายรอง brand awareness",
     gender: ["Female"],
-    location: ["ประเทศไทย"],
+    country: "Thailand",
+    province: "Bangkok",
     ageRange: "25 ++ ขึ้นไป",
     lifestyle: "General, Lifestyle",
     persona: "วัยทำงาน / นักศึกษาที่มีกำลังทรัพย์",
     occupation: "พนักงานบริษัท รองลงมา นักศึกษา",
-    campaignPeriod: "Apr 2025 +++",
+    campaignStartDate: "2025-04-01",
+    campaignEndDate: "2025-04-30",
     platform: ["Instagram", "Tiktok", "Facebook"],
     otherPlatform: "",
     
@@ -224,6 +235,79 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
 แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`,
     
     createdAt: "2025-01-09",
+  },
+  {
+    id: "NRP202501021",
+    internalStatus: "Draft",
+    version: 1,
+    campaignName: "Launch Food Festival",
+    brand: "TasteBite",
+    product: "ขนมขบเคี้ยวรสใหม่",
+    clientStatus: "New",
+    customerType: "Key Account",
+    salesOwner: "พี่ bankie",
+    packageType: ["Custom (1 D)"],
+    objective: ["Awareness (Reach)"],
+    objectiveNote: "เน้นสร้าง awareness ให้คนรู้จักรสชาติใหม่",
+    gender: ["Male", "Female"],
+    country: "Thailand",
+    province: "Bangkok",
+    ageRange: "18 - 35 ปี",
+    lifestyle: "Foodie, Cafe Hopper",
+    persona: "วัยรุ่นชอบลองของใหม่",
+    occupation: "นักศึกษา, พนักงานบริษัท",
+    campaignStartDate: "2025-05-01",
+    campaignEndDate: "2025-05-15",
+    platform: ["Tiktok", "Facebook"],
+    otherPlatform: "",
+    
+    // Budget
+    budgetSpending: "150,000",
+    budgetBoostSpending: "50,000",
+    vat: "Incl. VAT",
+    budgetCondition: "Net",
+    estimatedBrandSpending: "200,000",
+    budgetPerInfluencer: "10,000",
+    expectedNumInfluencers: "10",
+    expectedReach: "1M",
+    
+    // SOW
+    scopeOfWorks: [
+      {
+        id: "1",
+        contentType: "VDO content (Short Clip)",
+        followerReq: "100K or above",
+        numInfluencers: "5",
+        platforms: ["Tiktok"],
+        name: "Tiktok Challenge",
+        details: "ทำคลิปสั้นเต้นประกอบเพลง พร้อมกินขนมโชว์"
+      }
+    ],
+
+    // Service Scope
+    buyoutRequired: false,
+    buyoutDuration: [],
+    boostRequired: true,
+    boostDuration: ["15 days"],
+    addAdsRequired: false,
+    addAdsDuration: [],
+    paidPartnershipRequired: false,
+    paidPartnershipDuration: [],
+    genCodeRequired: false,
+    genCodeDuration: [],
+    tiktokShopRequired: true,
+    tiktokShopDuration: ["30 days"],
+    crossPostingRequired: false,
+    crossPostingDuration: [],
+
+    // Brand Support & Condition
+    brandSupport: ["Sponsor สินค้า"],
+    influencerBuyValue: "",
+    influencerPickupLocation: "จัดส่งให้ถึงบ้าน",
+    condition: `ต้องแปะตะกร้า Tiktok Shop
+แบรนด์ตรวจคลิปได้ 1 ครั้ง`,
+    
+    createdAt: "2025-01-10",
   }
 ];
 
@@ -334,75 +418,79 @@ function InfluencerSelectModal({ open, onClose, onSelect }) {
 }
 
 // --- Form Modal Component ---
-function CreateBriefModal({ open, onClose, onSubmit }) {
-  const [currentStep, setCurrentStep] = useState(1);
+function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1 }) {
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  useEffect(() => { if (open) setCurrentStep(initialStep); }, [open, initialStep]);
   const totalSteps = 5;
 
   // Step 1: Client & Project Details
-  const [brand, setBrand] = useState("");
-  const [clientStatus, setClientStatus] = useState("New");
-  const [customerType, setCustomerType] = useState("Key Account");
-  const [salesOwner, setSalesOwner] = useState("planner.beauty@buddyreview.co");
+  const [brand, setBrand] = useState(initialData?.brand || "");
+  const [clientStatus, setClientStatus] = useState(initialData?.clientStatus || "New");
+  const [customerType, setCustomerType] = useState(initialData?.customerType || "Key Account");
+  const [salesOwner, setSalesOwner] = useState(initialData?.salesOwner || "planner.beauty@buddyreview.co");
   
-  const [campaignName, setCampaignName] = useState("");
-  const [packageType, setPackageType] = useState([]);
-  const [packageTypeOther, setPackageTypeOther] = useState("");
-  const [product, setProduct] = useState("");
+  const [campaignName, setCampaignName] = useState(initialData?.campaignName || "");
+  const [packageType, setPackageType] = useState(initialData?.packageType ? (Array.isArray(initialData.packageType) ? initialData.packageType : [initialData.packageType]) : []);
+  const [packageTypeOther, setPackageTypeOther] = useState(initialData?.packageTypeOther || "");
+  const [product, setProduct] = useState(initialData?.product || "");
   
-  const [objective, setObjective] = useState([]);
-  const [objectiveNote, setObjectiveNote] = useState("");
+  const [objective, setObjective] = useState(initialData?.objective || []);
+  const [objectiveNote, setObjectiveNote] = useState(initialData?.objectiveNote || "");
   
-  const [gender, setGender] = useState([]);
-  const [ageRange, setAgeRange] = useState([]);
-  const [country, setCountry] = useState("");
-  const [province, setProvince] = useState("");
+  const [gender, setGender] = useState(initialData?.gender || []);
+  const [ageRange, setAgeRange] = useState(initialData?.ageRange || []);
+  const [lifestyle, setLifestyle] = useState(initialData?.lifestyle || "");
+  const [persona, setPersona] = useState(initialData?.persona || "");
+  const [occupation, setOccupation] = useState(initialData?.occupation || "");
+  const [country, setCountry] = useState(initialData?.country || "");
+  const [province, setProvince] = useState(initialData?.province || "");
   
-  const [campaignStartDate, setCampaignStartDate] = useState("");
-  const [campaignEndDate, setCampaignEndDate] = useState("");
+  const [campaignStartDate, setCampaignStartDate] = useState(initialData?.campaignStartDate || "");
+  const [campaignEndDate, setCampaignEndDate] = useState(initialData?.campaignEndDate || "");
   
-  const [platform, setPlatform] = useState([]);
+  const [platform, setPlatform] = useState(initialData?.platform || []);
   const [platformOther, setPlatformOther] = useState("");
   
-  const [previousCampaign, setPreviousCampaign] = useState("");
-  const [competitor, setCompetitor] = useState("");
-  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [previousCampaign, setPreviousCampaign] = useState(initialData?.previousCampaign || "");
+  const [competitor, setCompetitor] = useState(initialData?.competitor || "");
+  const [additionalInfo, setAdditionalInfo] = useState(initialData?.additionalInfo || "");
 
   // Step 2: Budget
-  const [budgetSpending, setBudgetSpending] = useState("");
-  const [budgetBoostSpending, setBudgetBoostSpending] = useState("");
-  const [vat, setVat] = useState("Incl. VAT");
-  const [budgetCondition, setBudgetCondition] = useState("");
-  const [estimatedBrandSpending, setEstimatedBrandSpending] = useState("");
-  const [budgetPerInfluencer, setBudgetPerInfluencer] = useState("");
-  const [expectedNumInfluencers, setExpectedNumInfluencers] = useState("");
-  const [expectedReach, setExpectedReach] = useState("");
+  const [budgetSpending, setBudgetSpending] = useState(initialData?.budgetSpending || "");
+  const [budgetBoostSpending, setBudgetBoostSpending] = useState(initialData?.budgetBoostSpending || "");
+  const [vat, setVat] = useState(initialData?.vat || "Incl. VAT");
+  const [budgetCondition, setBudgetCondition] = useState(initialData?.budgetCondition || "");
+  const [estimatedBrandSpending, setEstimatedBrandSpending] = useState(initialData?.estimatedBrandSpending || "");
+  const [budgetPerInfluencer, setBudgetPerInfluencer] = useState(initialData?.budgetPerInfluencer || "");
+  const [expectedNumInfluencers, setExpectedNumInfluencers] = useState(initialData?.expectedNumInfluencers || "");
+  const [expectedReach, setExpectedReach] = useState(initialData?.expectedReach || "");
 
   // Step 3: SOW
-  const [scopeOfWorks, setScopeOfWorks] = useState([{ id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
+  const [scopeOfWorks, setScopeOfWorks] = useState(initialData?.scopeOfWorks || [{ id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
   const handleAddScope = () => setScopeOfWorks(prev => [...prev, { id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
   const handleRemoveScope = (id) => setScopeOfWorks(prev => prev.filter(s => s.id !== id));
   const handleUpdateScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
 
   // Step 4: Service Scope
-  const [buyoutRequired, setBuyoutRequired] = useState(false);
-  const [buyoutDuration, setBuyoutDuration] = useState([]);
-  const [boostRequired, setBoostRequired] = useState(false);
-  const [boostDuration, setBoostDuration] = useState([]);
-  const [addAdsRequired, setAddAdsRequired] = useState(false);
-  const [addAdsDuration, setAddAdsDuration] = useState([]);
-  const [paidPartnershipRequired, setPaidPartnershipRequired] = useState(false);
-  const [paidPartnershipDuration, setPaidPartnershipDuration] = useState([]);
-  const [genCodeRequired, setGenCodeRequired] = useState(false);
-  const [genCodeDuration, setGenCodeDuration] = useState([]);
-  const [tiktokShopRequired, setTiktokShopRequired] = useState(false);
-  const [tiktokShopDuration, setTiktokShopDuration] = useState([]);
-  const [crossPostingRequired, setCrossPostingRequired] = useState(false);
-  const [crossPostingDuration, setCrossPostingDuration] = useState([]);
+  const [buyoutRequired, setBuyoutRequired] = useState(initialData?.buyoutRequired || false);
+  const [buyoutDuration, setBuyoutDuration] = useState(initialData?.buyoutDuration || []);
+  const [boostRequired, setBoostRequired] = useState(initialData?.boostRequired || false);
+  const [boostDuration, setBoostDuration] = useState(initialData?.boostDuration || []);
+  const [addAdsRequired, setAddAdsRequired] = useState(initialData?.addAdsRequired || false);
+  const [addAdsDuration, setAddAdsDuration] = useState(initialData?.addAdsDuration || []);
+  const [paidPartnershipRequired, setPaidPartnershipRequired] = useState(initialData?.paidPartnershipRequired || false);
+  const [paidPartnershipDuration, setPaidPartnershipDuration] = useState(initialData?.paidPartnershipDuration || []);
+  const [genCodeRequired, setGenCodeRequired] = useState(initialData?.genCodeRequired || false);
+  const [genCodeDuration, setGenCodeDuration] = useState(initialData?.genCodeDuration || []);
+  const [tiktokShopRequired, setTiktokShopRequired] = useState(initialData?.tiktokShopRequired || false);
+  const [tiktokShopDuration, setTiktokShopDuration] = useState(initialData?.tiktokShopDuration || []);
+  const [crossPostingRequired, setCrossPostingRequired] = useState(initialData?.crossPostingRequired || false);
+  const [crossPostingDuration, setCrossPostingDuration] = useState(initialData?.crossPostingDuration || []);
 
   // Step 5: Brand Support & Condition
-  const [brandSupport, setBrandSupport] = useState([]);
-  const [influencerBuyValue, setInfluencerBuyValue] = useState("");
-  const [influencerPickupLocation, setInfluencerPickupLocation] = useState("");
+  const [brandSupport, setBrandSupport] = useState(initialData?.brandSupport || []);
+  const [influencerBuyValue, setInfluencerBuyValue] = useState(initialData?.influencerBuyValue || "");
+  const [influencerPickupLocation, setInfluencerPickupLocation] = useState(initialData?.influencerPickupLocation || "");
   
   const defaultCondition = `แบรนด์ สามารถเลือก Influencer ได้ ... ครั้ง
 แบรนด์ เป็นผู้ตรวจ Draft Content โดยสามารถตรวจได้ ... ครั้ง
@@ -410,17 +498,18 @@ function CreateBriefModal({ open, onClose, onSubmit }) {
 Buddy Review เป็นผู้ประสานงานกับ Influencer
 รบกวนเช็ค รายละเอียด Condition ของ KOL รวมถึงราคา Boost Post / Boost fee
 แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`;
-  const [condition, setCondition] = useState(defaultCondition);
+  const [condition, setCondition] = useState(initialData?.condition || defaultCondition);
 
   const handleSubmit = () => {
     onSubmit({
       // Step 1
       brand, clientStatus, customerType, salesOwner, 
-      campaignName, packageType, product, objective, objectiveNote, 
-      gender, location, ageRange, lifestyle, persona, occupation, 
-      campaignPeriod, platform, otherPlatform,
+      campaignName, packageType, packageTypeOther, product, objective, objectiveNote, 
+      gender, country, province, ageRange, lifestyle, persona, occupation, 
+      campaignStartDate, campaignEndDate, platform, platformOther,
+      previousCampaign, competitor, additionalInfo,
       // Step 2
-      standardBudget, includeVAT, boostPostBudget, addAdsBudget, pickUpFee, buyingValue,
+      budgetSpending, budgetBoostSpending, vat, budgetCondition, estimatedBrandSpending, budgetPerInfluencer, expectedNumInfluencers, expectedReach,
       // Step 3
       scopeOfWorks,
       // Step 4
@@ -448,22 +537,24 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
         >
           <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Create New Brief</h2>
-              <div className="text-sm font-medium text-slate-500 mt-1">Step {currentStep} of {totalSteps}</div>
+              <h2 className="text-lg font-semibold text-slate-900">{initialData ? `Edit Section ${currentStep}` : "Create New Brief"}</h2>
+              {!initialData && <div className="text-sm font-medium text-slate-500 mt-1">Step {currentStep} of {totalSteps}</div>}
             </div>
             <button onClick={onClose} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">
               <X className="h-5 w-5" />
             </button>
           </div>
           
-          <div className="h-1 w-full bg-slate-100">
-            <motion.div 
-              className="h-full bg-[#6D5DF6]"
-              initial={{ width: 0 }}
-              animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
+          {!initialData && (
+            <div className="h-1 w-full bg-slate-100">
+              <motion.div 
+                className="h-full bg-[#6D5DF6]"
+                initial={{ width: 0 }}
+                animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-6">
             <div className="space-y-10">
@@ -991,17 +1082,23 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
           <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
             <div className="flex gap-3">
-              <Button 
-                variant="secondary" 
-                onClick={prevStep} 
-                disabled={currentStep === 1}
-              >
-                Back
-              </Button>
-              {currentStep < totalSteps ? (
-                <Button onClick={nextStep}>Next Step</Button>
+              {!initialData ? (
+                <>
+                  <Button 
+                    variant="secondary" 
+                    onClick={prevStep} 
+                    disabled={currentStep === 1}
+                  >
+                    Back
+                  </Button>
+                  {currentStep < totalSteps ? (
+                    <Button onClick={nextStep}>Next Step</Button>
+                  ) : (
+                    <Button onClick={handleSubmit} disabled={!campaignName || !brand}>Create Brief</Button>
+                  )}
+                </>
               ) : (
-                <Button onClick={handleSubmit} disabled={!campaignName || !brand}>Create Brief</Button>
+                <Button onClick={handleSubmit}>Save Changes</Button>
               )}
             </div>
           </div>
@@ -1012,7 +1109,83 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
 }
 
 // --- Brief Listing Page Component ---
-function BriefListingPage({ briefs, onView, onCreate }) {
+function ActivityTimeline({ logs }) {
+  if (!logs || logs.length === 0) return null;
+  const sortedLogs = [...logs].reverse();
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-slate-800 mb-4">Brief Activity Log</h3>
+      <div className="space-y-4">
+        {sortedLogs.map((log, index) => (
+          <div key={index} className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex mt-0.5 items-center justify-center w-8 h-8 rounded-full bg-violet-100 text-violet-500 shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-sm text-slate-800">{log.action}</span>
+                <span className="text-xs text-slate-500">{log.date}</span>
+              </div>
+              {typeof log.details === 'string' ? (
+                <p className="text-xs text-slate-600 mt-1 whitespace-pre-wrap">{log.details}</p>
+              ) : log.details && Array.isArray(log.details) ? (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-slate-700 font-medium mb-1">รายการที่ถูกแก้ไข:</p>
+                  {log.details.map((change, idx) => (
+                    <div key={idx} className="text-xs text-slate-600">
+                      - เปลี่ยน {change.field} จาก <span className="text-[#6D5DF6] font-semibold">{change.oldVal}</span> เป็น <span className="text-[#6D5DF6] font-semibold">{change.newVal}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AddRequestModal({ open, onClose, onSubmit }) {
+  const [requestText, setRequestText] = useState("");
+  
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Add Change Request</h3>
+        <p className="text-sm text-slate-500 mb-4">This will notify the Buyer that there is a new requirement impacting the current candidates.</p>
+        <textarea rows={3} value={requestText} onChange={e => setRequestText(e.target.value)} className="w-full rounded-lg border border-slate-200 p-3 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g., เพิ่ม Service Buyout Asset 6 เดือน" />
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onSubmit(requestText)} disabled={!requestText}>Submit Request</Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function ReviewChangeModal({ open, pendingChanges, onApply, onLater }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Review Change Request</h3>
+        <p className="text-sm text-slate-500 mb-4">Sales has added new requirements. Applying these updates will generate Tracker V{(pendingChanges?.targetVersion || 2)}.</p>
+        <div className="rounded-lg bg-amber-50 p-4 border border-amber-200 mb-6">
+          <h4 className="text-xs font-semibold text-amber-800 uppercase mb-2">New Requirements</h4>
+          <p className="text-sm text-amber-900">{pendingChanges?.text || "No details provided"}</p>
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={onLater}>Later</Button>
+          <Button onClick={onApply}>Apply Update (Create V{(pendingChanges?.targetVersion || 2)})</Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -1075,12 +1248,14 @@ function BriefListingPage({ briefs, onView, onCreate }) {
                   <td className="px-6 py-4 text-sm text-slate-600">{b.createdAt}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onView(b)}
-                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-[#6D5DF6] transition hover:bg-violet-50 hover:border-violet-200"
-                      >
-                        <Eye className="h-4 w-4" /> View Details
-                      </button>
+                      {!listOnly && (
+                        <button
+                          onClick={() => onView(b)}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-[#6D5DF6] transition hover:bg-violet-50 hover:border-violet-200"
+                        >
+                          <Eye className="h-4 w-4" /> View Details
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -1100,9 +1275,141 @@ function BriefListingPage({ briefs, onView, onCreate }) {
   );
 }
 
+// --- Step Progress Nav ---
+function BriefStepProgress({ activeTab, onTabChange, onBack }) {
+  const steps = [
+    { id: "brief", label: "Brief" },
+    { id: "exampleList", label: "Example List" },
+    { id: "dealsheet", label: "Dealsheet & Proposal" }
+  ];
+  const activeIdx = steps.findIndex(s => s.id === activeTab);
+  
+  return (
+    <div className="mb-12">
+      <div className="mb-8">
+        <button onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-[#6D5DF6] flex items-center gap-1">
+          <ArrowLeft className="w-4 h-4" /> Back to Briefs
+        </button>
+      </div>
+      
+      <div className="relative flex items-center justify-between w-full max-w-3xl mx-auto px-4">
+        {/* Connecting Line Background */}
+        <div className="absolute left-10 right-10 top-5 h-1 bg-slate-200 z-0 rounded-full" />
+        
+        {/* Connecting Line Progress */}
+        <div 
+          className="absolute left-10 top-5 h-1 bg-[#6D5DF6] z-0 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `calc(${(activeIdx / (steps.length - 1)) * 100}% - 2.5rem)` }}
+        />
+        
+        {steps.map((step, index) => {
+          const isActive = index === activeIdx;
+          const isPassed = index < activeIdx;
+          return (
+            <div key={step.id} className="relative z-10 flex flex-col items-center">
+              <button
+                onClick={() => onTabChange(step.id)}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 border-[#FAFAFA] transition-all duration-300 shadow-sm
+                  ${isActive || isPassed ? 'bg-[#6D5DF6] text-white' : 'bg-slate-200 text-slate-400 hover:bg-slate-300'}`}
+              >
+                {index + 1}
+              </button>
+              <span className={`absolute top-12 text-sm font-medium whitespace-nowrap transition-colors duration-300
+                ${isActive ? 'text-[#6D5DF6]' : isPassed ? 'text-slate-800' : 'text-slate-400'}`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// --- Dealsheet & Proposal Page Component ---
+function DealsheetPage() {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Dealsheet & Proposal</h2>
+        <p className="text-slate-500 text-sm">This page is under construction.</p>
+      </div>
+    </motion.div>
+  );
+}
+
 // --- Brief Detail Page Component ---
 function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentEditStep, setCurrentEditStep] = useState(1);
+  
+  const handleEditSection = (step) => {
+    setCurrentEditStep(step);
+    setEditModalOpen(true);
+  };
+  
+  const handleEditSubmit = (updatedData) => {
+    const fieldNames = {
+      brand: "แบรนด์", clientStatus: "สถานะลูกค้า", customerType: "ประเภทลูกค้า", salesOwner: "เจ้าของโปรเจกต์ (Sales)",
+      campaignName: "ชื่อแคมเปญ", packageType: "ประเภทแพ็กเกจ", packageTypeOther: "แพ็กเกจอื่นๆ", product: "สินค้า",
+      objective: "วัตถุประสงค์", objectiveNote: "รายละเอียดวัตถุประสงค์", gender: "เพศ", country: "ประเทศ",
+      province: "จังหวัด", ageRange: "ช่วงอายุ", lifestyle: "ไลฟ์สไตล์", persona: "ลักษณะนิสัย (Persona)",
+      occupation: "อาชีพ", campaignStartDate: "วันที่เริ่มแคมเปญ", campaignEndDate: "วันที่สิ้นสุดแคมเปญ",
+      platform: "แพลตฟอร์ม", platformOther: "แพลตฟอร์มอื่นๆ", previousCampaign: "แคมเปญที่ผ่านมา",
+      competitor: "คู่แข่ง", additionalInfo: "ข้อมูลเพิ่มเติม", budgetSpending: "งบประมาณใช้จ่าย",
+      budgetBoostSpending: "งบประมาณ Boost Post", vat: "ภาษี (VAT)", budgetCondition: "เงื่อนไขงบประมาณ",
+      estimatedBrandSpending: "ประเมินค่าใช้จ่ายแบรนด์", budgetPerInfluencer: "งบประมาณต่อ Influencer",
+      expectedNumInfluencers: "จำนวน Influencer ที่คาดหวัง", expectedReach: "Reach ที่คาดหวัง",
+      buyoutRequired: "ต้องการ Buyout", buyoutDuration: "ระยะเวลา Buyout", boostRequired: "ต้องการ Boost",
+      boostDuration: "ระยะเวลา Boost", addAdsRequired: "ต้องการ Add Ads", addAdsDuration: "ระยะเวลา Add Ads",
+      paidPartnershipRequired: "ต้องการ Paid Partnership", paidPartnershipDuration: "ระยะเวลา Paid Partnership",
+      genCodeRequired: "ต้องการ Gen Code", genCodeDuration: "ระยะเวลา Gen Code", tiktokShopRequired: "ต้องการ Tiktok Shop",
+      tiktokShopDuration: "ระยะเวลา Tiktok Shop", crossPostingRequired: "ต้องการ Cross Posting",
+      crossPostingDuration: "ระยะเวลา Cross Posting", brandSupport: "การสนับสนุนจากแบรนด์",
+      influencerBuyValue: "มูลค่าที่ Influencer ซื้อได้", influencerPickupLocation: "สถานที่รับสินค้า",
+      condition: "เงื่อนไข (Condition)"
+    };
+
+    const changes = [];
+    Object.keys(updatedData).forEach(key => {
+      if (key === 'scopeOfWorks') return;
+      
+      const isOldEmpty = brief[key] === "" || brief[key] === undefined || brief[key] === null || (Array.isArray(brief[key]) && brief[key].length === 0);
+      const isNewEmpty = updatedData[key] === "" || updatedData[key] === null || (Array.isArray(updatedData[key]) && updatedData[key].length === 0);
+      
+      if (isOldEmpty && isNewEmpty) return; // Ignore if both are empty
+
+      const oldStr = JSON.stringify(brief[key]);
+      const newStr = JSON.stringify(updatedData[key]);
+      
+      if (oldStr !== newStr) {
+        const formatVal = (val) => {
+          if (val === "" || val === undefined || val === null || (Array.isArray(val) && val.length === 0)) return "ว่างเปล่า";
+          if (Array.isArray(val)) return val.join(", ");
+          if (typeof val === "boolean") return val ? "ใช่" : "ไม่ใช่";
+          return String(val);
+        };
+        const oldVal = formatVal(brief[key]);
+        const newVal = formatVal(updatedData[key]);
+        const fieldName = fieldNames[key] || key;
+        changes.push({ field: fieldName, oldVal, newVal });
+      }
+    });
+
+    const log = {
+      date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      action: `อัปเดตข้อมูล Brief ส่วนที่ ${currentEditStep}`,
+      details: changes.length > 0 ? changes : "ไม่มีการเปลี่ยนแปลงข้อมูล"
+    };
+    onUpdateBrief({
+      ...brief,
+      ...updatedData,
+      activityLog: [...(brief.activityLog || []), log]
+    });
+    setEditModalOpen(false);
+  };
+  
   const [selectedSows, setSelectedSows] = useState([]);
 
   const renderList = (items) => {
@@ -1113,14 +1420,23 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   };
 
   const handleSubmitToBuyer = () => {
+    const log = {
+      date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      action: "Sales submitted Brief V1",
+      details: "Initial submission to buyer."
+    };
     onUpdateBrief({
       ...brief,
+      version: 1,
       internalStatus: "Submitted to Buyer",
       submittedSows: selectedSows,
-      viewingTracker: true
+      viewingTracker: true,
+      activityLog: [...(brief.activityLog || []), log]
     });
     setSubmitModalOpen(false);
   };
+
+
 
   const toggleSowSelection = (sowId) => {
     if (selectedSows.includes(sowId)) {
@@ -1131,23 +1447,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20">
-      <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-[#6D5DF6] flex items-center gap-1">
-          <ArrowUpDown className="h-4 w-4 rotate-90" /> Back to Briefs
-        </button>
-        <div className="flex gap-2">
-          {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-            <Button onClick={() => setSubmitModalOpen(true)}>Submit to Buyer</Button>
-          )}
-          {brief.internalStatus === "Submitted to Buyer" && (
-            <Button onClick={() => onUpdateBrief({ ...brief, viewingTracker: true })}>Go to Influencer Tracker</Button>
-          )}
-          <Button variant="secondary"><Copy className="h-4 w-4" /> Duplicate</Button>
-        </div>
-      </div>
-      
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Column (Main Content) */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
         <div className="mb-8 border-b border-slate-100 pb-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-[#6D5DF6] ring-1 ring-violet-100">
@@ -1167,7 +1471,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
           
           {/* Section 1 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2 text-[#6D5DF6]">1. Client & Project Details</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">1. Client & Project Details</h3><button onClick={() => handleEditSection(1)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Customer Type</dt><dd className="font-medium text-slate-900">{brief.customerType || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Sales Owner</dt><dd className="font-medium text-slate-900">{brief.salesOwner || "-"}</dd></div>
@@ -1177,11 +1481,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Objective Note</dt><dd className="font-medium text-slate-900">{brief.objectiveNote || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Gender</dt><dd className="font-medium text-slate-900">{renderList(brief.gender)}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Age</dt><dd className="font-medium text-slate-900">{brief.ageRange || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Location</dt><dd className="font-medium text-slate-900">{renderList(brief.location)}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Target Country</dt><dd className="font-medium text-slate-900">{brief.country || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Target Province</dt><dd className="font-medium text-slate-900">{brief.province || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Lifestyle</dt><dd className="font-medium text-slate-900">{brief.lifestyle || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{brief.persona || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{brief.occupation || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Campaign Period</dt><dd className="font-medium text-slate-900">{brief.campaignPeriod || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Campaign Date</dt><dd className="font-medium text-slate-900">{brief.campaignStartDate ? `${brief.campaignStartDate} to ${brief.campaignEndDate}` : "-"}</dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.otherPlatform ? `(${brief.otherPlatform})` : ""}</dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Previous Campaign / Work Ref</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.previousCampaign || "-" }}></dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Competitor Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.competitor || "-" }}></dd></div>
@@ -1191,20 +1496,22 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Section 2 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2 text-[#6D5DF6]">2. Budget Details</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">2. Budget Details</h3><button onClick={() => handleEditSection(2)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Standard Budget</dt><dd className="font-medium text-slate-900">{brief.standardBudget || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">VAT</dt><dd className="font-medium text-slate-900">{brief.includeVAT || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Boost Post Budget</dt><dd className="font-medium text-slate-900">{brief.boostPostBudget || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Add Ads Budget</dt><dd className="font-medium text-slate-900">{brief.addAdsBudget || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Pick up fee</dt><dd className="font-medium text-slate-900">{brief.pickUpFee || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Buying value</dt><dd className="font-medium text-slate-900">{brief.buyingValue || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Budget Spending (THB)</dt><dd className="font-medium text-slate-900">{brief.budgetSpending || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Budget Boost Spending</dt><dd className="font-medium text-slate-900">{brief.budgetBoostSpending || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">VAT</dt><dd className="font-medium text-slate-900">{brief.vat || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Budget Condition</dt><dd className="font-medium text-slate-900">{brief.budgetCondition || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Estimated Brand Spending</dt><dd className="font-medium text-slate-900">{brief.estimatedBrandSpending || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Budget Per Influencer</dt><dd className="font-medium text-slate-900">{brief.budgetPerInfluencer || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Expected No. of Influencers</dt><dd className="font-medium text-slate-900">{brief.expectedNumInfluencers || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Expected Reach/Impression</dt><dd className="font-medium text-slate-900">{brief.expectedReach || "-"}</dd></div>
             </div>
           </div>
 
           {/* Section 3 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2 text-[#6D5DF6]">3. Scope of Work (SOW)</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="space-y-4">
               {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
                 brief.scopeOfWorks.map((sow, idx) => (
@@ -1229,7 +1536,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Section 4 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2 text-[#6D5DF6]">4. Service Scope</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Service Scope</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Buyout</dt><dd className="font-medium text-slate-900">{brief.buyoutRequired ? `Yes (${renderList(brief.buyoutDuration)})` : "No"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Boost Post</dt><dd className="font-medium text-slate-900">{brief.boostRequired ? `Yes (${renderList(brief.boostDuration)})` : "No"}</dd></div>
@@ -1243,7 +1550,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Section 5 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2 text-[#6D5DF6]">5. Brand Support & Condition</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">5. Brand Support & Condition</h3><button onClick={() => handleEditSection(5)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="space-y-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Brand Support Selected</dt><dd className="font-medium text-slate-900">{renderList(brief.brandSupport)}</dd></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1258,6 +1565,28 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             </div>
           </div>
 
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Right Column (Actions & Timeline) */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
+              <div className="flex flex-col gap-3">
+                {(!brief.internalStatus || brief.internalStatus === "Draft") && (
+                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>Submit to Buyer</Button>
+                )}
+                <Button variant="secondary" className="w-full"><Copy className="mr-2 h-4 w-4" /> Duplicate</Button>
+              </div>
+            </div>
+
+            <ActivityTimeline logs={brief.activityLog || []} />
+          </div>
         </div>
       </div>
 
@@ -1308,74 +1637,69 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
           </div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {editModalOpen && (
+          <BriefFormModal 
+            key={brief.id} 
+            open={editModalOpen} 
+            onClose={() => setEditModalOpen(false)} 
+            onSubmit={handleEditSubmit} 
+            initialData={brief} 
+            initialStep={currentEditStep} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-// --- Planner Tracker Page Component ---
-function PlannerTrackerPage({ brief, onBack, onUpdateBrief }) {
-  const [influencers, setInfluencers] = useState(brief.influencers || []);
-  const [selectModalOpen, setSelectModalOpen] = useState(false);
-
-  const handleAddInfluencerClick = () => {
-    setSelectModalOpen(true);
-  };
-
-  const handleSelectInfluencer = (inf) => {
-    setSelectModalOpen(false);
-    
-    setInfluencers([
-      ...influencers,
-      {
-        id: Date.now(),
-        accountName: inf ? inf.username : "",
-        accountLink: inf ? `https://${inf.platform.toLowerCase()}.com/${inf.username.replace('@', '')}` : "",
-        follower: inf ? inf.followers.toString() : "",
-        channel: inf ? inf.platform : "",
-        contact: "",
-        rawCost: inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, '') : "",
-        creditTerm: "",
-        tax3: false,
-        services: {},
-        ideaTimeline: "",
-        draftTimeline: "",
-        postDate: "",
-        brandSupports: {},
-        competitorNote: "",
-        note: ""
-      }
-    ]);
-  };
+// --- Sub-components for Tracker ---
+function TrackerTable({ sow, brief, trackerData, onUpdateTracker, onAddClick }) {
+  const influencers = trackerData.influencers || [];
 
   const updateInf = (id, field, value) => {
-    setInfluencers(influencers.map(inf => inf.id === id ? { ...inf, [field]: value } : inf));
+    const updated = influencers.map(inf => inf.id === id ? { ...inf, [field]: value } : inf);
+    onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
-  const updateInfService = (id, serviceName, value) => {
-    setInfluencers(influencers.map(inf => inf.id === id ? { ...inf, services: { ...inf.services, [serviceName]: value } } : inf));
+  const updateInfServiceField = (id, serviceName, field, value) => {
+    const updated = influencers.map(inf => {
+      if (inf.id === id) {
+        let currentServiceObj = inf.services?.[serviceName];
+        if (typeof currentServiceObj === 'string' || !currentServiceObj) {
+          currentServiceObj = { 
+            status: currentServiceObj === "ไม่รับ" ? "ไม่รับ" : (currentServiceObj ? "รับ" : ""), 
+            price: currentServiceObj && currentServiceObj !== "ไม่รับ" ? currentServiceObj : "", 
+            note: "" 
+          };
+        }
+        let newValue = value;
+        if (field === "price") {
+           newValue = value.replace(/[^0-9]/g, "");
+        }
+        return {
+          ...inf,
+          services: {
+            ...inf.services,
+            [serviceName]: {
+              ...currentServiceObj,
+              [field]: newValue
+            }
+          }
+        };
+      }
+      return inf;
+    });
+    onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
   const updateInfBrandSupport = (id, supportName, value) => {
-    setInfluencers(influencers.map(inf => inf.id === id ? { ...inf, brandSupports: { ...inf.brandSupports, [supportName]: value } } : inf));
-  };
-
-  const handleSave = () => {
-    onUpdateBrief({ ...brief, influencers });
-  };
-
-  const handleBack = () => {
-    onUpdateBrief({ ...brief, influencers, viewingTracker: false });
-  };
-
-  const renderList = (items) => {
-    if (!items || items.length === 0) return "-";
-    if (typeof items === "string") return items;
-    if (Array.isArray(items)) return items.join(", ");
-    return String(items);
+    const updated = influencers.map(inf => inf.id === id ? { ...inf, brandSupports: { ...inf.brandSupports, [supportName]: value } } : inf);
+    onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
   const requiredServices = [];
-  
   const addServiceColumns = (reqKey, durationKey, labelPrefix) => {
     if (brief[reqKey]) {
       const durations = Array.isArray(brief[durationKey]) ? brief[durationKey] : (brief[durationKey] ? [brief[durationKey]] : []);
@@ -1389,68 +1713,72 @@ function PlannerTrackerPage({ brief, onBack, onUpdateBrief }) {
     }
   };
 
-  addServiceColumns('buyoutRequired', 'buyoutDuration', 'Buyout');
-  addServiceColumns('boostRequired', 'boostDuration', 'Boost Post');
-  addServiceColumns('genCodeRequired', 'genCodeDuration', 'Gen Code');
-  addServiceColumns('crossPostingRequired', 'crossPostingDuration', 'Cross Posting');
-  addServiceColumns('paidPartnershipRequired', 'paidPartnershipDuration', 'Paid Partnership');
-  addServiceColumns('addAdsRequired', 'addAdsDuration', 'Add Ads');
-  
-  // Add affiliate per user request
+  addServiceColumns("buyoutRequired", "buyoutDuration", "Buyout");
+  addServiceColumns("boostRequired", "boostDuration", "Boost Post");
+  addServiceColumns("genCodeRequired", "genCodeDuration", "Gen Code");
+  addServiceColumns("crossPostingRequired", "crossPostingDuration", "Cross Posting");
+  addServiceColumns("paidPartnershipRequired", "paidPartnershipDuration", "Paid Partnership");
+  addServiceColumns("addAdsRequired", "addAdsDuration", "Add Ads");
   requiredServices.push({ key: "Affiliate", label: "Affiliate" });
   
   const brandSupports = Array.isArray(brief.brandSupport) ? brief.brandSupport : [];
-  
-  // Check if competitor is present (not empty and not just empty html)
-  const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor !== "<p><br></p>";
+  const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor != "<p><br></p>";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20">
-      <div className="flex items-center justify-between">
-        <button onClick={handleBack} className="text-sm font-medium text-slate-500 hover:text-[#6D5DF6] flex items-center gap-1">
-          <ArrowUpDown className="h-4 w-4 rotate-90" /> Back to Brief Details
-        </button>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={handleSave}>Save Changes</Button>
-          <Button onClick={handleAddInfluencerClick}><Plus className="h-4 w-4" /> Add Influencer</Button>
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">{sow.name}</h2>
+          <p className="text-sm text-slate-500 mt-1">{sow.details || "No details provided"}</p>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700">Group:</label>
+            <select 
+              value={trackerData.group || ""} 
+              onChange={e => onUpdateTracker({ ...trackerData, group: e.target.value })}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]"
+            >
+              <option value="">Select Group</option>
+              <option value="Beauty">Beauty</option>
+              <option value="Lifestyle">Lifestyle</option>
+              <option value="Food">Food</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Tech">Tech</option>
+              <option value="MC">MC</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <Button onClick={() => onAddClick(sow.id)}><Plus className="h-4 w-4" /> Add Influencer</Button>
         </div>
       </div>
-
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
-        <div className="mb-6 border-b border-slate-100 pb-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Influencer Tracker</h1>
-          <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
-        </div>
-
-        <div className="w-full overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
+      <div className="w-full overflow-x-auto">
+        <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
             <thead className="bg-slate-50">
               <tr>
-                <th colSpan="6" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50/50">Influencer Detail</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50/50">Contact</th>
                 <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-blue-50/50">Payment</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Service (Price or "ไม่รับ")</th>}
-                <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-emerald-50/50">Timeline & Queue</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-indigo-50/50">SOW & Condition</th>
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-rose-50/50">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-orange-50/50">Competitor</th>}
-                <th className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-slate-100/50">Note</th>
+                <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-slate-100/50">Note</th>
               </tr>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 uppercase tracking-wider">
-                <th className="px-3 py-2 border-r border-slate-200">No.</th>
-                <th className="px-3 py-2 border-r border-slate-200">Account Name</th>
-                <th className="px-3 py-2 border-r border-slate-200">Account Link</th>
-                <th className="px-3 py-2 border-r border-slate-200">Follower</th>
-                <th className="px-3 py-2 border-r border-slate-200">Channel</th>
+                <th className="px-3 py-2 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-slate-50">No.</th>
+                <th className="px-5 py-4 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
                 <th className="px-3 py-2 border-r border-slate-200">Credit Term (Days)</th>
-                <th className="px-3 py-2 border-r border-slate-200">Tax 3%</th>
+                <th className="px-3 py-2 border-r border-slate-200">ชำระเงินในนาม</th>
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
-                <th className="px-3 py-2 border-r border-slate-200">Content Idea</th>
-                <th className="px-3 py-2 border-r border-slate-200">Draft Timeline</th>
-                <th className="px-3 py-2 border-r border-slate-200">Post Date</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[250px]">Condition</th>
                 {brandSupports.map(bs => <th key={bs} className="px-3 py-2 border-r border-slate-200">{bs}</th>)}
                 {hasCompetitor && <th className="px-3 py-2 border-r border-slate-200">Competitor Note</th>}
-                <th className="px-3 py-2">Additional Note</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Detail</th>
+                <th className="px-3 py-2 min-w-[200px]">Additional Note</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -1462,49 +1790,243 @@ function PlannerTrackerPage({ brief, onBack, onUpdateBrief }) {
                 </tr>
               ) : (
                 influencers.map((inf, idx) => (
-                  <tr key={inf.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-500 text-center">{idx + 1}</td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.accountName} onChange={e => updateInf(inf.id, 'accountName', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.accountLink} onChange={e => updateInf(inf.id, 'accountLink', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.follower} onChange={e => updateInf(inf.id, 'follower', e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.channel} onChange={e => updateInf(inf.id, 'channel', e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, 'contact', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="Email, Line, Tel" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, 'rawCost', e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
+                  <tr key={inf.id} className="group hover:bg-slate-50 transition">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 bg-white group-hover:bg-slate-50 w-[50px] min-w-[50px]">{idx + 1}</td>
+                    <td className="px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 bg-white group-hover:bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                      <div className="flex gap-3 text-left w-full">
+                        <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
+                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                          <input type="text" value={inf.accountName} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-transparent outline-none placeholder:text-slate-300" />
+                          <div className="flex items-center gap-2 w-full">
+                             <input type="text" value={inf.follower} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-transparent outline-none border-b border-dashed border-slate-300 placeholder:text-slate-300" />
+                             <select value={inf.channel} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-slate-100 rounded-md px-1.5 py-0.5 outline-none cursor-pointer">
+                               <option value="">Platform</option>
+                               <option value="Instagram">IG</option>
+                               <option value="TikTok">TT</option>
+                               <option value="Facebook">FB</option>
+                               <option value="YouTube">YT</option>
+                               <option value="X">X</option>
+                               <option value="Other">Other</option>
+                             </select>
+                          </div>
+                          <input type="text" value={inf.accountLink} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-transparent outline-none border-b border-dashed border-slate-300 placeholder:text-slate-300" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="Email, Line, Tel" /></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
                     <td className="px-3 py-2 border-r border-slate-100">
-                      <select value={inf.creditTerm} onChange={e => updateInf(inf.id, 'creditTerm', e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
+                      <input type="text" value={inf.creditTerm} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="วัน" />
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100">
+                      <select value={inf.paymentType || ""} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
                         <option value="">Select...</option>
-                        <option value="7">7 วัน</option>
-                        <option value="15">15 วัน</option>
-                        <option value="30">30 วัน</option>
-                        <option value="60">60 วัน</option>
-                        <option value="90">90 วัน</option>
-                        <option value="120">120 วัน</option>
-                        <option value="150">150 วัน</option>
-                        <option value="180">180 วัน</option>
+                        <option value="บุคคล">บุคคล</option>
+                        <option value="บริษัท">บริษัท</option>
                       </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center"><input type="checkbox" checked={inf.tax3} onChange={e => updateInf(inf.id, 'tax3', e.target.checked)} className="rounded border-slate-300 text-[#6D5DF6]" /></td>
-                    {requiredServices.map(srv => (
-                      <td key={srv.key} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.services?.[srv.key] || ''} onChange={e => updateInfService(inf.id, srv.key, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="Price / ไม่รับ" /></td>
-                    ))}
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="date" value={inf.ideaTimeline} onChange={e => updateInf(inf.id, 'ideaTimeline', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="date" value={inf.draftTimeline} onChange={e => updateInf(inf.id, 'draftTimeline', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="date" value={inf.postDate} onChange={e => updateInf(inf.id, 'postDate', e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
+                    {requiredServices.map(srv => {
+                      let srvData = inf.services?.[srv.key];
+                      if (typeof srvData === 'string' || !srvData) {
+                        srvData = { 
+                          status: srvData === "ไม่รับ" ? "ไม่รับ" : (srvData ? "รับ" : ""), 
+                          price: srvData && srvData !== "ไม่รับ" ? srvData : "", 
+                          note: "" 
+                        };
+                      }
+                      return (
+                        <td key={srv.key} className="px-3 py-2 border-r border-slate-100 min-w-[150px] align-top">
+                          <div className="flex flex-col gap-2">
+                            <select value={srvData.status || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "status", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                              <option value="">เลือกสถานะ</option>
+                              <option value="รับ">รับ</option>
+                              <option value="ไม่รับ">ไม่รับ</option>
+                            </select>
+                            {srvData.status === "รับ" && (
+                              <input type="text" value={srvData.price || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "price", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs" placeholder="ราคา" />
+                            )}
+                            <textarea rows={1} value={srvData.note || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "note", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px]" placeholder="Note..."></textarea>
+                          </div>
+                        </td>
+                      );
+                    })}
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.scopeOfWork || ""} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
                     {brandSupports.map(bs => (
-                      <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ''} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
+                      <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
                     ))}
                     {hasCompetitor && (
-                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={1} value={inf.competitorNote} onChange={e => updateInf(inf.id, 'competitorNote', e.target.value)} className="w-40 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-none"></textarea></td>
+                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
                     )}
-                    <td className="px-3 py-2 border-slate-100"><textarea rows={1} value={inf.note} onChange={e => updateInf(inf.id, 'note', e.target.value)} className="w-40 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-none"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+      </div>
+    </div>
+  );
+}
+
+// --- Planner Tracker Page Component ---
+function PlannerTrackerPage({ brief, onUpdateBrief }) {
+  const [sowTrackers, setSowTrackers] = useState(brief.sowTrackers || {});
+  const [selectModalOpen, setSelectModalOpen] = useState(false);
+  const [currentSowId, setCurrentSowId] = useState(null);
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [selectedSows, setSelectedSows] = useState([]);
+
+  const handleSubmitToBuyer = () => {
+    const log = {
+      date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      action: "Sales submitted Brief V1",
+      details: "Initial submission to buyer."
+    };
+    onUpdateBrief({
+      ...brief,
+      version: 1,
+      internalStatus: "Submitted to Buyer",
+      submittedSows: selectedSows,
+      activityLog: [...(brief.activityLog || []), log]
+    });
+    setSubmitModalOpen(false);
+  };
+
+  const toggleSowSelection = (sowId) => {
+    if (selectedSows.includes(sowId)) {
+      setSelectedSows(selectedSows.filter(id => id !== sowId));
+    } else {
+      setSelectedSows([...selectedSows, sowId]);
+    }
+  };
+
+  const activeSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
+    ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
+    : (brief.scopeOfWorks || []);
+
+  const handleAddInfluencerClick = (sowId) => {
+    setCurrentSowId(sowId);
+    setSelectModalOpen(true);
+  };
+
+  const handleSelectInfluencer = (inf) => {
+    setSelectModalOpen(false);
+    if (!currentSowId) return;
+
+    const currentData = sowTrackers[currentSowId] || { group: "", influencers: [] };
+    const newInfluencer = {
+      id: Date.now() + Math.random(),
+      accountName: inf ? inf.username : "",
+      accountLink: inf ? `https://${inf.platform.toLowerCase()}.com/${inf.username.replace("@", "")}` : "",
+      follower: inf ? inf.followers.toString() : "",
+      channel: inf ? inf.platform : "Other",
+      contact: "",
+      rawCost: inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, "") : "",
+      creditTerm: "",
+      paymentType: "",
+      services: {},
+      scopeOfWork: "",
+      detail: "",
+      condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง =\n2. ใส่ # สูงสุดได้กี่อัน =\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ =\n4. ระยะเวลาทำ Script/Idea  =\n5. ระยะเวลาทำ Draft = \n6. ลบโพสต์หรือไม่ = ",
+      brandSupports: {},
+      competitorNote: "",
+      note: "",
+      internalStatus: "Pitching",
+      postingStatus: "Pending",
+      clientStatus: "Pending"
+    };
+
+    const newData = {
+      ...currentData,
+      influencers: [...(currentData.influencers || []), newInfluencer]
+    };
+    setSowTrackers({
+      ...sowTrackers,
+      [currentSowId]: newData
+    });
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+            <div className="mb-6 border-b border-slate-100 pb-6">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Example List</h1>
+              <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
+            </div>
+
+            {activeSows.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
+                No Scope of Work was submitted to the Buyer.
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {activeSows.map(sow => (
+                  <TrackerTable 
+                    key={sow.id}
+                    sow={sow}
+                    brief={brief}
+                    trackerData={sowTrackers[sow.id] || { group: "", influencers: [] }}
+                    onUpdateTracker={(newData) => setSowTrackers({ ...sowTrackers, [sow.id]: newData })}
+                    onAddClick={handleAddInfluencerClick}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            <ActivityTimeline logs={brief.activityLog || []} />
+          </div>
         </div>
       </div>
-      
+
+      <AnimatePresence>
+        {submitModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="bg-[#6D5DF6] px-6 py-4 text-white flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Submit Brief to Buyer</h2>
+                <button onClick={() => setSubmitModalOpen(false)} className="text-white/80 hover:text-white"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="p-6 text-sm text-slate-600">
+                <p className="mb-4">Select the Scope of Works you want to include in this submission:</p>
+                
+                <div className="space-y-2 border border-slate-200 rounded-lg p-1">
+                  {brief.scopeOfWorks?.map(sow => (
+                    <label key={sow.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-md cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedSows.includes(sow.id)}
+                        onChange={() => toggleSowSelection(sow.id)}
+                        className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-900">{sow.platform}</p>
+                        <p className="text-xs text-slate-500">Tier: {sow.influencerTier}, Format: {sow.format}</p>
+                      </div>
+                    </label>
+                  ))}
+                  {(!brief.scopeOfWorks || brief.scopeOfWorks.length === 0) && (
+                    <div className="p-4 text-center text-slate-500">No Scope of Works available to submit.</div>
+                  )}
+                </div>
+
+                <div className="mt-8 flex justify-end gap-3">
+                  <Button variant="secondary" onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSubmitToBuyer} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>Submit Brief</Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {selectModalOpen && (
           <InfluencerSelectModal 
@@ -1519,7 +2041,7 @@ function PlannerTrackerPage({ brief, onBack, onUpdateBrief }) {
 }
 
 // --- Main Container ---
-export default function BriefFlow({ showToast }) {
+export default function BriefFlow({ showToast, listOnly = false }) {
   const [briefs, setBriefs] = useState(briefsSeed);
   const [currentBrief, setCurrentBrief] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -1529,6 +2051,12 @@ export default function BriefFlow({ showToast }) {
       id: `BRF-${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString().split('T')[0],
       internalStatus: "Draft",
+      version: 1,
+      activityLog: [{
+        date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        action: "Brief Created",
+        details: "Draft initiated by Sales."
+      }],
       ...data,
     };
     setBriefs([newBrief, ...briefs]);
@@ -1544,30 +2072,42 @@ export default function BriefFlow({ showToast }) {
 
   return (
     <>
-      <CreateBriefModal 
+      <BriefFormModal 
         open={createModalOpen} 
         onClose={() => setCreateModalOpen(false)} 
         onSubmit={handleCreate} 
       />
       
-      {!currentBrief ? (
+      {!currentBrief || listOnly ? (
         <BriefListingPage 
           briefs={briefs} 
-          onView={setCurrentBrief} 
-          onCreate={() => setCreateModalOpen(true)} 
-        />
-      ) : currentBrief.viewingTracker ? (
-        <PlannerTrackerPage
-          brief={currentBrief}
-          onBack={() => handleUpdateBrief({ ...currentBrief, viewingTracker: false })}
-          onUpdateBrief={handleUpdateBrief}
+          onView={(b) => listOnly ? null : setCurrentBrief({ ...b, activeTab: "brief" })} 
+          onCreate={() => setCreateModalOpen(true)}
+          listOnly={listOnly}
         />
       ) : (
-        <BriefDetailPage 
-          brief={currentBrief} 
-          onBack={() => setCurrentBrief(null)} 
-          onUpdateBrief={handleUpdateBrief}
-        />
+        <div className="w-full max-w-7xl mx-auto">
+          <BriefStepProgress 
+            activeTab={currentBrief.activeTab || "brief"} 
+            onTabChange={(tab) => handleUpdateBrief({ ...currentBrief, activeTab: tab })} 
+            onBack={() => setCurrentBrief(null)}
+          />
+          {currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
+            <PlannerTrackerPage
+              brief={currentBrief}
+              onBack={() => setCurrentBrief(null)}
+              onUpdateBrief={handleUpdateBrief}
+            />
+          ) : currentBrief.activeTab === "dealsheet" ? (
+            <DealsheetPage onBack={() => setCurrentBrief(null)} />
+          ) : (
+            <BriefDetailPage 
+              brief={currentBrief} 
+              onBack={() => setCurrentBrief(null)} 
+              onUpdateBrief={handleUpdateBrief}
+            />
+          )}
+        </div>
       )}
     </>
   );

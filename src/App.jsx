@@ -269,7 +269,7 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
     { label: "Example List", id: "exampleList", icon: ClipboardList, active: activeTab === "exampleList" },
-    { label: "Brief", id: "brief", icon: FileText, active: activeTab === "brief" },
+    { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
   ];
 
   return (
@@ -341,7 +341,7 @@ function AppShell({ children, activeTab, setActiveTab }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : "Brief Flow"}</div>
+              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : "Brief Flow"}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1132,6 +1132,9 @@ export default function App() {
       <Toast toast={toast} onClose={() => setToast(null)} />
       
       {activeTab === "brief" && (
+        <BriefFlow showToast={showToast} />
+      )}
+      {activeTab === "brief2" && (
         <BriefFlow showToast={showToast} />
       )}
 
