@@ -1402,12 +1402,92 @@ function BriefStepProgress({ activeTab, onTabChange, onBack }) {
 }
 
 // --- Dealsheet & Proposal Page Component ---
-function DealsheetPage() {
+function DealsheetPage({ brief, onUpdateBrief, showToast }) {
+  const activeGroups = Object.keys(brief.groupTrackers || {});
+  
+  // Create a filtered version of groupTrackers containing only "Done" influencers
+  const filteredTrackers = {};
+  let totalDoneCount = 0;
+  
+  activeGroups.forEach(grp => {
+    const tracker = brief.groupTrackers[grp];
+    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Done");
+    if (doneInfluencers.length > 0) {
+      filteredTrackers[grp] = { ...tracker, influencers: doneInfluencers };
+      totalDoneCount += doneInfluencers.length;
+    }
+  });
+
+  const filteredGroups = Object.keys(filteredTrackers);
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20">
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-900 mb-2">Dealsheet & Proposal</h2>
-        <p className="text-slate-500 text-sm">This page is under construction.</p>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+            <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dealsheet & Proposal</h1>
+                <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
+              </div>
+            </div>
+
+            {totalDoneCount === 0 ? (
+              <div className="text-center py-16 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
+                  <CheckCircle2 className="h-8 w-8 text-slate-300" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
+                <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Done" in Example List to view them here.</p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {filteredGroups.map(grp => (
+                  <TrackerTable 
+                    key={grp}
+                    groupName={grp}
+                    brief={brief}
+                    trackerData={filteredTrackers[grp]}
+                    onUpdateTracker={(updatedTracker) => {
+                      // We need to merge the updated "Done" influencers back into the full list
+                      const newTrackers = { ...brief.groupTrackers };
+                      const originalInfluencers = newTrackers[grp].influencers;
+                      
+                      // Map the updated influencers by ID
+                      const updatedMap = {};
+                      updatedTracker.influencers.forEach(inf => {
+                        updatedMap[inf.id] = inf;
+                      });
+                      
+                      // Replace the original ones with updated ones if they exist
+                      const mergedInfluencers = originalInfluencers.map(inf => {
+                        return updatedMap[inf.id] ? updatedMap[inf.id] : inf;
+                      });
+                      
+                      newTrackers[grp] = { ...newTrackers[grp], influencers: mergedInfluencers };
+                      onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+                    }}
+                    onAddClick={() => {}} // Disabled adding in dealsheet view
+                    hideAddButton={true} // We'll add this prop to TrackerTable to hide the add button
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="w-full lg:w-1/4 shrink-0">
+          <div className="sticky top-6 space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
+              <div className="flex flex-col gap-3">
+                <Button className="w-full" onClick={() => showToast && showToast("download dealsheet soon")}><Download className="mr-2 h-4 w-4" /> Export Dealsheet</Button>
+                <Button variant="secondary" className="w-full" onClick={() => showToast && showToast("download proposal soon")}><Download className="mr-2 h-4 w-4" /> Export Proposal</Button>
+              </div>
+            </div>
+            <ActivityTimeline logs={brief.activityLog || []} />
+          </div>
+        </div>
       </div>
     </motion.div>
   );
@@ -1730,7 +1810,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 }
 
 // --- Sub-components for Tracker ---
-function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false }) {
   const influencers = trackerData.influencers || [];
   const submittedSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
     ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
@@ -1826,7 +1906,9 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
           <p className="text-sm text-slate-500 mt-1">Influencers in this group</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
-          <Button onClick={() => onAddClick(groupName)}><Plus className="h-4 w-4" /> Add Influencer</Button>
+          {!hideAddButton && (
+            <Button onClick={() => onAddClick(groupName)}><Plus className="h-4 w-4" /> Add Influencer</Button>
+          )}
         </div>
       </div>
       <div className="w-full overflow-x-auto">
@@ -1869,16 +1951,16 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                 </tr>
               ) : (
                 influencers.map((inf, idx) => (
-                  <tr key={inf.id} className="group hover:bg-slate-50 transition">
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 bg-white group-hover:bg-slate-50 w-[50px] min-w-[50px]">{idx + 1}</td>
-                    <td className="px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 bg-white group-hover:bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                  <tr key={inf.id} className={`group transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] hover:bg-[#D1FAE5]" : "hover:bg-slate-50"}`}>
+                    <td className={`px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 w-[50px] min-w-[50px] transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" : "bg-white group-hover:bg-slate-50"}`}>{idx + 1}</td>
+                    <td className={`px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" : "bg-white group-hover:bg-slate-50"}`}>
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
                         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                          <input type="text" value={inf.accountName} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-transparent outline-none placeholder:text-slate-300" />
+                          <input type="text" value={inf.accountName} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-white px-1.5 py-1 rounded outline-none border border-transparent hover:border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
                           <div className="flex items-center gap-2 w-full">
-                             <input type="text" value={inf.follower} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-transparent outline-none border-b border-dashed border-slate-300 placeholder:text-slate-300" />
-                             <select value={inf.channel} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-slate-100 rounded-md px-1.5 py-0.5 outline-none cursor-pointer">
+                             <input type="text" value={inf.follower} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                             <select value={inf.channel} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]">
                                <option value="">Platform</option>
                                <option value="Instagram">IG</option>
                                <option value="TikTok">TT</option>
@@ -1888,7 +1970,7 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                                <option value="Other">Other</option>
                              </select>
                           </div>
-                          <input type="text" value={inf.accountLink} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-transparent outline-none border-b border-dashed border-slate-300 placeholder:text-slate-300" />
+                          <input type="text" value={inf.accountLink} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
                         </div>
                       </div>
                     </td>
@@ -1903,10 +1985,10 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="Email, Line, Tel" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="Email, Line, Tel" /></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
                     <td className="px-3 py-2 border-r border-slate-100">
-                      <input type="text" value={inf.creditTerm} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" placeholder="วัน" />
+                      <input type="text" value={inf.creditTerm} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100">
                       <select value={inf.paymentType || ""} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
@@ -1933,9 +2015,9 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                               <option value="ไม่รับ">ไม่รับ</option>
                             </select>
                             {srvData.status === "รับ" && (
-                              <input type="text" value={srvData.price || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "price", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs" placeholder="ราคา" />
+                              <input type="text" value={srvData.price || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "price", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white" placeholder="ราคา" />
                             )}
-                            <textarea rows={1} value={srvData.note || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "note", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px]" placeholder="Note..."></textarea>
+                            <textarea rows={1} value={srvData.note || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "note", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px] bg-white" placeholder="Note..."></textarea>
                           </div>
                         </td>
                       );
@@ -1948,15 +2030,15 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                     {brandSupports.map(bs => (
-                      <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6]" /></td>
+                      <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
                     ))}
                     {hasCompetitor && (
-                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                     )}
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
-                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
                   </tr>
                 ))
               )}
@@ -2191,7 +2273,7 @@ export default function BriefFlow({ showToast, listOnly = false }) {
               onUpdateBrief={handleUpdateBrief}
             />
           ) : currentBrief.activeTab === "dealsheet" ? (
-            <DealsheetPage onBack={() => setCurrentBrief(null)} />
+            <DealsheetPage brief={currentBrief} onUpdateBrief={handleUpdateBrief} showToast={showToast} onBack={() => setCurrentBrief(null)} />
           ) : (
             <BriefDetailPage 
               brief={currentBrief} 
