@@ -1,16 +1,26 @@
-# React + Vite
+# KOL & Brief Management Platform (Prototype)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
+This platform is a centralized workspace designed to streamline the workflow between Sales, Planners, and Buyers for Influencer Marketing campaigns. It digitizes the end-to-end process—from receiving initial client requirements to tracking and confirming Key Opinion Leaders (KOLs) / Influencers.
 
-Currently, two official plugins are available:
+## Business Value
+- **Efficiency & Speed**: Replaces fragmented communication and manual spreadsheets with a unified, digital workflow.
+- **Clear Alignment**: Ensures all teams (Sales, Strategy/Planners, and Buyers) are aligned on Campaign Objectives, Budgets, and Influencer Personas from day one.
+- **Real-Time Visibility**: Provides a centralized Dealsheet to track KOL acquisition status (e.g., Checking Availability, Negotiating, Signed).
+- **Standardized Operations**: Enforces structured inputs for Scope of Work (SOW), commercial terms, and service requirements, significantly reducing human error and missed details.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Key Features
 
-## React Compiler
+### 1. Brief Management
+- **Smart Brief Creation**: A comprehensive, step-by-step form to capture Client Details, Campaign Budgets, Target Influencer Personas, Scope of Work (SOW), and specific Service Scopes (e.g., Buyout rights, Boost Post durations).
+- **Centralized Dashboard**: A single view to monitor the progress and status of all campaign briefs across different clients and brands.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Dealsheet & Proposal Tracking
+- **Influencer Pipeline**: Monitor selected candidates mapped to their respective scopes of work.
+- **Financial Tracking**: Track expected costs, actual costs, boost fees, and margins per influencer against the project's allocated budget.
+- **Status Workflows**: Clear visual indicators of where each KOL stands in the pipeline (e.g., Checking, Accepted, Wait for Sign, Done).
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Target Audience
+- **Sales / Account Managers**: To initiate project briefs accurately based on client requirements.
+- **Planners / Strategists**: To define the target audience, outline the budget allocation, and design the campaign strategy.
+- **Buyers / Influencer Relations**: To execute the brief, source the right influencers, track negotiations, and finalize the dealsheet.
