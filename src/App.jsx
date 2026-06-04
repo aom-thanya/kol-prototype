@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BriefFlow from "./BriefFlow";
+import CustomerFlow from "./CustomerFlow";
+import { customersSeed, briefsSeed } from "./data/mockData";
 import {
   Search,
   Plus,
@@ -269,6 +271,7 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
     { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
+    { label: "Customer Management", id: "customer", icon: Users, active: activeTab === "customer" },
   ];
 
   return (
@@ -340,7 +343,7 @@ function AppShell({ children, activeTab, setActiveTab }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : "Brief Flow"}</div>
+              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "customer" ? "Customer Management" : "Brief Flow"}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1098,11 +1101,21 @@ function CreateListModal({ open, onClose, onSubmit }) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("brief");
+  const [activeTab, setActiveTab] = useState("brief2");
   const [lists, setLists] = useState(exampleListsSeed);
+  const [customers, setCustomers] = useState(customersSeed);
+  const [briefs, setBriefs] = useState(briefsSeed);
   const [currentList, setCurrentList] = useState(null);
   const [toast, setToast] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [forceOpenBrief, setForceOpenBrief] = useState(null);
+
+  const handleViewBrief = (brief) => {
+    setForceOpenBrief(brief);
+    setActiveTab("brief2");
+    // Clear forceOpenBrief after a small delay so we can navigate back and forth
+    setTimeout(() => setForceOpenBrief(null), 100);
+  };
 
   const showToast = (message) => {
     setToast(message);
@@ -1131,10 +1144,13 @@ export default function App() {
       <Toast toast={toast} onClose={() => setToast(null)} />
       
       {activeTab === "brief" && (
-        <BriefFlow showToast={showToast} />
+        <BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} forceOpenBrief={forceOpenBrief} />
       )}
       {activeTab === "brief2" && (
-        <BriefFlow showToast={showToast} />
+        <BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} forceOpenBrief={forceOpenBrief} />
+      )}
+      {activeTab === "customer" && (
+        <CustomerFlow showToast={showToast} customers={customers} setCustomers={setCustomers} briefs={briefs} onViewBrief={handleViewBrief} />
       )}
 
       {activeTab === "exampleList" && (

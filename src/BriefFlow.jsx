@@ -11,7 +11,8 @@ import {
   ArrowUpDown,
   Check,
   ArrowLeft,
-  Download
+  Download,
+  ExternalLink
 } from "lucide-react";
 
 // Helper utilities
@@ -137,179 +138,6 @@ function SimpleHtmlEditor({ value, onChange }) {
 }
 
 // Mock seed data
-const briefsSeed = [
-  {
-    id: "NRP202501020",
-    internalStatus: "Submitted to Buyer",
-    version: 1,
-    activityLog: [{
-      date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      action: "Sales submitted Brief V1",
-      details: "Initial submission to buyer."
-    }],
-    campaignName: "XXX",
-    brand: "XXX",
-    product: "เป็น Skincare ใหม่ ภายใต้แบรนด์ XXX ค่ะ โดยจะ launch สินค้าในช่วง April 2025 ค่ะ มีสินค้าทั้งหมด 5 SKU : Cleanser / ครีมกันแดด / serum ผลัดเซลล์ผิว / serum booster เพิ่มความกระจ่างใส / Moisturizer สินค้าราคาขายเริ่มที่ 390++",
-    clientStatus: "New",
-    customerType: "Non Key Account",
-    salesOwner: "พี่ bankie",
-    packageType: "Rate Card (2 D)",
-    objective: ["Awareness (Reach)", "Interest (Engagement)"],
-    objectiveNote: "เป้าหมายหลัก ต้องการให้เกิดยอดขาย เป้าหมายรอง brand awareness",
-    gender: ["Female"],
-    country: "Thailand",
-    province: "Bangkok",
-    ageRange: "25 ++ ขึ้นไป",
-    infContent: "General, Lifestyle",
-    infPersona: "สนุกสนาน, เป็นกันเอง",
-    infOccupation: "พนักงานออฟฟิศ, ฟรีแลนซ์",
-    campaignStartDate: "2025-04-01",
-    campaignEndDate: "2025-04-30",
-    platform: ["Instagram", "Tiktok", "Facebook"],
-    otherPlatform: "",
-    
-    // Budget
-    standardBudget: "300,000",
-    includeVAT: "Excl. VAT",
-    boostPostBudget: "รวมในแพคเกจ",
-    addAdsBudget: "",
-    pickUpFee: "",
-    buyingValue: "",
-    
-    // SOW
-    scopeOfWorks: [
-      {
-        id: "1",
-        contentType: "VDO content (Short Clip)",
-        followerReq: "5K or above (10 คน), 10K or above (5 คน)",
-        numInfluencers: "15",
-        platforms: ["Tiktok"],
-        name: "Tiktok Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate"
-      },
-      {
-        id: "2",
-        contentType: "VDO content (Short Clip)",
-        followerReq: "5K or above (7 คน), 10K or above (3 คน)",
-        numInfluencers: "10",
-        platforms: ["Instagram"],
-        name: "IG Reel Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate"
-      },
-      {
-        id: "3",
-        contentType: "Photo Album",
-        followerReq: "5K or above (5 คน)",
-        numInfluencers: "5",
-        platforms: ["Facebook"],
-        name: "Facebook Album Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate"
-      }
-    ],
-
-    // Service Scope
-    buyoutRequired: true,
-    buyoutDuration: ["6 เดือน", "12 เดือน", "ถาวร"],
-    boostRequired: true,
-    boostDuration: ["30 days"],
-    addAdsRequired: false,
-    addAdsDuration: [],
-    paidPartnershipRequired: false,
-    paidPartnershipDuration: [],
-    genCodeRequired: true,
-    genCodeDuration: ["30 days"],
-    tiktokShopRequired: false,
-    tiktokShopDuration: [],
-    crossPostingRequired: false,
-    crossPostingDuration: [],
-
-    // Brand Support & Condition
-    brandSupport: ["Sponsor สินค้า"],
-    influencerBuyValue: "",
-    influencerPickupLocation: "",
-    condition: `แบรนด์ สามารถเลือก Influencer ได้ 1 ครั้ง
-แบรนด์ เป็นผู้ตรวจ Draft Content  โดยสามารถตรวจได้ 2 ครั้ง
-แบรนด์ ต้อง Sponsor Product
-Buddy Review เป็นผู้ประสานงานกับ Influencer
-รบกวนเช็ค รายละเอียด Condition ของ KOL รวมถึงราคา Boost Post / Boost fee
-แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`,
-    
-    createdAt: "2025-01-09",
-  },
-  {
-    id: "NRP202501021",
-    internalStatus: "Draft",
-    version: 1,
-    campaignName: "Launch Food Festival",
-    brand: "TasteBite",
-    product: "ขนมขบเคี้ยวรสใหม่",
-    clientStatus: "New",
-    customerType: "Key Account",
-    salesOwner: "พี่ bankie",
-    packageType: ["Custom (1 D)"],
-    objective: ["Awareness (Reach)"],
-    objectiveNote: "เน้นสร้าง awareness ให้คนรู้จักรสชาติใหม่",
-    gender: ["Male", "Female"],
-    country: "Thailand",
-    province: "Bangkok",
-    ageRange: "18 - 35 ปี",
-    infContent: "Foodie, Cafe Hopper",
-    infPersona: "วัยรุ่นชอบลองของใหม่",
-    infOccupation: "นักศึกษา, พนักงานบริษัท",
-    campaignStartDate: "2025-05-01",
-    campaignEndDate: "2025-05-15",
-    platform: ["Tiktok", "Facebook"],
-    otherPlatform: "",
-    
-    // Budget
-    budgetSpending: "150,000",
-    budgetBoostSpending: "50,000",
-    vat: "Incl. VAT",
-    budgetCondition: "Net",
-    estimatedBrandSpending: "200,000",
-    budgetPerInfluencer: "10,000",
-    expectedNumInfluencers: "10",
-    expectedReach: "1M",
-    
-    // SOW
-    scopeOfWorks: [
-      {
-        id: "1",
-        contentType: "VDO content (Short Clip)",
-        followerReq: "100K or above",
-        numInfluencers: "5",
-        platforms: ["Tiktok"],
-        name: "Tiktok Challenge",
-        details: "ทำคลิปสั้นเต้นประกอบเพลง พร้อมกินขนมโชว์"
-      }
-    ],
-
-    // Service Scope
-    buyoutRequired: false,
-    buyoutDuration: [],
-    boostRequired: true,
-    boostDuration: ["15 days"],
-    addAdsRequired: false,
-    addAdsDuration: [],
-    paidPartnershipRequired: false,
-    paidPartnershipDuration: [],
-    genCodeRequired: false,
-    genCodeDuration: [],
-    tiktokShopRequired: true,
-    tiktokShopDuration: ["30 days"],
-    crossPostingRequired: false,
-    crossPostingDuration: [],
-
-    // Brand Support & Condition
-    brandSupport: ["Sponsor สินค้า"],
-    influencerBuyValue: "",
-    influencerPickupLocation: "จัดส่งให้ถึงบ้าน",
-    condition: `ต้องแปะตะกร้า Tiktok Shop
-แบรนด์ตรวจคลิปได้ 1 ครั้ง`,
-    
-    createdAt: "2025-01-10",
-  }
-];
 
 // --- Mock Influencer Data for Selection ---
 const influencerSeed = [
@@ -493,18 +321,17 @@ function InfluencerSelectModal({ open, onClose, onSelect }) {
 }
 
 // --- Form Modal Component ---
-function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1 }) {
+function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1, customers = [] }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   useEffect(() => { if (open) setCurrentStep(initialStep); }, [open, initialStep]);
   const totalSteps = 6;
 
   // Step 1: Client & Project Details
+  const [customerId, setCustomerId] = useState(initialData?.customerId || "");
   const [brand, setBrand] = useState(initialData?.brand || "");
   const [clientStatus, setClientStatus] = useState(initialData?.clientStatus || "New");
   const [customerType, setCustomerType] = useState(initialData?.customerType || "Key Account");
   const [salesOwner, setSalesOwner] = useState(initialData?.salesOwner || "พี่ bankie");
-  const [planner, setPlanner] = useState(initialData?.planner || "");
-  const [buyer, setBuyer] = useState(initialData?.buyer || "");
   const [campaignName, setCampaignName] = useState(initialData?.campaignName || "");
   const [packageType, setPackageType] = useState(initialData?.packageType ? (Array.isArray(initialData.packageType) ? initialData.packageType : [initialData.packageType]) : []);
   const [packageTypeOther, setPackageTypeOther] = useState(initialData?.packageTypeOther || "");
@@ -584,10 +411,10 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
 แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`;
   const [condition, setCondition] = useState(initialData?.condition || defaultCondition);
 
-  const handleSubmit = () => {
+  const handleSubmit = (status) => {
     onSubmit({
       // Step 1
-      brand, clientStatus, customerType, salesOwner, planner, buyer,
+      customerId, brand, clientStatus, customerType, salesOwner,
       campaignName, packageType, packageTypeOther, product, objective, objectiveNote, 
       gender, country, province, ageRange,
       campaignStartDate, campaignEndDate, platform, platformOther,
@@ -606,7 +433,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
       xWhitelistingRequired, xWhitelistingDuration,
       // Step 6
       brandSupport, influencerBuyValue, influencerPickupLocation, condition
-    });
+    }, status);
   };
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -656,7 +483,30 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                 </h3>
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Brand / Company Name *</label>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Select Customer *</label>
+                    <div className="relative">
+                      <select 
+                        value={customerId} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setCustomerId(val);
+                          const cust = customers.find(c => c.id === val);
+                          if (cust && cust.type) {
+                            setCustomerType(cust.type);
+                          }
+                        }}
+                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"
+                      >
+                        <option value="" disabled>Select Customer...</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Brand / Product Name *</label>
                     <input type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                   </div>
                   <div>
@@ -685,28 +535,10 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                       </label>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <label className="mb-1 block text-sm font-medium text-slate-700">Sales Owner *</label>
                       <input type="text" value={salesOwner} onChange={e => setSalesOwner(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Planner *</label>
-                      <Select 
-                        value={planner} 
-                        onChange={setPlanner} 
-                        options={["planner.beauty@buddyreview.co", "planner.mc@buddyreview.co", "senior.planner@buddyreview.co"]} 
-                        label="Select Planner" 
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Buyer *</label>
-                      <Select 
-                        value={buyer} 
-                        onChange={setBuyer} 
-                        options={["buyer.team@buddyreview.co", "buyer.lead@buddyreview.co", "beauty.buyer@buddyreview.co"]} 
-                        label="Select Buyer" 
-                      />
                     </div>
                   </div>
                   
@@ -1245,11 +1077,14 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                   {currentStep < totalSteps ? (
                     <Button onClick={nextStep}>Next Step</Button>
                   ) : (
-                    <Button onClick={handleSubmit} disabled={!campaignName || !brand}>Create Brief</Button>
+                    <div className="flex items-center gap-3">
+                      <Button variant="secondary" onClick={() => handleSubmit("Draft")}>Save as Draft</Button>
+                      <Button onClick={() => handleSubmit("Assign Planner/Buyer")} disabled={!campaignName || !brand}>Create Brief</Button>
+                    </div>
                   )}
                 </>
               ) : (
-                <Button onClick={handleSubmit}>Save Changes</Button>
+                <Button onClick={() => handleSubmit(initialData?.internalStatus)}>Save Changes</Button>
               )}
             </div>
           </div>
@@ -1377,7 +1212,7 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
           <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-white text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                {["Brief No", "Campaign Name", "Brand", "Client Status", "Created Date", "Management"].map((head) => (
+                {["Brief No", "Campaign Name", "Brand", "Package Type", "Client Status", "Status", "Created Date", "Management"].map((head) => (
                   <th key={head} className="px-6 py-4">
                     <span className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-700 transition">
                       {head}
@@ -1394,7 +1229,18 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
                   <td className="px-6 py-4 font-normal text-slate-800 text-sm">{b.campaignName}</td>
                   <td className="px-6 py-4 text-sm text-slate-600">{b.brand}</td>
                   <td className="px-6 py-4 text-sm text-slate-600">
+                    {Array.isArray(b.packageType) ? b.packageType.join(", ") : b.packageType || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-600">
                     <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{b.clientStatus || "New"}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    <span className={cn(
+                        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        b.internalStatus === "Draft" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-600"
+                    )}>
+                      {b.internalStatus}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">{b.createdAt}</td>
                   <td className="px-6 py-4">
@@ -1425,22 +1271,181 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
     </motion.div>
   );
 }
+// --- Assign Role Page ---
+function AssignRolePage({ brief, onUpdateBrief, onNext }) {
+  const [planner, setPlanner] = useState(brief.planner || "");
+  const [buyer, setBuyer] = useState(brief.buyer || "");
+  const [mockEmailOpen, setMockEmailOpen] = useState(false);
+
+  const hasStandard = Array.isArray(brief.packageType) 
+    ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+    : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"));
+    
+  const showBuyer = !hasStandard;
+
+  const handleAssign = () => {
+    onUpdateBrief({ ...brief, planner, buyer });
+    setMockEmailOpen(true);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20 max-w-4xl mx-auto">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900 mb-6">Assign Planner / Buyer</h2>
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-8">
+          <p className="text-sm text-slate-600 mb-1">Brief ID: <span className="font-semibold text-slate-900">{brief.id}</span></p>
+          <p className="text-sm text-slate-600 mb-1">Campaign: <span className="font-semibold text-slate-900">{brief.campaignName}</span></p>
+          <p className="text-sm text-slate-600">Package Type: <span className="font-semibold text-slate-900">{Array.isArray(brief.packageType) ? brief.packageType.join(", ") : brief.packageType}</span></p>
+        </div>
+
+        <div className="space-y-6 max-w-lg">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Assign Planner</label>
+            <Select 
+              value={planner} 
+              onChange={setPlanner} 
+              options={["planner.beauty@buddyreview.co", "planner.mc@buddyreview.co", "senior.planner@buddyreview.co"]} 
+              label="Select Planner" 
+            />
+          </div>
+          
+          {showBuyer && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Assign Buyer</label>
+              <Select 
+                value={buyer} 
+                onChange={setBuyer} 
+                options={["buyer.team@buddyreview.co", "buyer.lead@buddyreview.co", "beauty.buyer@buddyreview.co"]} 
+                label="Select Buyer" 
+              />
+            </div>
+          )}
+
+          <div className="pt-4 border-t border-slate-100">
+            <button
+              onClick={handleAssign}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#6D5DF6] px-8 text-sm font-medium text-white transition hover:bg-[#5a4add]"
+            >
+              Assign & Notify
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {mockEmailOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-xl rounded-2xl bg-white overflow-hidden shadow-xl"
+            >
+              <div className="bg-slate-100 border-b border-slate-200 px-6 py-4">
+                <div className="flex gap-2 items-center text-sm text-slate-500 mb-2">
+                  <span className="w-12">New Message</span>
+                </div>
+                <div className="flex gap-2 items-center text-sm mb-2">
+                  <span className="w-12 text-slate-500 text-right">To:</span>
+                  <span className="font-medium text-slate-900">{planner}{showBuyer && buyer ? `, ${buyer}` : ""}</span>
+                </div>
+                <div className="flex gap-2 items-center text-sm mb-2">
+                  <span className="w-12 text-slate-500 text-right">Subject:</span>
+                  <span className="font-medium text-slate-900">New Assignment: {brief.campaignName} ({brief.id})</span>
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-slate-700 mb-4 whitespace-pre-line">
+                  {`Hello,
+                  
+                  You have been assigned to a new brief:
+                  
+                  Brief ID: ${brief.id}
+                  Campaign: ${brief.campaignName}
+                  Package Type: ${Array.isArray(brief.packageType) ? brief.packageType.join(", ") : brief.packageType}
+                  
+                  Please review the details and start working on the Example List.
+                  
+                  Best,
+                  Traffic Team`}
+                </p>
+                <div className="mt-8 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setMockEmailOpen(false);
+                      onNext();
+                    }}
+                    className="rounded-lg bg-[#6D5DF6] px-6 py-2.5 text-sm font-medium text-white transition hover:bg-[#5a4add]"
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
 
 // --- Step Progress Nav ---
-function BriefStepProgress({ activeTab, onTabChange, onBack }) {
+function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
+  const hasStandard = brief && (
+    Array.isArray(brief.packageType) 
+      ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+      : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
+  );
+  
   const steps = [
     { id: "brief", label: "Brief" },
-    { id: "exampleList", label: "Example List" },
-    { id: "dealsheet", label: "Dealsheet & Proposal" }
+    { id: "assign", label: "Assign Planner/Buyer" }
   ];
+  
+  if (!hasStandard) {
+    steps.push({ id: "exampleList", label: "Example List" });
+  }
+  
+  steps.push({ id: "dealsheet", label: "Dealsheet & Proposal" });
+
   const activeIdx = steps.findIndex(s => s.id === activeTab);
+  
+  const getProgressIdx = () => {
+    if (!status || status === "Draft") return 0; // Brief
+    
+    // If planner is assigned, we're at least past step 1 (Assign)
+    if (brief.planner || brief.buyer) {
+      if (hasStandard) {
+        return 2; // Dealsheet (end)
+      } else {
+        // Rate card - Check if influencers are ready for dealsheet
+        let hasDone = false;
+        if (brief.groupTrackers) {
+          Object.values(brief.groupTrackers).forEach(t => {
+            if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
+          });
+        }
+        return hasDone ? 3 : 2; // Dealsheet : Example List
+      }
+    }
+    
+    return 1; // Assign Planner/Buyer
+  };
+  
+  const progressIdx = getProgressIdx();
   
   return (
     <div className="mb-12">
-      <div className="mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <button onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-[#6D5DF6] flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Back to Briefs
         </button>
+        {status && (
+          <div className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
+            <span className="mr-1.5 flex h-2 w-2 rounded-full bg-indigo-500"></span>
+            Status: {status}
+          </div>
+        )}
       </div>
       
       <div className="relative flex items-center justify-between w-full max-w-3xl mx-auto px-4">
@@ -1450,23 +1455,25 @@ function BriefStepProgress({ activeTab, onTabChange, onBack }) {
         {/* Connecting Line Progress */}
         <div 
           className="absolute left-10 top-5 h-1 bg-[#6D5DF6] z-0 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `calc(${(activeIdx / (steps.length - 1)) * 100}% - 2.5rem)` }}
+          style={{ width: `calc(${(progressIdx / (steps.length - 1)) * 100}% - 2.5rem)` }}
         />
         
         {steps.map((step, index) => {
-          const isActive = index === activeIdx;
-          const isPassed = index < activeIdx;
+          const isCompleted = index <= progressIdx;
+          const isViewing = index === activeIdx;
+          
           return (
             <div key={step.id} className="relative z-10 flex flex-col items-center">
               <button
                 onClick={() => onTabChange(step.id)}
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 border-[#FAFAFA] transition-all duration-300 shadow-sm
-                  ${isActive || isPassed ? 'bg-[#6D5DF6] text-white' : 'bg-slate-200 text-slate-400 hover:bg-slate-300'}`}
+                  ${isCompleted ? 'bg-[#6D5DF6] text-white' : 'bg-slate-200 text-slate-400 hover:bg-slate-300'}
+                  ${isViewing ? 'ring-2 ring-offset-2 ring-[#6D5DF6]' : ''}`}
               >
                 {index + 1}
               </button>
               <span className={`absolute top-12 text-sm font-medium whitespace-nowrap transition-colors duration-300
-                ${isActive ? 'text-[#6D5DF6]' : isPassed ? 'text-slate-800' : 'text-slate-400'}`}>
+                ${isViewing ? 'text-[#6D5DF6]' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
                 {step.label}
               </span>
             </div>
@@ -1496,6 +1503,12 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
 
   const filteredGroups = Object.keys(filteredTrackers);
 
+  const hasStandard = brief && (
+    Array.isArray(brief.packageType) 
+      ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+      : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -1508,7 +1521,26 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
               </div>
             </div>
 
-            {totalDoneCount === 0 ? (
+            {hasStandard ? (
+              <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm p-10 flex flex-col items-center justify-center text-center">
+                <div className="h-16 w-16 rounded-full bg-[#6D5DF6]/10 flex items-center justify-center mb-4">
+                  <ExternalLink className="h-8 w-8 text-[#6D5DF6]" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">Standard Dealsheet is Ready</h3>
+                <p className="text-slate-500 max-w-md mb-8">
+                  Your standard Dealsheet & Proposal is hosted on Canva. Click the button below to view it in a new tab.
+                </p>
+                <a 
+                  href="https://bubblely-standard-dealsheet.my.canva.site/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#6D5DF6] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
+                >
+                  Open Dealsheet in Canva
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              </div>
+            ) : totalDoneCount === 0 ? (
               <div className="text-center py-16 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
                 <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
                   <CheckCircle2 className="h-8 w-8 text-slate-300" />
@@ -1655,18 +1687,18 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     return String(items);
   };
 
-  const handleSubmitToBuyer = () => {
+  const handleSubmitToTraffic = () => {
     const log = {
       date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      action: "Sales submitted Brief V1",
-      details: "Initial submission to buyer."
+      action: "Brief Submitted",
+      details: "Brief created and submitted to Traffic."
     };
     onUpdateBrief({
       ...brief,
       version: 1,
-      internalStatus: "Submitted to Buyer",
+      internalStatus: "Assign Planner/Buyer",
+      activeTab: "assign",
       submittedSows: selectedSows,
-      viewingTracker: true,
       activityLog: [...(brief.activityLog || []), log]
     });
     setSubmitModalOpen(false);
@@ -1693,11 +1725,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-[#6D5DF6] ring-1 ring-violet-100">
               {brief.id} • {brief.clientStatus || "New"}
             </div>
-            {(!brief.internalStatus || brief.internalStatus === "Draft") ? (
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">Draft</span>
-            ) : (
-              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">Submitted to Buyer</span>
-            )}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 lg:text-3xl">{brief.campaignName}</h1>
           <p className="text-slate-500 mt-1">{brief.brand} • Created: {brief.createdAt}</p>
@@ -1831,7 +1858,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
               <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>Submit to Buyer</Button>
+                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>Submit to Traffic</Button>
                 )}
                 <Button variant="secondary" className="w-full"><Copy className="mr-2 h-4 w-4" /> Duplicate</Button>
               </div>
@@ -1853,7 +1880,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
             >
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Submit to Buyer</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Submit to Traffic</h2>
                 <p className="text-sm text-slate-500 mb-6">Select the Scope of Work (SOW) you want to include in this submission.</p>
 
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -1882,7 +1909,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                 <div className="mt-8 flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSubmitToBuyer} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>Submit Brief</Button>
+                  <Button onClick={handleSubmitToTraffic} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>Submit Brief</Button>
                 </div>
               </div>
             </motion.div>
@@ -1909,7 +1936,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 // --- Sub-components for Tracker ---
 function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false, readOnly = false }) {
   const influencers = trackerData.influencers || [];
-  const submittedSows = brief.internalStatus === "Submitted to Buyer" && brief.submittedSows 
+  const submittedSows = brief.internalStatus === "Submitted to Traffic" && brief.submittedSows 
     ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
     : (brief.scopeOfWorks || []);
 
@@ -2315,31 +2342,65 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
 }
 
 // --- Main Container ---
-export default function BriefFlow({ showToast, listOnly = false }) {
-  const [briefs, setBriefs] = useState(briefsSeed);
+export default function BriefFlow({ showToast, customers = [], briefs = [], setBriefs, listOnly = false, forceOpenBrief = null }) {
   const [currentBrief, setCurrentBrief] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [pendingBriefData, setPendingBriefData] = useState(null);
+  const [createdBrief, setCreatedBrief] = useState(null);
 
-  const handleCreate = (data) => {
+  useEffect(() => {
+    if (forceOpenBrief) {
+      setCurrentBrief({ ...forceOpenBrief, activeTab: "brief" });
+    }
+  }, [forceOpenBrief]);
+
+  const handleCreateClick = (data, status) => {
+    const briefData = { ...data, internalStatus: status || "Assign Planner/Buyer" };
+    if (status === "Draft") {
+      executeCreate(briefData);
+    } else {
+      setPendingBriefData(briefData);
+      setConfirmSubmitOpen(true);
+    }
+  };
+
+  const executeCreate = (data) => {
+    const isDraft = data.internalStatus === "Draft";
     const newBrief = {
       id: `BRF-${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString().split('T')[0],
-      internalStatus: "Draft",
       version: 1,
       activityLog: [{
         date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        action: "Brief Created",
-        details: "Draft initiated by Sales."
+        action: isDraft ? "Brief Saved" : "Brief Submitted",
+        details: isDraft ? "Saved as Draft." : "Brief created and submitted to Traffic."
       }],
       ...data,
     };
-    setBriefs([newBrief, ...briefs]);
+    if (setBriefs) {
+      setBriefs([newBrief, ...briefs]);
+    }
+    setCreatedBrief(newBrief);
     setCreateModalOpen(false);
-    if (showToast) showToast("Brief created successfully!");
+
+    if (isDraft) {
+      if (showToast) showToast("Draft saved successfully!");
+    } else {
+      setSuccessModalOpen(true);
+    }
+  };
+
+  const handleConfirmCreate = () => {
+    executeCreate(pendingBriefData);
+    setConfirmSubmitOpen(false);
   };
 
   const handleUpdateBrief = (updatedBrief) => {
-    setBriefs(briefs.map(b => b.id === updatedBrief.id ? updatedBrief : b));
+    if (setBriefs) {
+      setBriefs(briefs.map(b => b.id === updatedBrief.id ? updatedBrief : b));
+    }
     setCurrentBrief(updatedBrief);
     if (showToast) showToast("Brief updated successfully!");
   };
@@ -2349,8 +2410,74 @@ export default function BriefFlow({ showToast, listOnly = false }) {
       <BriefFormModal 
         open={createModalOpen} 
         onClose={() => setCreateModalOpen(false)} 
-        onSubmit={handleCreate} 
+        onSubmit={handleCreateClick}
+        customers={customers}
       />
+
+      <AnimatePresence>
+        {confirmSubmitOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            >
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-slate-900">Confirm Submission</h3>
+              <p className="mb-6 text-sm text-slate-500">
+                Are you sure you want to create this Brief? You can edit details later if needed.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmSubmitOpen(false)}
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmCreate}
+                  className="rounded-lg bg-[#6D5DF6] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#5a4add]"
+                >
+                  Yes, Create Brief
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {successModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl flex flex-col items-center"
+            >
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-slate-900">Brief Created Successfully!</h3>
+              <p className="mb-6 text-slate-500">
+                Your brief has been saved as <span className="font-semibold text-slate-700">{createdBrief?.id}</span>.
+              </p>
+              <button
+                onClick={() => {
+                  setSuccessModalOpen(false);
+                  setCurrentBrief({ ...createdBrief, activeTab: "assign" });
+                }}
+                className="w-full rounded-xl bg-[#6D5DF6] py-3 text-sm font-bold text-white transition hover:bg-[#5a4add]"
+              >
+                Proceed to Assign Role
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       
       {!currentBrief || listOnly ? (
         <BriefListingPage 
@@ -2365,8 +2492,21 @@ export default function BriefFlow({ showToast, listOnly = false }) {
             activeTab={currentBrief.activeTab || "brief"} 
             onTabChange={(tab) => handleUpdateBrief({ ...currentBrief, activeTab: tab })} 
             onBack={() => setCurrentBrief(null)}
+            status={currentBrief.internalStatus}
+            brief={currentBrief}
           />
-          {currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
+          {currentBrief.activeTab === "assign" ? (
+            <AssignRolePage
+              brief={currentBrief}
+              onUpdateBrief={handleUpdateBrief}
+              onNext={() => {
+                const hasStandard = Array.isArray(currentBrief.packageType) 
+                  ? currentBrief.packageType.some(p => p.toLowerCase().includes("standard"))
+                  : (typeof currentBrief.packageType === "string" && currentBrief.packageType.toLowerCase().includes("standard"));
+                handleUpdateBrief({ ...currentBrief, activeTab: hasStandard ? "dealsheet" : "exampleList" });
+              }}
+            />
+          ) : currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
             <PlannerTrackerPage
               brief={currentBrief}
               onBack={() => setCurrentBrief(null)}
