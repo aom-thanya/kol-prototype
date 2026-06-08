@@ -350,14 +350,17 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   
   const [platform, setPlatform] = useState(initialData?.platform || []);
   const [platformOther, setPlatformOther] = useState("");
-  
+  const [isBuddyBoostRequired, setIsBuddyBoostRequired] = useState(initialData?.isBuddyBoostRequired || false);
+  const [targetBoost, setTargetBoost] = useState(initialData?.targetBoost || []);
+  const [buddyBoostDetail, setBuddyBoostDetail] = useState(initialData?.buddyBoostDetail || "");
+  const [budgetBoostSpending, setBudgetBoostSpending] = useState(initialData?.budgetBoostSpending || "");
+
   const [previousCampaign, setPreviousCampaign] = useState(initialData?.previousCampaign || "");
   const [competitor, setCompetitor] = useState(initialData?.competitor || "");
   const [additionalInfo, setAdditionalInfo] = useState(initialData?.additionalInfo || "");
 
   // Step 2: Budget
   const [budgetSpending, setBudgetSpending] = useState(initialData?.budgetSpending || "");
-  const [budgetBoostSpending, setBudgetBoostSpending] = useState(initialData?.budgetBoostSpending || "");
   const [vat, setVat] = useState(initialData?.vat || "Incl. VAT");
   const [budgetCondition, setBudgetCondition] = useState(initialData?.budgetCondition || "");
   const [estimatedBrandSpending, setEstimatedBrandSpending] = useState(initialData?.estimatedBrandSpending || "");
@@ -424,6 +427,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       campaignName, packageType, packageTypeOther, product, objective, objectiveNote, 
       gender, country, province, ageRange,
       campaignStartDate, campaignEndDate, platform, platformOther,
+      isBuddyBoostRequired, targetBoost, buddyBoostDetail,
       previousCampaign, competitor, additionalInfo,
       // Step 2
       budgetSpending, budgetBoostSpending, vat, budgetCondition, estimatedBrandSpending, budgetPerInfluencer, expectedNumInfluencers, expectedReach,
@@ -586,7 +590,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">Objective</label>
                         <div className="flex flex-wrap items-center gap-6">
-                          {["Awareness (Reach)", "Trust (Post)", "Drive Sale"].map(obj => (
+                          {["Awareness (Reach)", "Interest (Engagement)", "Trust"].map(obj => (
                             <label key={obj} className="flex items-center gap-2 cursor-pointer">
                               <input type="checkbox" checked={objective.includes(obj)} onChange={e => {
                                 if (e.target.checked) setObjective([...objective, obj]);
@@ -680,8 +684,55 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             <input type="text" value={platformOther} onChange={e => setPlatformOther(e.target.value)} className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]" />
                           )}
                         </div>
+                        
+                        <div className="rounded-xl bg-[#6D5DF6]/5 p-4 border border-[#6D5DF6]/10 mt-4">
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Buddy Boost Required?</label>
+                          <div className="flex items-center gap-6 mb-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === true} onChange={() => setIsBuddyBoostRequired(true)} className="h-4 w-4 text-[#6D5DF6]" />
+                              <span className="text-sm text-slate-700">Yes</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === false} onChange={() => {
+                                setIsBuddyBoostRequired(false);
+                                setTargetBoost([]);
+                                setBuddyBoostDetail("");
+                                setBudgetBoostSpending("");
+                              }} className="h-4 w-4 text-[#6D5DF6]" />
+                              <span className="text-sm text-slate-700">No</span>
+                            </label>
+                          </div>
+
+                          {isBuddyBoostRequired && (
+                            <div className="space-y-4 pt-4 border-t border-[#6D5DF6]/10">
+                              <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Target Boost</label>
+                                <div className="flex flex-wrap items-center gap-4">
+                                  {["Awareness", "Engagement", "View", "Follower", "Drive sale", "Traffic"].map(target => (
+                                    <label key={target} className="flex items-center gap-2 cursor-pointer">
+                                      <input type="checkbox" checked={targetBoost.includes(target)} onChange={e => {
+                                        if (e.target.checked) setTargetBoost([...targetBoost, target]);
+                                        else setTargetBoost(targetBoost.filter(t => t !== target));
+                                      }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                      <span className="text-sm text-slate-700">{target}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="mb-1 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
+                                <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                              </div>
+                              <div>
+                                <label className="mb-1 block text-sm font-medium text-slate-700">Detail</label>
+                                <textarea rows={2} value={buddyBoostDetail} onChange={e => setBuddyBoostDetail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
+
                       <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">Previous Campaign / Work Reference</label>
                         <SimpleHtmlEditor value={previousCampaign} onChange={setPreviousCampaign} />
@@ -711,10 +762,6 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                   <div>
                     <label className="mb-1 block text-sm font-medium text-slate-700">Budget Spending</label>
                     <input type="text" value={budgetSpending} onChange={e => setBudgetSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
-                    <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">VAT</label>
@@ -1743,7 +1790,8 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       occupation: "อาชีพ", campaignStartDate: "วันที่เริ่มแคมเปญ", campaignEndDate: "วันที่สิ้นสุดแคมเปญ",
       platform: "แพลตฟอร์ม", platformOther: "แพลตฟอร์มอื่นๆ", previousCampaign: "แคมเปญที่ผ่านมา",
       competitor: "คู่แข่ง", additionalInfo: "ข้อมูลเพิ่มเติม", budgetSpending: "งบประมาณใช้จ่าย",
-      budgetBoostSpending: "งบประมาณ Boost Post", vat: "ภาษี (VAT)", budgetCondition: "เงื่อนไขงบประมาณ",
+      budgetBoostSpending: "งบประมาณ Boost Post", isBuddyBoostRequired: "ต้องการ Buddy Boost", 
+      targetBoost: "Target Boost", buddyBoostDetail: "รายละเอียด Buddy Boost", vat: "ภาษี (VAT)", budgetCondition: "เงื่อนไขงบประมาณ",
       estimatedBrandSpending: "ประเมินค่าใช้จ่ายแบรนด์", budgetPerInfluencer: "งบประมาณต่อ Influencer",
       expectedNumInfluencers: "จำนวน Influencer ที่คาดหวัง", expectedReach: "Reach ที่คาดหวัง",
       buyoutRequired: "ต้องการ Buyout", buyoutDuration: "ระยะเวลา Buyout", boostRequired: "ต้องการ Boost",
@@ -1881,6 +1929,17 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <div><dt className="text-slate-500 mb-1">Target Province</dt><dd className="font-medium text-slate-900">{brief.province || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Campaign Date</dt><dd className="font-medium text-slate-900">{brief.campaignStartDate ? `${brief.campaignStartDate} to ${brief.campaignEndDate}` : "-"}</dd></div>
               <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.platformOther ? `(${brief.platformOther})` : ""}</dd></div>
+              <div className="md:col-span-4 pt-2 border-t border-slate-100">
+                <dt className="text-slate-500 mb-1">Buddy Boost Required</dt>
+                <dd className="font-medium text-slate-900">{brief.isBuddyBoostRequired ? "Yes" : "No"}</dd>
+                {brief.isBuddyBoostRequired && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3 bg-[#6D5DF6]/5 p-3 rounded-lg border border-[#6D5DF6]/10">
+                    <div><dt className="text-slate-500 mb-1 text-xs">Target Boost</dt><dd className="font-medium text-slate-900 text-sm">{renderList(brief.targetBoost)}</dd></div>
+                    <div><dt className="text-slate-500 mb-1 text-xs">Budget Boost Spending</dt><dd className="font-medium text-slate-900 text-sm">{brief.budgetBoostSpending || "-"}</dd></div>
+                    <div className="md:col-span-3"><dt className="text-slate-500 mb-1 text-xs">Detail</dt><dd className="font-medium text-slate-900 text-sm">{brief.buddyBoostDetail || "-"}</dd></div>
+                  </div>
+                )}
+              </div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Previous Campaign / Work Ref</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.previousCampaign || "-" }}></dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Competitor Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.competitor || "-" }}></dd></div>
               <div className="md:col-span-4 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Additional Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.additionalInfo || "-" }}></dd></div>
@@ -1892,7 +1951,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">2. Budget Details</h3><button onClick={() => handleEditSection(2)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Budget Spending (THB)</dt><dd className="font-medium text-slate-900">{brief.budgetSpending || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Budget Boost Spending</dt><dd className="font-medium text-slate-900">{brief.budgetBoostSpending || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">VAT</dt><dd className="font-medium text-slate-900">{brief.vat || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Budget Condition</dt><dd className="font-medium text-slate-900">{brief.budgetCondition || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Estimated Brand Spending</dt><dd className="font-medium text-slate-900">{brief.estimatedBrandSpending || "-"}</dd></div>
