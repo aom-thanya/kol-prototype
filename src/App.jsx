@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BriefFlow from "./BriefFlow";
 import CustomerFlow from "./CustomerFlow";
+import StandardCostFlow from "./StandardCostFlow";
 import { customersSeed, briefsSeed } from "./data/mockData";
 import {
   Search,
@@ -24,6 +25,7 @@ import {
   Loader2,
   Menu,
   FileText,
+  DollarSign
 } from "lucide-react";
 
 const primary = "#6D5DF6";
@@ -272,6 +274,7 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
     { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
     { label: "Customer Management", id: "customer", icon: Users, active: activeTab === "customer" },
+    { label: "Standard Cost", id: "standardCost", icon: DollarSign, active: activeTab === "standardCost" },
   ];
 
   return (
@@ -343,7 +346,7 @@ function AppShell({ children, activeTab, setActiveTab }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "customer" ? "Customer Management" : "Brief Flow"}</div>
+              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "customer" ? "Customer Management" : activeTab === "standardCost" ? "Standard Cost" : "Brief Flow"}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1151,6 +1154,10 @@ export default function App() {
       )}
       {activeTab === "customer" && (
         <CustomerFlow showToast={showToast} customers={customers} setCustomers={setCustomers} briefs={briefs} onViewBrief={handleViewBrief} />
+      )}
+      
+      {activeTab === "standardCost" && (
+        <StandardCostFlow showToast={showToast} />
       )}
 
       {activeTab === "exampleList" && (

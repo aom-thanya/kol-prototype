@@ -324,7 +324,7 @@ function InfluencerSelectModal({ open, onClose, onSelect }) {
 function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1, customers = [] }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   useEffect(() => { if (open) setCurrentStep(initialStep); }, [open, initialStep]);
-  const totalSteps = 6;
+  const totalSteps = 4;
 
   // Step 1: Client & Project Details
   const [customerId, setCustomerId] = useState(initialData?.customerId || "");
@@ -341,7 +341,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [objectiveNote, setObjectiveNote] = useState(initialData?.objectiveNote || "");
   
   const [gender, setGender] = useState(initialData?.gender || []);
-    const [ageRange, setAgeRange] = useState(initialData?.ageRange || "");
+  const [ageRange, setAgeRange] = useState(initialData?.ageRange || []);
   const [country, setCountry] = useState(initialData?.country || "");
   const [province, setProvince] = useState(initialData?.province || "");
   
@@ -365,50 +365,56 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [expectedNumInfluencers, setExpectedNumInfluencers] = useState(initialData?.expectedNumInfluencers || "");
   const [expectedReach, setExpectedReach] = useState(initialData?.expectedReach || "");
 
-  // Step 3: Influencer Persona
-  const [infContent, setInfContent] = useState(initialData?.infContent || "");
-  const [infPersona, setInfPersona] = useState(initialData?.infPersona || "");
-  const [infOccupation, setInfOccupation] = useState(initialData?.infOccupation || "");
-
-  // Step 4: SOW
-  const [scopeOfWorks, setScopeOfWorks] = useState(initialData?.scopeOfWorks || [{ id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
-  const handleAddScope = () => setScopeOfWorks(prev => [...prev, { id: Date.now(), name: "", details: "", contentType: "", platforms: [], followerReq: "", numInfluencers: "" }]);
+  // Step 3: Scope of Work (SOW)
+  const defaultSOW = { 
+    name: "", 
+    platforms: [], 
+    contentType: [], 
+    notes: "",
+    allocation: "",
+    numInfluencers: "",
+    followerReq: "",
+    details: "",
+    persona: {
+      demographic: "",
+      location: "",
+      occupation: "",
+      persona: "",
+      contentCategory: "",
+      storyTelling: ""
+    },
+    serviceScope: {
+      buyoutRequired: false, buyoutDuration: [],
+      boostPostRequired: false, boostPostDuration: [],
+      addAdsRequired: false, addAdsDuration: [],
+      paidPartnershipRequired: false, paidPartnershipDuration: [],
+      discoveryRequired: false, discoveryDuration: [],
+      genCodeRequired: false, genCodeDuration: [],
+      tiktokShopRequired: false, tiktokShopDuration: [],
+      brandedContentRequired: false, brandedContentDuration: [],
+      whitelistingRequired: false, whitelistingDuration: []
+    }
+  };
+  const [scopeOfWorks, setScopeOfWorks] = useState(() => initialData?.scopeOfWorks || [{ ...defaultSOW, id: Date.now() }]);
+  const handleAddScope = () => setScopeOfWorks(prev => [...prev, { ...defaultSOW, id: Date.now() }]);
   const handleRemoveScope = (id) => setScopeOfWorks(prev => prev.filter(s => s.id !== id));
   const handleUpdateScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+  const handleUpdatePersona = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, persona: { ...s.persona, [field]: value } } : s));
+  const handleUpdateServiceScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, serviceScope: { ...s.serviceScope, [field]: value } } : s));
 
-  // Step 5: Service Scope
-  const [buyoutRequired, setBuyoutRequired] = useState(initialData?.buyoutRequired || false);
-  const [buyoutDuration, setBuyoutDuration] = useState(initialData?.buyoutDuration || []);
-  const [boostRequired, setBoostRequired] = useState(initialData?.boostRequired || false);
-  const [boostDuration, setBoostDuration] = useState(initialData?.boostDuration || []);
-  const [addAdsRequired, setAddAdsRequired] = useState(initialData?.addAdsRequired || false);
-  const [addAdsDuration, setAddAdsDuration] = useState(initialData?.addAdsDuration || []);
-  const [paidPartnershipRequired, setPaidPartnershipRequired] = useState(initialData?.paidPartnershipRequired || false);
-  const [paidPartnershipDuration, setPaidPartnershipDuration] = useState(initialData?.paidPartnershipDuration || []);
-  const [genCodeRequired, setGenCodeRequired] = useState(initialData?.genCodeRequired || false);
-  const [genCodeDuration, setGenCodeDuration] = useState(initialData?.genCodeDuration || []);
-  const [tiktokShopRequired, setTiktokShopRequired] = useState(initialData?.tiktokShopRequired || false);
-  const [tiktokShopDuration, setTiktokShopDuration] = useState(initialData?.tiktokShopDuration || []);
-  const [crossPostingRequired, setCrossPostingRequired] = useState(initialData?.crossPostingRequired || false);
-  const [crossPostingDuration, setCrossPostingDuration] = useState(initialData?.crossPostingDuration || []);
-  const [youtubeDiscoveryRequired, setYoutubeDiscoveryRequired] = useState(initialData?.youtubeDiscoveryRequired || false);
-  const [youtubeDiscoveryDuration, setYoutubeDiscoveryDuration] = useState(initialData?.youtubeDiscoveryDuration || []);
-  const [fbBrandedContentRequired, setFbBrandedContentRequired] = useState(initialData?.fbBrandedContentRequired || false);
-  const [fbBrandedContentDuration, setFbBrandedContentDuration] = useState(initialData?.fbBrandedContentDuration || []);
-  const [xWhitelistingRequired, setXWhitelistingRequired] = useState(initialData?.xWhitelistingRequired || false);
-  const [xWhitelistingDuration, setXWhitelistingDuration] = useState(initialData?.xWhitelistingDuration || []);
-
-  // Step 6: Brand Support & Condition
-  const [brandSupport, setBrandSupport] = useState(initialData?.brandSupport || []);
-  const [influencerBuyValue, setInfluencerBuyValue] = useState(initialData?.influencerBuyValue || "");
-  const [influencerPickupLocation, setInfluencerPickupLocation] = useState(initialData?.influencerPickupLocation || "");
+  // Step 4: Brand Support & Condition
+  const [brandSupportType, setBrandSupportType] = useState(initialData?.brandSupportType || "No Sponsor");
+  const [brandSupportTypeOther, setBrandSupportTypeOther] = useState(initialData?.brandSupportTypeOther || "");
+  const [productValue, setProductValue] = useState(initialData?.productValue || "");
+  const [productReceiveMethod, setProductReceiveMethod] = useState(initialData?.productReceiveMethod || "");
+  const [reimbursement, setReimbursement] = useState(initialData?.reimbursement || "");
+  const [requireTravel, setRequireTravel] = useState(initialData?.requireTravel || "");
+  const [onSiteType, setOnSiteType] = useState(initialData?.onSiteType || "");
+  const [eventDuration, setEventDuration] = useState(initialData?.eventDuration || "");
+  const [locationDetails, setLocationDetails] = useState(initialData?.locationDetails || "");
+  const [buddyReviewSupport, setBuddyReviewSupport] = useState(initialData?.buddyReviewSupport || "");
   
-  const defaultCondition = `แบรนด์ สามารถเลือก Influencer ได้ ... ครั้ง
-แบรนด์ เป็นผู้ตรวจ Draft Content โดยสามารถตรวจได้ ... ครั้ง
-แบรนด์ ต้อง Sponsor Product
-Buddy Review เป็นผู้ประสานงานกับ Influencer
-รบกวนเช็ค รายละเอียด Condition ของ KOL รวมถึงราคา Boost Post / Boost fee
-แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`;
+  const defaultCondition = `1. Brand สามารถเลือก Influencer ได้จำนวน ... ครั้ง\n2. Brand สามารถตรวจ Content Idea ได้ ... ครั้ง\n3. Brand สามารถตรวจ Draft ได้จำนวน ... ครั้ง (แก้ไขได้เฉพาะการตัดต่อและแคปชั่นในกรณีที่ทำออกมาไม่ตรงตาม Final Brief เท่านั้น)\n4. Buddy Review เป็นผู้ประสานงานกับ Influencer\n5. Recheck คิวและราคาอีกครั้ง ก่อน Confirm งาน\n6. ราคานำเสนอดังกล่าว สามารถใช้ได้ถึง .........`;
   const [condition, setCondition] = useState(initialData?.condition || defaultCondition);
 
   const handleSubmit = (status) => {
@@ -422,17 +428,9 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
       // Step 2
       budgetSpending, budgetBoostSpending, vat, budgetCondition, estimatedBrandSpending, budgetPerInfluencer, expectedNumInfluencers, expectedReach,
       // Step 3
-      infContent, infPersona, infOccupation,
-      // Step 4
       scopeOfWorks,
-      // Step 5
-      buyoutRequired, buyoutDuration, boostRequired, boostDuration, addAdsRequired, addAdsDuration, 
-      paidPartnershipRequired, paidPartnershipDuration, genCodeRequired, genCodeDuration, 
-      tiktokShopRequired, tiktokShopDuration, crossPostingRequired, crossPostingDuration,
-      youtubeDiscoveryRequired, youtubeDiscoveryDuration, fbBrandedContentRequired, fbBrandedContentDuration,
-      xWhitelistingRequired, xWhitelistingDuration,
-      // Step 6
-      brandSupport, influencerBuyValue, influencerPickupLocation, condition
+      // Step 4
+      brandSupportType, brandSupportTypeOther, productValue, productReceiveMethod, reimbursement, requireTravel, onSiteType, eventDuration, locationDetails, buddyReviewSupport, condition
     }, status);
   };
 
@@ -621,9 +619,19 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                               ))}
                             </div>
                           </div>
-                          <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-700">Age Range</label>
-                            <input type="text" value={ageRange} onChange={e => setAgeRange(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <div className="col-span-1 md:col-span-2">
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Age Range</label>
+                            <div className="flex flex-wrap items-center gap-4">
+                              {["13-17", "18-24", "25-34", "35-44", "45-64"].map(age => (
+                                <label key={age} className="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" checked={ageRange.includes(age)} onChange={e => {
+                                    if (e.target.checked) setAgeRange([...ageRange, age]);
+                                    else setAgeRange(ageRange.filter(i => i !== age));
+                                  }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                  <span className="text-sm text-slate-700">{age}</span>
+                                </label>
+                              ))}
+                            </div>
                           </div>
                           <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">Country</label>
@@ -649,8 +657,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                         <label className="mb-2 block text-sm font-medium text-slate-700">Platform</label>
                         <div className="grid grid-cols-2 gap-3 mb-2">
                           {[
-                            "Instagram", "Tiktok", "Facebook", "Facebook Page",
-                            "Twitter/X", "Youtube", "Buddy Boost", "Lemon8"
+                            "TikTok", "Instagram", "YouTube", "Facebook", "Facebook Page", "X", "Lemon8"
                           ].map(plat => (
                             <label key={plat} className="flex items-center gap-2 cursor-pointer">
                               <input type="checkbox" checked={platform.includes(plat)} onChange={e => {
@@ -751,30 +758,6 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">3</span> 
-                  Influencer Persona
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Content</label>
-                    <input type="text" value={infContent} onChange={e => setInfContent(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. Lifestyle, Foodie" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Persona</label>
-                    <input type="text" value={infPersona} onChange={e => setInfPersona(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. สนุกสนาน, เป็นกันเอง" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Occupation</label>
-                    <input type="text" value={infOccupation} onChange={e => setInfOccupation(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. พนักงานออฟฟิศ, ฟรีแลนซ์" />
-                  </div>
-                </div>
-              </section>
-              )}
-
-              {/* Section 4 */}
-              {currentStep === 4 && (
-              <section>
-                <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">4</span> 
                   Scope of Work (SOW)
                 </h3>
                 <div className="flex flex-col gap-4">
@@ -784,55 +767,52 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                       <Plus className="h-4 w-4" /> Add Scope
                     </Button>
                   </div>
-                  {scopeOfWorks.map((scope, index) => (
-                    <div key={scope.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 relative mb-4">
+                  {scopeOfWorks.map((scope, index) => {
+                    const getAvailableContentTypes = (plats) => {
+                      const allTypes = new Set();
+                      plats.forEach(p => {
+                        if (p === "TikTok") { allTypes.add("Video (TikTok)"); allTypes.add("Photo Carousel"); }
+                        else if (p === "Instagram") { allTypes.add("Photo"); allTypes.add("Reel"); allTypes.add("Story"); allTypes.add("Carousel"); }
+                        else if (p === "YouTube") { allTypes.add("Long Video"); allTypes.add("Short"); }
+                        else if (p === "Facebook" || p === "Facebook Page") { allTypes.add("Photo"); allTypes.add("Video"); allTypes.add("Link"); allTypes.add("Album"); }
+                        else if (p === "X") { allTypes.add("Text"); allTypes.add("Photo"); allTypes.add("Video"); }
+                        else if (p === "Lemon8") { allTypes.add("Photo"); allTypes.add("Carousel"); }
+                      });
+                      if (plats.includes("Others")) allTypes.add("Custom");
+                      return Array.from(allTypes);
+                    };
+                    const availableContentTypes = getAvailableContentTypes(scope.platforms || []);
+
+                    return (
+                    <div key={scope.id} className="rounded-xl border border-slate-200 bg-slate-50 p-6 relative mb-6">
                       {scopeOfWorks.length > 1 && (
                         <button 
                           type="button" 
                           onClick={() => handleRemoveScope(scope.id)}
-                          className="absolute top-3 right-3 text-slate-400 hover:text-rose-500"
+                          className="absolute top-4 right-4 text-slate-400 hover:text-rose-500"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-5 w-5" />
                         </button>
                       )}
-                      <h4 className="mb-4 text-sm font-semibold text-slate-900">Scope {index + 1}</h4>
-                      <div className="grid gap-4 md:grid-cols-2 mb-4">
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Content Type</label>
+                      <h4 className="mb-6 text-base font-semibold text-slate-900 border-b border-slate-200 pb-2">Scope {index + 1}</h4>
+                      
+                      <div className="grid gap-6 md:grid-cols-2 mb-8">
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Scope Name</label>
                           <input 
                             type="text" 
-                            value={scope.contentType} 
-                            onChange={e => handleUpdateScope(scope.id, 'contentType', e.target.value)} 
-                            placeholder="e.g. Photo, Video 1 min"
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
-                          <input 
-                            type="text" 
-                            value={scope.followerReq} 
-                            onChange={e => handleUpdateScope(scope.id, 'followerReq', e.target.value)} 
-                            placeholder="e.g. 5K or above"
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
-                          <input 
-                            type="number" 
-                            value={scope.numInfluencers} 
-                            onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} 
+                            value={scope.name} 
+                            onChange={e => handleUpdateScope(scope.id, 'name', e.target.value)} 
                             className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
                           />
                         </div>
                         <div className="md:col-span-2">
                           <label className="mb-2 block text-sm font-medium text-slate-700">Platform</label>
-                          <div className="grid grid-cols-2 gap-3 mb-2">
+                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             {platform.length > 0 ? platform.map(plat => (
                               <label key={plat} className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" checked={scope.platforms.includes(plat)} onChange={e => {
-                                  let newPlats = [...scope.platforms];
+                                <input type="checkbox" checked={(scope.platforms || []).includes(plat)} onChange={e => {
+                                  let newPlats = [...(scope.platforms || [])];
                                   if (e.target.checked) newPlats.push(plat);
                                   else newPlats = newPlats.filter(p => p !== plat);
                                   handleUpdateScope(scope.id, 'platforms', newPlats);
@@ -845,210 +825,338 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Scope Name / Description</label>
-                          <input 
-                            type="text" 
-                            value={scope.name} 
-                            onChange={e => handleUpdateScope(scope.id, 'name', e.target.value)} 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6] mb-3" 
-                          />
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
-                          <SimpleHtmlEditor 
-                            value={scope.details} 
-                            onChange={val => handleUpdateScope(scope.id, 'details', val)} 
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Content Type</label>
+                          <MultiSelect 
+                            value={scope.contentType || []} 
+                            onChange={val => handleUpdateScope(scope.id, 'contentType', val)} 
+                            options={availableContentTypes.length ? availableContentTypes : ["Photo", "Video", "Reel"]} 
+                            placeholder={availableContentTypes.length ? "Select content types" : "Select platform first"}
                           />
                         </div>
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Notes</label>
+                          <textarea rows={2} value={scope.notes || ""} onChange={e => handleUpdateScope(scope.id, 'notes', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Influencer Allocation (%)</label>
+                          <input type="number" value={scope.allocation || ""} onChange={e => handleUpdateScope(scope.id, 'allocation', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. 100" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
+                          <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
+                          <input type="text" value={scope.followerReq} onChange={e => handleUpdateScope(scope.id, 'followerReq', e.target.value)} placeholder="e.g. 5K or above" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
+                          <SimpleHtmlEditor value={scope.details} onChange={val => handleUpdateScope(scope.id, 'details', val)} />
+                        </div>
                       </div>
+
+                      {/* Persona under SOW */}
+                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Influencer Persona</h5>
+                      <div className="grid gap-4 md:grid-cols-2 mb-8">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Demographic</label>
+                          <Select value={scope.persona?.demographic} onChange={val => handleUpdatePersona(scope.id, 'demographic', val)} options={["Lifestyle", "Foodie", "Beauty", "Tech"]} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                          <Select value={scope.persona?.location} onChange={val => handleUpdatePersona(scope.id, 'location', val)} options={["Bangkok", "Chiang Mai", "Phuket", "Other"]} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Occupation</label>
+                          <Select value={scope.persona?.occupation} onChange={val => handleUpdatePersona(scope.id, 'occupation', val)} options={["พนักงานออฟฟิศ", "นักศึกษา", "ฟรีแลนซ์"]} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Persona</label>
+                          <Select value={scope.persona?.persona} onChange={val => handleUpdatePersona(scope.id, 'persona', val)} options={["สนุกสนาน", "เป็นกันเอง", "ทางการ"]} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Content Category</label>
+                          <Select value={scope.persona?.contentCategory} onChange={val => handleUpdatePersona(scope.id, 'contentCategory', val)} options={["Vlog", "Review", "Educational"]} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Story Telling</label>
+                          <Select value={scope.persona?.storyTelling} onChange={val => handleUpdatePersona(scope.id, 'storyTelling', val)} options={["Soft-sell", "Hard-sell", "Inspirational"]} />
+                        </div>
+                      </div>
+
+                      {/* Service Scope under SOW */}
+                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Service Scope</h5>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" checked={scope.serviceScope?.buyoutRequired} onChange={e => handleUpdateServiceScope(scope.id, 'buyoutRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                            <span className="text-sm font-medium text-slate-700">Buyout</span>
+                          </label>
+                          {scope.serviceScope?.buyoutRequired && (
+                            <div className="pl-7 mt-2">
+                              <MultiSelect value={scope.serviceScope?.buyoutDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'buyoutDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                            </div>
+                          )}
+
+                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.boostPostRequired} onChange={e => handleUpdateServiceScope(scope.id, 'boostPostRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Boost Post</span>
+                              </label>
+                              {scope.serviceScope?.boostPostRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.boostPostDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'boostPostDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"].includes(p)) && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.addAdsRequired} onChange={e => handleUpdateServiceScope(scope.id, 'addAdsRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Add Ads</span>
+                              </label>
+                              {scope.serviceScope?.addAdsRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.addAdsDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'addAdsDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.paidPartnershipRequired} onChange={e => handleUpdateServiceScope(scope.id, 'paidPartnershipRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Paid Partnership</span>
+                              </label>
+                              {scope.serviceScope?.paidPartnershipRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.paidPartnershipDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'paidPartnershipDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {scope.platforms?.includes("YouTube") && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.discoveryRequired} onChange={e => handleUpdateServiceScope(scope.id, 'discoveryRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Youtube Discovery</span>
+                              </label>
+                              {scope.serviceScope?.discoveryRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.discoveryDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'discoveryDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {scope.platforms?.includes("TikTok") && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked={scope.serviceScope?.genCodeRequired} onChange={e => handleUpdateServiceScope(scope.id, 'genCodeRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Gen Code</span>
+                              </label>
+                              {scope.serviceScope?.genCodeRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.genCodeDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'genCodeDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.tiktokShopRequired} onChange={e => handleUpdateServiceScope(scope.id, 'tiktokShopRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">TikTok Shop</span>
+                              </label>
+                              {scope.serviceScope?.tiktokShopRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.tiktokShopDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'tiktokShopDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {scope.platforms?.some(p => ["Facebook", "Facebook Page"].includes(p)) && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.brandedContentRequired} onChange={e => handleUpdateServiceScope(scope.id, 'brandedContentRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">FB Branded Content</span>
+                              </label>
+                              {scope.serviceScope?.brandedContentRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.brandedContentDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'brandedContentDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {scope.platforms?.includes("X") && (
+                            <>
+                              <label className="flex items-center gap-3 cursor-pointer pt-2">
+                                <input type="checkbox" checked={scope.serviceScope?.whitelistingRequired} onChange={e => handleUpdateServiceScope(scope.id, 'whitelistingRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">X/Twitter Whitelisting</span>
+                              </label>
+                              {scope.serviceScope?.whitelistingRequired && (
+                                <div className="pl-7 mt-2">
+                                  <MultiSelect value={scope.serviceScope?.whitelistingDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'whitelistingDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
               )}
 
-              {/* Section 5 */}
-              {currentStep === 5 && (
+              {/* Section 4 */}
+              {currentStep === 4 && (
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">5</span> 
-                  Service Scope
-                </h3>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={buyoutRequired} onChange={e => setBuyoutRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Buyout</span>
-                    </label>
-                    {buyoutRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={buyoutDuration} onChange={setBuyoutDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={boostRequired} onChange={e => setBoostRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Boost Post</span>
-                    </label>
-                    {boostRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={boostDuration} onChange={setBoostDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={addAdsRequired} onChange={e => setAddAdsRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Add Ads</span>
-                    </label>
-                    {addAdsRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={addAdsDuration} onChange={setAddAdsDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-                    
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={paidPartnershipRequired} onChange={e => setPaidPartnershipRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Paid Partnership</span>
-                    </label>
-                    {paidPartnershipRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={paidPartnershipDuration} onChange={setPaidPartnershipDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={youtubeDiscoveryRequired} onChange={e => setYoutubeDiscoveryRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Youtube Discovery</span>
-                    </label>
-                    {youtubeDiscoveryRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={youtubeDiscoveryDuration} onChange={setYoutubeDiscoveryDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={genCodeRequired} onChange={e => setGenCodeRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Gen Code</span>
-                    </label>
-                    {genCodeRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={genCodeDuration} onChange={setGenCodeDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={tiktokShopRequired} onChange={e => setTiktokShopRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">TikTok Shop</span>
-                    </label>
-                    {tiktokShopRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={tiktokShopDuration} onChange={setTiktokShopDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={crossPostingRequired} onChange={e => setCrossPostingRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">Cross Posting</span>
-                    </label>
-                    {crossPostingRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={crossPostingDuration} onChange={setCrossPostingDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={fbBrandedContentRequired} onChange={e => setFbBrandedContentRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">FB Branded Content</span>
-                    </label>
-                    {fbBrandedContentRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={fbBrandedContentDuration} onChange={setFbBrandedContentDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer pt-2">
-                      <input type="checkbox" checked={xWhitelistingRequired} onChange={e => setXWhitelistingRequired(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                      <span className="text-sm font-medium text-slate-700">X/Twitter Whitelisting</span>
-                    </label>
-                    {xWhitelistingRequired && (
-                      <div className="pl-7 mt-2">
-                        <MultiSelect value={xWhitelistingDuration} onChange={setXWhitelistingDuration} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-              )}
-
-              {/* Section 6 */}
-              {currentStep === 6 && (
-              <section>
-                <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">6</span> 
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">4</span> 
                   Brand Support & Condition
                 </h3>
                 <div className="flex flex-col gap-6">
                   <div>
-                    <label className="mb-3 block text-sm font-medium text-slate-700">Brand Support</label>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {[
-                        "Sponsor สินค้า",
-                        "No sponsor",
-                        "On Site",
-                        "Buddy Review ไปซื้อสินค้าเอง",
-                        "Influencer ไปออก event",
-                        "มีทีมงาน Buddy Review ไปดูแลที่สถานที่"
-                      ].map(support => (
-                        <label key={support} className="flex items-center gap-3 cursor-pointer">
-                          <input type="checkbox" checked={brandSupport.includes(support)} onChange={e => {
-                            if (e.target.checked) setBrandSupport([...brandSupport, support]);
-                            else setBrandSupport(brandSupport.filter(s => s !== support));
-                          }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                          <span className="text-sm text-slate-700">{support}</span>
+                    <label className="mb-3 block text-sm font-medium text-slate-700">Brand Support Type</label>
+                    <div className="flex items-center gap-6 mb-6">
+                      {["No Sponsor", "Brand Sponsor", "Other"].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="brandSupportType" value={opt} checked={brandSupportType === opt} onChange={e => setBrandSupportType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                          <span className="text-sm text-slate-700">{opt}</span>
                         </label>
                       ))}
-                      
-                      <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-3 cursor-pointer whitespace-nowrap">
-                          <input type="checkbox" checked={brandSupport.includes("Influencer ไปซื้อสินค้าเอง")} onChange={e => {
-                            if (e.target.checked) setBrandSupport([...brandSupport, "Influencer ไปซื้อสินค้าเอง"]);
-                            else setBrandSupport(brandSupport.filter(s => s !== "Influencer ไปซื้อสินค้าเอง"));
-                          }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                          <span className="text-sm text-slate-700">Influencer ไปซื้อสินค้าเอง ระบุมูลค่า(ต่อชิ้น)</span>
-                        </label>
-                        {brandSupport.includes("Influencer ไปซื้อสินค้าเอง") && (
-                          <div className="flex items-center gap-2 flex-1">
-                            <input type="text" value={influencerBuyValue} onChange={e => setInfluencerBuyValue(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                            <span className="text-sm text-slate-600">บาท</span>
+                    </div>
+                    {brandSupportType === "Other" && (
+                      <div className="mb-6">
+                        <textarea 
+                          value={brandSupportTypeOther} 
+                          onChange={e => setBrandSupportTypeOther(e.target.value)} 
+                          placeholder="โปรดระบุรายละเอียด..." 
+                          rows={2} 
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" 
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">วิธีการรับสินค้า/บริการ</label>
+                        <Select 
+                          value={productReceiveMethod} 
+                          onChange={setProductReceiveMethod} 
+                          options={
+                            brandSupportType === "No Sponsor" ? ["Buddy Review ซื้อและจัดส่งให้ Influencer", "Influencer ซื้อเอง"] :
+                            brandSupportType === "Brand Sponsor" ? ["Sponsor สินค้า (Buddy Review จัดส่ง)", "Sponsor สินค้า (แบรนด์จัดส่ง)"] :
+                            ["อื่นๆ (โปรดระบุ)"]
+                          } 
+                        />
+                      </div>
+
+                      {brandSupportType === "No Sponsor" && productReceiveMethod === "Influencer ซื้อเอง" && (
+                        <div className="pt-2">
+                          <label className="mb-4 block text-base font-bold text-slate-900">การเบิกค่าใช้จ่าย</label>
+                          <div className="flex flex-col gap-4">
+                            <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "ไม่เบิก" ? "border-pink-500 bg-pink-50/30 ring-1 ring-pink-500" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-5 items-center mt-0.5">
+                                  <input type="radio" name="reimbursement" value="ไม่เบิก" checked={reimbursement === "ไม่เบิก"} onChange={() => setReimbursement("ไม่เบิก")} className="h-5 w-5 border-slate-300 text-pink-500 focus:ring-pink-500" />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-base">ไม่เบิก</div>
+                                  <div className="text-sm text-slate-500 mt-1">ไม่มีการกันงบเบิกคืน</div>
+                                </div>
+                              </div>
+                            </label>
+
+                            <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "เบิกตามจริง" ? "border-slate-700 bg-slate-50 ring-1 ring-slate-700" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-5 items-center mt-0.5">
+                                  <input type="radio" name="reimbursement" value="เบิกตามจริง" checked={reimbursement === "เบิกตามจริง"} onChange={() => setReimbursement("เบิกตามจริง")} className="h-5 w-5 border-slate-300 text-slate-700 focus:ring-slate-700" />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-base">เบิกตามจริง</div>
+                                  <div className="text-sm text-slate-500 mt-1">Influencer นำใบเสร็จมาเบิก (Buddy Review จะต้องกันเงินไว้)</div>
+                                </div>
+                              </div>
+                            </label>
                           </div>
-                        )}
+                        </div>
+                      )}
+
+                      {brandSupportType === "No Sponsor" && (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">มูลค่าสินค้า (บาท)</label>
+                          <input type="number" value={productValue} onChange={e => setProductValue(e.target.value)} placeholder="ระบุมูลค่าสินค้า" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 mt-6">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">ต้องมีการเดินทางไปถ่ายทำ / รับบริการ หรือไม่</label>
+                        <Select 
+                          value={requireTravel} 
+                          onChange={setRequireTravel} 
+                          options={["ต้อง (มี On-site / Event / รับบริการ)", "ไม่ต้อง (Remote / ถ่ายทำที่ไหนก็ได้)"]} 
+                        />
                       </div>
 
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={brandSupport.includes("Influencer เดินทางไป สาขาที่สะดวก")} onChange={e => {
-                          if (e.target.checked) setBrandSupport([...brandSupport, "Influencer เดินทางไป สาขาที่สะดวก"]);
-                          else setBrandSupport(brandSupport.filter(s => s !== "Influencer เดินทางไป สาขาที่สะดวก"));
-                        }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Influencer เดินทางไป สาขาที่สะดวก</span>
-                      </label>
+                      {requireTravel === "ต้อง (มี On-site / Event / รับบริการ)" && (
+                        <>
+                          <div className="border-t border-slate-200 pt-6 mt-2">
+                            <h4 className="mb-4 font-semibold text-slate-900 text-sm">รายละเอียด On-Site</h4>
+                            <div className="grid gap-6 md:grid-cols-2">
+                              <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">ประเภท On-Site</label>
+                                <Select 
+                                  value={onSiteType} 
+                                  onChange={setOnSiteType} 
+                                  options={["ถ่ายทำที่สาขาที่ influencer สะดวก", "ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"]} 
+                                />
+                              </div>
 
-                      <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-3 cursor-pointer whitespace-nowrap">
-                          <input type="checkbox" checked={brandSupport.includes("Influencer ต้องเดินทางไปรับของ หรือใช้บริการ ที่")} onChange={e => {
-                            if (e.target.checked) setBrandSupport([...brandSupport, "Influencer ต้องเดินทางไปรับของ หรือใช้บริการ ที่"]);
-                            else setBrandSupport(brandSupport.filter(s => s !== "Influencer ต้องเดินทางไปรับของ หรือใช้บริการ ที่"));
-                          }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                          <span className="text-sm text-slate-700">Influencer ต้องเดินทางไปรับของ หรือใช้บริการ ที่</span>
-                        </label>
-                        {brandSupport.includes("Influencer ต้องเดินทางไปรับของ หรือใช้บริการ ที่") && (
-                          <input type="text" value={influencerPickupLocation} onChange={e => setInfluencerPickupLocation(e.target.value)} className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                        )}
-                      </div>
+                              {onSiteType === "เข้าร่วม Event" && (
+                                <div>
+                                  <label className="mb-2 block text-sm font-medium text-slate-700">ระยะเวลา Event (ชั่วโมง)</label>
+                                  <input type="number" value={eventDuration} onChange={e => setEventDuration(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                                </div>
+                              )}
+
+                              <div className="md:col-span-2">
+                                <label className="mb-2 block text-sm font-medium text-slate-700">รายละเอียดสถานที่</label>
+                                <textarea rows={2} value={locationDetails} onChange={e => setLocationDetails(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
+                              </div>
+
+                              <div className="md:col-span-2">
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Buddy Review Support (มีทีมดูแลหน้างาน)</label>
+                                <div className="flex items-center gap-6">
+                                  {["Yes", "No"].map(opt => (
+                                    <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                                      <input type="radio" name="buddySupport" value={opt} checked={buddyReviewSupport === opt} onChange={e => setBuddyReviewSupport(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                                      <span className="text-sm text-slate-700">{opt}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1">ใช้สำหรับเคส Event หรือ On-Site ที่ต้องมีทีม Support</p>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-100 pt-4">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Condition (If any)</label>
+                  <div className="border-t border-slate-100 pt-6">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">Condition (Terms & Notes)</label>
                     <textarea 
                       rows={6} 
                       value={condition} 
@@ -1246,12 +1354,25 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       {!listOnly && (
-                        <button
-                          onClick={() => onView(b)}
-                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-[#6D5DF6] transition hover:bg-violet-50 hover:border-violet-200"
-                        >
-                          <Eye className="h-4 w-4" /> View Details
-                        </button>
+                        <>
+                          <button
+                            onClick={() => onView(b)}
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-[#6D5DF6] transition hover:bg-violet-50 hover:border-violet-200"
+                          >
+                            <Eye className="h-4 w-4" /> View Details
+                          </button>
+                          <button
+                            onClick={() => {
+                              const url = `${window.location.origin}${window.location.pathname}?briefId=${b.id}`;
+                              navigator.clipboard.writeText(url);
+                              if (window.showToast) window.showToast("Copied Brief Link!");
+                            }}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                            title="Copy link to this brief"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -1725,6 +1846,18 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-[#6D5DF6] ring-1 ring-violet-100">
               {brief.id} • {brief.clientStatus || "New"}
             </div>
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}${window.location.pathname}?briefId=${brief.id}`;
+                navigator.clipboard.writeText(url);
+                if (window.showToast) window.showToast("Copied Brief Link!");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 transition"
+              title="Copy link to this brief"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </button>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 lg:text-3xl">{brief.campaignName}</h1>
           <p className="text-slate-500 mt-1">{brief.brand} • Created: {brief.createdAt}</p>
@@ -1738,21 +1871,19 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><dt className="text-slate-500 mb-1">Customer Type</dt><dd className="font-medium text-slate-900">{brief.customerType || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Sales Owner</dt><dd className="font-medium text-slate-900">{brief.salesOwner || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Planner</dt><dd className="font-medium text-slate-900">{brief.planner || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Buyer</dt><dd className="font-medium text-slate-900">{brief.buyer || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Package Type</dt><dd className="font-medium text-slate-900">{brief.packageType || "-"}</dd></div>
+              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Package Type</dt><dd className="font-medium text-slate-900">{renderList(brief.packageType)} {brief.packageTypeOther ? `(${brief.packageTypeOther})` : ""}</dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Product Details</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.product || "-" }}></dd></div>
               <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Objective</dt><dd className="font-medium text-slate-900">{renderList(brief.objective)}</dd></div>
-              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Objective Note</dt><dd className="font-medium text-slate-900">{brief.objectiveNote || "-"}</dd></div>
+              <div className="md:col-span-4"><dt className="text-slate-500 mb-1">Objective Note</dt><dd className="font-medium text-slate-900">{brief.objectiveNote || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Gender</dt><dd className="font-medium text-slate-900">{renderList(brief.gender)}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Age</dt><dd className="font-medium text-slate-900">{brief.ageRange || "-"}</dd></div>
+              <div><dt className="text-slate-500 mb-1">Target Age</dt><dd className="font-medium text-slate-900">{renderList(brief.ageRange) || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Country</dt><dd className="font-medium text-slate-900">{brief.country || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Target Province</dt><dd className="font-medium text-slate-900">{brief.province || "-"}</dd></div>
               <div><dt className="text-slate-500 mb-1">Campaign Date</dt><dd className="font-medium text-slate-900">{brief.campaignStartDate ? `${brief.campaignStartDate} to ${brief.campaignEndDate}` : "-"}</dd></div>
-              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.otherPlatform ? `(${brief.otherPlatform})` : ""}</dd></div>
+              <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.platformOther ? `(${brief.platformOther})` : ""}</dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Previous Campaign / Work Ref</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.previousCampaign || "-" }}></dd></div>
               <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Competitor Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.competitor || "-" }}></dd></div>
-              <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Additional Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.additionalInfo || "-" }}></dd></div>
+              <div className="md:col-span-4 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Additional Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.additionalInfo || "-" }}></dd></div>
             </div>
           </div>
 
@@ -1773,82 +1904,116 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Section 3 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Influencer Persona</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Demographic</dt><dd className="font-medium text-slate-900">{brief.infDemographic || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Location</dt><dd className="font-medium text-slate-900">{brief.infLocation || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{brief.infOccupation || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{brief.infPersona || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Content</dt><dd className="font-medium text-slate-900">{brief.infContent || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Story Telling</dt><dd className="font-medium text-slate-900">{brief.infStoryTelling || "-"}</dd></div>
-              <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Influencer or KOL Preference</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.infPreference || "-" }}></dd></div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="space-y-6">
+              {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
+                brief.scopeOfWorks.map((sow, idx) => (
+                  <div key={idx} className="bg-white p-5 rounded-lg border border-slate-200 text-sm shadow-sm">
+                    <div className="font-bold text-slate-900 text-base mb-4 border-b border-slate-100 pb-3">Scope {idx + 1}: {sow.name || "Unnamed"}</div>
+                    
+                    {/* SOW Details */}
+                    <div className="mb-6">
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">General SOW Info</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                        <div><dt className="text-slate-500 mb-1">Content Type</dt><dd className="font-medium text-slate-900">{renderList(sow.contentType)}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Follower Req.</dt><dd className="font-medium text-slate-900">{sow.followerReq || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Influencer Qty.</dt><dd className="font-medium text-slate-900">{sow.numInfluencers || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Allocation %</dt><dd className="font-medium text-slate-900">{sow.allocationPercent ? `${sow.allocationPercent}%` : "-"}</dd></div>
+                        <div className="md:col-span-4"><dt className="text-slate-500 mb-1">Platforms</dt><dd className="font-medium text-slate-900">{renderList(sow.platforms)}</dd></div>
+                      </div>
+                      <div><dt className="text-slate-500 mb-1">SOW Details</dt>
+                        <dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-xs mt-1" dangerouslySetInnerHTML={{ __html: sow.details || "-" }} />
+                      </div>
+                    </div>
+
+                    {/* SOW Persona */}
+                    <div className="mb-6 border-t border-slate-100 pt-4">
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Influencer Persona</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div><dt className="text-slate-500 mb-1">Demographic</dt><dd className="font-medium text-slate-900">{sow.persona?.infDemographic || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Location</dt><dd className="font-medium text-slate-900">{sow.persona?.infLocation || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{sow.persona?.infOccupation || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{sow.persona?.infPersona || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Content Category</dt><dd className="font-medium text-slate-900">{sow.persona?.infContent || "-"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Story Telling</dt><dd className="font-medium text-slate-900">{sow.persona?.infStoryTelling || "-"}</dd></div>
+                        <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Influencer Preference</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-xs mt-1" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference || "-" }}></dd></div>
+                      </div>
+                    </div>
+
+                    {/* SOW Service Scope */}
+                    <div className="border-t border-slate-100 pt-4">
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Service Scope</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><dt className="text-slate-500 mb-1">Buyout</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.buyoutRequired ? `Yes (${renderList(sow.serviceScope?.buyoutDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Boost Post</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.boostRequired ? `Yes (${renderList(sow.serviceScope?.boostDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Add Ads</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.addAdsRequired ? `Yes (${renderList(sow.serviceScope?.addAdsDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Paid Partnership</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.paidPartnershipRequired ? `Yes (${renderList(sow.serviceScope?.paidPartnershipDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Gen Code</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.genCodeRequired ? `Yes (${renderList(sow.serviceScope?.genCodeDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">TikTok Shop</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.tiktokShopRequired ? `Yes (${renderList(sow.serviceScope?.tiktokShopDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Branded Content</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.fbBrandedContentRequired ? `Yes (${renderList(sow.serviceScope?.fbBrandedContentDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">Youtube Discovery</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.youtubeDiscoveryRequired ? `Yes (${renderList(sow.serviceScope?.youtubeDiscoveryDuration)})` : "No"}</dd></div>
+                        <div><dt className="text-slate-500 mb-1">X Whitelisting</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.xWhitelistingRequired ? `Yes (${renderList(sow.serviceScope?.xWhitelistingDuration)})` : "No"}</dd></div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-slate-500 text-center py-6">No scope of work defined.</div>
+              )}
             </div>
           </div>
 
           {/* Section 4 */}
           <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="space-y-4">
-              {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
-                brief.scopeOfWorks.map((sow, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-lg border border-slate-200 text-sm">
-                    <div className="font-semibold text-slate-800 mb-3">Scope {idx + 1}: {sow.name || "Unnamed"}</div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                      <div><dt className="text-slate-500 mb-1">Content Type</dt><dd className="font-medium text-slate-900">{sow.contentType || "-"}</dd></div>
-                      <div><dt className="text-slate-500 mb-1">Follower Req.</dt><dd className="font-medium text-slate-900">{sow.followerReq || "-"}</dd></div>
-                      <div><dt className="text-slate-500 mb-1">Influencer Qty.</dt><dd className="font-medium text-slate-900">{sow.numInfluencers || "-"}</dd></div>
-                      <div><dt className="text-slate-500 mb-1">Platforms</dt><dd className="font-medium text-slate-900">{renderList(sow.platforms)}</dd></div>
-                    </div>
-                    <div><dt className="text-slate-500 mb-1">Details</dt>
-                      <dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-xs" dangerouslySetInnerHTML={{ __html: sow.details || "-" }} />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-slate-500">No scope of work defined.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Section 5 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">5. Service Scope</h3><button onClick={() => handleEditSection(5)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Buyout</dt><dd className="font-medium text-slate-900">{brief.buyoutRequired ? `Yes (${renderList(brief.buyoutDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Boost Post</dt><dd className="font-medium text-slate-900">{brief.boostRequired ? `Yes (${renderList(brief.boostDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Add Ads</dt><dd className="font-medium text-slate-900">{brief.addAdsRequired ? `Yes (${renderList(brief.addAdsDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Paid Partnership</dt><dd className="font-medium text-slate-900">{brief.paidPartnershipRequired ? `Yes (${renderList(brief.paidPartnershipDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Gen Code</dt><dd className="font-medium text-slate-900">{brief.genCodeRequired ? `Yes (${renderList(brief.genCodeDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">TikTok Shop</dt><dd className="font-medium text-slate-900">{brief.tiktokShopRequired ? `Yes (${renderList(brief.tiktokShopDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Cross Posting</dt><dd className="font-medium text-slate-900">{brief.crossPostingRequired ? `Yes (${renderList(brief.crossPostingDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Youtube Discovery</dt><dd className="font-medium text-slate-900">{brief.youtubeDiscoveryRequired ? `Yes (${renderList(brief.youtubeDiscoveryDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">FB Branded Content</dt><dd className="font-medium text-slate-900">{brief.fbBrandedContentRequired ? `Yes (${renderList(brief.fbBrandedContentDuration)})` : "No"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">X/Twitter Whitelisting</dt><dd className="font-medium text-slate-900">{brief.xWhitelistingRequired ? `Yes (${renderList(brief.xWhitelistingDuration)})` : "No"}</dd></div>
-            </div>
-          </div>
-
-          {/* Section 6 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">6. Brand Support & Condition</h3><button onClick={() => handleEditSection(6)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="space-y-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Brand Support Selected</dt><dd className="font-medium text-slate-900">{renderList(brief.brandSupport)}</dd></div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div><dt className="text-slate-500 mb-1">Influencer Buy Value</dt><dd className="font-medium text-slate-900">{brief.influencerBuyValue || "-"}</dd></div>
-                <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Pickup Location</dt><dd className="font-medium text-slate-900">{brief.influencerPickupLocation || "-"}</dd></div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Brand Support & Condition</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
+            <div className="space-y-6 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-slate-500 mb-1">Brand Support Type</dt>
+                  <dd className="font-medium text-slate-900">
+                    {brief.brandSupportType || "No Sponsor"}
+                    {brief.brandSupportType === "Other" && brief.brandSupportTypeOther && ` (${brief.brandSupportTypeOther})`}
+                  </dd>
+                </div>
+                <div><dt className="text-slate-500 mb-1">วิธีการรับสินค้า/บริการ</dt><dd className="font-medium text-slate-900">{brief.productReceiveMethod || "-"}</dd></div>
+                {brief.brandSupportType === "No Sponsor" && brief.productReceiveMethod === "Influencer ซื้อเอง" && (
+                  <div><dt className="text-slate-500 mb-1">การเบิกค่าใช้จ่าย</dt><dd className="font-medium text-slate-900">{brief.reimbursement || "-"}</dd></div>
+                )}
+                {brief.brandSupportType === "No Sponsor" && (
+                  <div><dt className="text-slate-500 mb-1">มูลค่าสินค้า (บาท)</dt><dd className="font-medium text-slate-900">{brief.productValue ? `${brief.productValue} บาท` : "-"}</dd></div>
+                )}
               </div>
-              <div><dt className="text-slate-500 mb-1">Conditions</dt>
-                <dd className="font-medium text-slate-800 bg-white border border-slate-200 p-3 rounded whitespace-pre-wrap mt-1">
+              
+              <div className="border-t border-slate-100 pt-4">
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">On-Site & Travel Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Require Travel?</dt><dd className="font-medium text-slate-900">{brief.requireTravel || "-"}</dd></div>
+                  {brief.requireTravel && brief.requireTravel.includes("ต้อง") && (
+                    <>
+                      <div><dt className="text-slate-500 mb-1">On-Site Type</dt><dd className="font-medium text-slate-900">{brief.onSiteType || "-"}</dd></div>
+                      {brief.onSiteType === "เข้าร่วม Event" && (
+                        <div><dt className="text-slate-500 mb-1">Event Duration</dt><dd className="font-medium text-slate-900">{brief.eventDuration ? `${brief.eventDuration} ชั่วโมง` : "-"}</dd></div>
+                      )}
+                      <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Buddy Review Support Required?</dt><dd className="font-medium text-slate-900">{brief.buddyReviewSupport || "No"}</dd></div>
+                      <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Location Details</dt><dd className="font-medium text-slate-900 whitespace-pre-wrap bg-white p-3 rounded border border-slate-200 mt-1">{brief.locationDetails || "-"}</dd></div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <dt className="text-slate-500 mb-2">Conditions (Terms & Notes)</dt>
+                <dd className="font-medium text-slate-800 bg-white border border-slate-200 p-4 rounded whitespace-pre-wrap leading-relaxed">
                   {brief.condition || "-"}
                 </dd>
               </div>
             </div>
           </div>
+        </div>
 
           </div>
 
         </div>
-
-      </div>
 
       {/* Right Column (Actions & Timeline) */}
         <div className="w-full lg:w-1/4 shrink-0">
