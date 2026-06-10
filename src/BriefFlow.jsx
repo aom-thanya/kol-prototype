@@ -410,8 +410,10 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [brandSupportTypeOther, setBrandSupportTypeOther] = useState(initialData?.brandSupportTypeOther || "");
   const [productValue, setProductValue] = useState(initialData?.productValue || "");
   const [productReceiveMethod, setProductReceiveMethod] = useState(initialData?.productReceiveMethod || "");
+  const [logisticsPerInfluencer, setLogisticsPerInfluencer] = useState(initialData?.logisticsPerInfluencer || "");
   const [reimbursement, setReimbursement] = useState(initialData?.reimbursement || "");
   const [requireTravel, setRequireTravel] = useState(initialData?.requireTravel || "");
+  const [reviewerTravelExpense, setReviewerTravelExpense] = useState(initialData?.reviewerTravelExpense || "");
   const [onSiteType, setOnSiteType] = useState(initialData?.onSiteType || "");
   const [eventDuration, setEventDuration] = useState(initialData?.eventDuration || "");
   const [locationDetails, setLocationDetails] = useState(initialData?.locationDetails || "");
@@ -434,7 +436,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       // Step 3
       scopeOfWorks,
       // Step 4
-      brandSupportType, brandSupportTypeOther, productValue, productReceiveMethod, reimbursement, requireTravel, onSiteType, eventDuration, locationDetails, buddyReviewSupport, condition
+      brandSupportType, brandSupportTypeOther, productValue, productReceiveMethod, logisticsPerInfluencer, reimbursement, requireTravel, onSiteType, eventDuration, locationDetails, buddyReviewSupport, condition, reviewerTravelExpense
     }, status);
   };
 
@@ -590,7 +592,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">Objective</label>
                         <div className="flex flex-wrap items-center gap-6">
-                          {["Awareness (Reach)", "Interest (Engagement)", "Trust"].map(obj => (
+                          {["Awareness (Reach)", "Interest (Engagement)", "Trust (Post)"].map(obj => (
                             <label key={obj} className="flex items-center gap-2 cursor-pointer">
                               <input type="checkbox" checked={objective.includes(obj)} onChange={e => {
                                 if (e.target.checked) setObjective([...objective, obj]);
@@ -1108,10 +1110,41 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         />
                       </div>
 
+                      {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(productReceiveMethod) && (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">ค่าจัดส่งต่อ Influencer</label>
+                          <input type="number" value={logisticsPerInfluencer} onChange={e => setLogisticsPerInfluencer(e.target.value)} placeholder="ระบุค่าจัดส่งต่อ Influencer" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                      )}
+
                       {brandSupportType === "No Sponsor" && productReceiveMethod === "Influencer ซื้อเอง" && (
                         <div className="pt-2">
                           <label className="mb-4 block text-base font-bold text-slate-900">การเบิกค่าใช้จ่าย</label>
                           <div className="flex flex-col gap-4">
+                            <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "กำหนดงบต่อคน" ? "border-[#6D5DF6] bg-violet-50/30 ring-1 ring-[#6D5DF6]" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-5 items-center mt-0.5">
+                                  <input type="radio" name="reimbursement" value="กำหนดงบต่อคน" checked={reimbursement === "กำหนดงบต่อคน"} onChange={() => setReimbursement("กำหนดงบต่อคน")} className="h-5 w-5 border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-base">กำหนดงบต่อคน</div>
+                                  <div className="text-sm text-slate-500 mt-1">ระบุจำนวนเงินที่แน่นอนเพื่อจำกัดงบประมาณต่อคน</div>
+                                </div>
+                              </div>
+                            </label>
+
+                            <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "เบิกตามจริง" ? "border-[#6D5DF6] bg-violet-50/30 ring-1 ring-[#6D5DF6]" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-5 items-center mt-0.5">
+                                  <input type="radio" name="reimbursement" value="เบิกตามจริง" checked={reimbursement === "เบิกตามจริง"} onChange={() => setReimbursement("เบิกตามจริง")} className="h-5 w-5 border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-base">เบิกตามจริง</div>
+                                  <div className="text-sm text-slate-500 mt-1">Influencer นำใบเสร็จมาเบิก (Buddy Review จะต้องกันเงินไว้)</div>
+                                </div>
+                              </div>
+                            </label>
+
                             <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "ไม่เบิก" ? "border-pink-500 bg-pink-50/30 ring-1 ring-pink-500" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
                               <div className="flex items-start gap-4">
                                 <div className="flex h-5 items-center mt-0.5">
@@ -1123,33 +1156,21 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </div>
                               </div>
                             </label>
-
-                            <label className={`relative flex cursor-pointer rounded-2xl border p-4 transition-colors ${reimbursement === "เบิกตามจริง" ? "border-slate-700 bg-slate-50 ring-1 ring-slate-700" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
-                              <div className="flex items-start gap-4">
-                                <div className="flex h-5 items-center mt-0.5">
-                                  <input type="radio" name="reimbursement" value="เบิกตามจริง" checked={reimbursement === "เบิกตามจริง"} onChange={() => setReimbursement("เบิกตามจริง")} className="h-5 w-5 border-slate-300 text-slate-700 focus:ring-slate-700" />
-                                </div>
-                                <div>
-                                  <div className="font-bold text-slate-900 text-base">เบิกตามจริง</div>
-                                  <div className="text-sm text-slate-500 mt-1">Influencer นำใบเสร็จมาเบิก (Buddy Review จะต้องกันเงินไว้)</div>
-                                </div>
-                              </div>
-                            </label>
                           </div>
                         </div>
                       )}
 
-                      {brandSupportType === "No Sponsor" && (
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">มูลค่าสินค้า (บาท)</label>
-                          <input type="number" value={productValue} onChange={e => setProductValue(e.target.value)} placeholder="ระบุมูลค่าสินค้า" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      {brandSupportType === "No Sponsor" && (productReceiveMethod === "Buddy Review ซื้อและจัดส่งให้ Influencer" || ["กำหนดงบต่อคน", "เบิกตามจริง"].includes(reimbursement)) && (
+                        <div className="mt-2 bg-violet-50 border border-[#6D5DF6]/20 p-4 rounded-xl">
+                          <label className="mb-2 block text-sm font-medium text-slate-700">มูลค่าสินค้า (บาท) <span className="text-xs font-normal text-[#6D5DF6] ml-2">*กรอกเพื่อสำรองงบประมาณล่วงหน้า</span></label>
+                          <input type="number" value={productValue} onChange={e => setProductValue(e.target.value)} placeholder="ระบุมูลค่าสินค้าสูงสุดที่เบิกได้" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                         </div>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 mt-6">
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">ต้องมีการเดินทางไปถ่ายทำ / รับบริการ หรือไม่</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">ต้องมีการเดินทางไปถ่ายทำ / รับสินค้าหรือบริการ หรือไม่</label>
                         <Select 
                           value={requireTravel} 
                           onChange={setRequireTravel} 
@@ -1175,6 +1196,22 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 <div>
                                   <label className="mb-2 block text-sm font-medium text-slate-700">ระยะเวลา Event (ชั่วโมง)</label>
                                   <input type="number" value={eventDuration} onChange={e => setEventDuration(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                                </div>
+                              )}
+
+                              {["ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"].includes(onSiteType) && (
+                                <div className="md:col-span-2">
+                                  <label className="mb-2 block text-sm font-medium text-slate-700">ค่าเดินทางต่อ Influencer</label>
+                                  <Select 
+                                    value={reviewerTravelExpense} 
+                                    onChange={setReviewerTravelExpense} 
+                                    options={[
+                                      "BTS < 1 KM (500 บาท)",
+                                      "BTS < 5 KM – 10 KM (1,000 บาท)",
+                                      "BTS > 10 KM (1,500 บาท)",
+                                      "กรณีนอกกรุงเทพ คิด Case by Case"
+                                    ]} 
+                                  />
                                 </div>
                               )}
 
@@ -1566,11 +1603,11 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
   );
   
   const steps = [
-    { id: "brief", label: "Brief" },
-    { id: "assign", label: "Assign Planner/Buyer" }
+    { id: "brief", label: "Brief" }
   ];
   
   if (!hasStandard) {
+    steps.push({ id: "assign", label: "Assign Planner/Buyer" });
     steps.push({ id: "exampleList", label: "Example List" });
   }
   
@@ -1581,20 +1618,22 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
   const getProgressIdx = () => {
     if (!status || status === "Draft") return 0; // Brief
     
+    if (hasStandard) {
+      // If Standard, we skip Assign Planner/Buyer and Example List
+      // So if it's not Draft, we are at Dealsheet
+      return 1; 
+    }
+
     // If planner is assigned, we're at least past step 1 (Assign)
     if (brief.planner || brief.buyer) {
-      if (hasStandard) {
-        return 2; // Dealsheet (end)
-      } else {
-        // Rate card - Check if influencers are ready for dealsheet
-        let hasDone = false;
-        if (brief.groupTrackers) {
-          Object.values(brief.groupTrackers).forEach(t => {
-            if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
-          });
-        }
-        return hasDone ? 3 : 2; // Dealsheet : Example List
+      // Rate card - Check if influencers are ready for dealsheet
+      let hasDone = false;
+      if (brief.groupTrackers) {
+        Object.values(brief.groupTrackers).forEach(t => {
+          if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
+        });
       }
+      return hasDone ? 3 : 2; // Dealsheet : Example List
     }
     
     return 1; // Assign Planner/Buyer
@@ -1805,7 +1844,10 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       xWhitelistingRequired: "ต้องการ X/Twitter Whitelisting", xWhitelistingDuration: "ระยะเวลา X/Twitter Whitelisting",
       brandSupport: "การสนับสนุนจากแบรนด์",
       influencerBuyValue: "มูลค่าที่ Influencer ซื้อได้", influencerPickupLocation: "สถานที่รับสินค้า",
-      condition: "เงื่อนไข (Condition)"
+      condition: "เงื่อนไข (Condition)", requireTravel: "ต้องการเดินทาง/รับบริการ",
+      onSiteType: "ประเภท On-Site", eventDuration: "ระยะเวลา Event", locationDetails: "รายละเอียดสถานที่",
+      buddyReviewSupport: "Buddy Review Support", reviewerTravelExpense: "ค่าเดินทางต่อ Influencer",
+      logisticsPerInfluencer: "ค่าจัดส่งต่อ Influencer"
     };
 
     const changes = [];
@@ -1856,17 +1898,21 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     return String(items);
   };
 
+  const hasStandard = Array.isArray(brief.packageType) 
+    ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+    : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"));
+
   const handleSubmitToTraffic = () => {
     const log = {
       date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      action: "Brief Submitted",
-      details: "Brief created and submitted to Traffic."
+      action: hasStandard ? "Dealsheet Created" : "Brief Submitted",
+      details: hasStandard ? "Standard Dealsheet created automatically." : "Brief created and submitted to Traffic."
     };
     onUpdateBrief({
       ...brief,
       version: 1,
-      internalStatus: "Assign Planner/Buyer",
-      activeTab: "assign",
+      internalStatus: hasStandard ? "Draft Dealsheet" : "Assign Planner/Buyer",
+      activeTab: hasStandard ? "dealsheet" : "assign",
       submittedSows: selectedSows,
       activityLog: [...(brief.activityLog || []), log]
     });
@@ -2034,6 +2080,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   </dd>
                 </div>
                 <div><dt className="text-slate-500 mb-1">วิธีการรับสินค้า/บริการ</dt><dd className="font-medium text-slate-900">{brief.productReceiveMethod || "-"}</dd></div>
+                {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(brief.productReceiveMethod) && (
+                  <div><dt className="text-slate-500 mb-1">ค่าจัดส่งต่อ Influencer</dt><dd className="font-medium text-slate-900">{brief.logisticsPerInfluencer ? `${brief.logisticsPerInfluencer} บาท` : "-"}</dd></div>
+                )}
                 {brief.brandSupportType === "No Sponsor" && brief.productReceiveMethod === "Influencer ซื้อเอง" && (
                   <div><dt className="text-slate-500 mb-1">การเบิกค่าใช้จ่าย</dt><dd className="font-medium text-slate-900">{brief.reimbursement || "-"}</dd></div>
                 )}
@@ -2051,6 +2100,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       <div><dt className="text-slate-500 mb-1">On-Site Type</dt><dd className="font-medium text-slate-900">{brief.onSiteType || "-"}</dd></div>
                       {brief.onSiteType === "เข้าร่วม Event" && (
                         <div><dt className="text-slate-500 mb-1">Event Duration</dt><dd className="font-medium text-slate-900">{brief.eventDuration ? `${brief.eventDuration} ชั่วโมง` : "-"}</dd></div>
+                      )}
+                      {["ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"].includes(brief.onSiteType) && (
+                        <div><dt className="text-slate-500 mb-1">ค่าเดินทางต่อ Influencer</dt><dd className="font-medium text-slate-900">{brief.reviewerTravelExpense || "-"}</dd></div>
                       )}
                       <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Buddy Review Support Required?</dt><dd className="font-medium text-slate-900">{brief.buddyReviewSupport || "No"}</dd></div>
                       <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Location Details</dt><dd className="font-medium text-slate-900 whitespace-pre-wrap bg-white p-3 rounded border border-slate-200 mt-1">{brief.locationDetails || "-"}</dd></div>
@@ -2081,7 +2133,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
               <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>Submit to Traffic</Button>
+                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>
+                    {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
+                  </Button>
                 )}
                 <Button variant="secondary" className="w-full"><Copy className="mr-2 h-4 w-4" /> Duplicate</Button>
               </div>
@@ -2103,7 +2157,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
             >
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Submit to Traffic</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">{hasStandard ? "Create Dealsheet" : "Submit to Traffic"}</h2>
                 <p className="text-sm text-slate-500 mb-6">Select the Scope of Work (SOW) you want to include in this submission.</p>
 
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -2132,7 +2186,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                 <div className="mt-8 flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSubmitToTraffic} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>Submit Brief</Button>
+                  <Button onClick={handleSubmitToTraffic} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>
+                    {hasStandard ? "Create Dealsheet" : "Submit Brief"}
+                  </Button>
                 </div>
               </div>
             </motion.div>
