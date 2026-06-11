@@ -8,11 +8,26 @@ import {
   CheckCircle2,
   X,
   ChevronDown,
+  ChevronUp,
   ArrowUpDown,
   Check,
   ArrowLeft,
   Download,
-  ExternalLink
+  ExternalLink,
+  Edit,
+  Calendar,
+  Users,
+  MapPin,
+  Coins,
+  TrendingUp,
+  Clock,
+  Compass,
+  FileText,
+  History,
+  Sparkles,
+  Truck,
+  Briefcase,
+  Folder
 } from "lucide-react";
 
 // Helper utilities
@@ -324,7 +339,7 @@ function InfluencerSelectModal({ open, onClose, onSelect }) {
 function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1, customers = [] }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   useEffect(() => { if (open) setCurrentStep(initialStep); }, [open, initialStep]);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   // Step 1: Client & Project Details
   const [customerId, setCustomerId] = useState(initialData?.customerId || "");
@@ -359,16 +374,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [competitor, setCompetitor] = useState(initialData?.competitor || "");
   const [additionalInfo, setAdditionalInfo] = useState(initialData?.additionalInfo || "");
 
-  // Step 2: Budget
-  const [budgetSpending, setBudgetSpending] = useState(initialData?.budgetSpending || "");
-  const [vat, setVat] = useState(initialData?.vat || "Incl. VAT");
-  const [budgetCondition, setBudgetCondition] = useState(initialData?.budgetCondition || "");
-  const [estimatedBrandSpending, setEstimatedBrandSpending] = useState(initialData?.estimatedBrandSpending || "");
-  const [budgetPerInfluencer, setBudgetPerInfluencer] = useState(initialData?.budgetPerInfluencer || "");
-  const [expectedNumInfluencers, setExpectedNumInfluencers] = useState(initialData?.expectedNumInfluencers || "");
-  const [expectedReach, setExpectedReach] = useState(initialData?.expectedReach || "");
-
-  // Step 3: Scope of Work (SOW)
+  // Step 2 & 3 Combined: Budget & SOW Options
   const defaultSOW = { 
     name: "", 
     platforms: [], 
@@ -398,12 +404,118 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       whitelistingRequired: false, whitelistingDuration: []
     }
   };
-  const [scopeOfWorks, setScopeOfWorks] = useState(() => initialData?.scopeOfWorks || [{ ...defaultSOW, id: Date.now() }]);
-  const handleAddScope = () => setScopeOfWorks(prev => [...prev, { ...defaultSOW, id: Date.now() }]);
-  const handleRemoveScope = (id) => setScopeOfWorks(prev => prev.filter(s => s.id !== id));
-  const handleUpdateScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
-  const handleUpdatePersona = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, persona: { ...s.persona, [field]: value } } : s));
-  const handleUpdateServiceScope = (id, field, value) => setScopeOfWorks(prev => prev.map(s => s.id === id ? { ...s, serviceScope: { ...s.serviceScope, [field]: value } } : s));
+
+  const [budgetOptions, setBudgetOptions] = useState(() => {
+    if (initialData?.budgetOptions && initialData.budgetOptions.length > 0) {
+      return initialData.budgetOptions;
+    }
+    // Fallback/Legacy import: convert single budget and SOW into Option 1
+    return [{
+      id: Date.now(),
+      name: "Option A",
+      budgetSpending: initialData?.budgetSpending || "",
+      vat: initialData?.vat || "Incl. VAT",
+      budgetCondition: initialData?.budgetCondition || "",
+      estimatedBrandSpending: initialData?.estimatedBrandSpending || "",
+      budgetPerInfluencer: initialData?.budgetPerInfluencer || "",
+      expectedNumInfluencers: initialData?.expectedNumInfluencers || "",
+      expectedReach: initialData?.expectedReach || "",
+      scopeOfWorks: initialData?.scopeOfWorks || [{ ...defaultSOW, id: Date.now() }]
+    }];
+  });
+
+  const [activeOptionId, setActiveOptionId] = useState(() => budgetOptions[0]?.id);
+
+  const updateActiveOption = (field, value) => {
+    setBudgetOptions(prev => prev.map(opt => opt.id === activeOptionId ? { ...opt, [field]: value } : opt));
+  };
+
+  const handleAddOption = () => {
+    const newId = Date.now();
+    const newOption = {
+      id: newId,
+      name: `Option ${String.fromCharCode(65 + budgetOptions.length)}`,
+      budgetSpending: "",
+      vat: "Incl. VAT",
+      budgetCondition: "",
+      estimatedBrandSpending: "",
+      budgetPerInfluencer: "",
+      expectedNumInfluencers: "",
+      expectedReach: "",
+      scopeOfWorks: [{ ...defaultSOW, id: Date.now() + 1 }]
+    };
+    setBudgetOptions(prev => [...prev, newOption]);
+    setActiveOptionId(newId);
+  };
+
+  const handleRemoveOption = (optId) => {
+    if (budgetOptions.length <= 1) return;
+    const remaining = budgetOptions.filter(opt => opt.id !== optId);
+    setBudgetOptions(remaining);
+    if (activeOptionId === optId) {
+      setActiveOptionId(remaining[0].id);
+    }
+  };
+
+  const handleAddScope = () => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: [...(opt.scopeOfWorks || []), { ...defaultSOW, id: Date.now() }]
+        };
+      }
+      return opt;
+    }));
+  };
+
+  const handleRemoveScope = (sowId) => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: (opt.scopeOfWorks || []).filter(s => s.id !== sowId)
+        };
+      }
+      return opt;
+    }));
+  };
+
+  const handleUpdateScope = (sowId, field, value) => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: (opt.scopeOfWorks || []).map(s => s.id === sowId ? { ...s, [field]: value } : s)
+        };
+      }
+      return opt;
+    }));
+  };
+
+  const handleUpdatePersona = (sowId, field, value) => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: (opt.scopeOfWorks || []).map(s => s.id === sowId ? { ...s, persona: { ...s.persona, [field]: value } } : s)
+        };
+      }
+      return opt;
+    }));
+  };
+
+  const handleUpdateServiceScope = (sowId, field, value) => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: (opt.scopeOfWorks || []).map(s => s.id === sowId ? { ...s, serviceScope: { ...s.serviceScope, [field]: value } } : s)
+        };
+      }
+      return opt;
+    }));
+  };
 
   // Step 4: Brand Support & Condition
   const [brandSupportType, setBrandSupportType] = useState(initialData?.brandSupportType || "No Sponsor");
@@ -423,6 +535,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const [condition, setCondition] = useState(initialData?.condition || defaultCondition);
 
   const handleSubmit = (status) => {
+    const primaryOpt = budgetOptions[0] || {};
     onSubmit({
       // Step 1
       customerId, brand, clientStatus, customerType, salesOwner,
@@ -431,11 +544,19 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       campaignStartDate, campaignEndDate, platform, platformOther,
       isBuddyBoostRequired, targetBoost, buddyBoostDetail,
       previousCampaign, competitor, additionalInfo,
-      // Step 2
-      budgetSpending, budgetBoostSpending, vat, budgetCondition, estimatedBrandSpending, budgetPerInfluencer, expectedNumInfluencers, expectedReach,
+      budgetBoostSpending,
+      // Step 2 (Legacy mapped fields)
+      budgetSpending: primaryOpt.budgetSpending || "",
+      vat: primaryOpt.vat || "Incl. VAT",
+      budgetCondition: primaryOpt.budgetCondition || "",
+      estimatedBrandSpending: primaryOpt.estimatedBrandSpending || "",
+      budgetPerInfluencer: primaryOpt.budgetPerInfluencer || "",
+      expectedNumInfluencers: primaryOpt.expectedNumInfluencers || "",
+      expectedReach: primaryOpt.expectedReach || "",
+      scopeOfWorks: primaryOpt.scopeOfWorks || [],
+      // New: budgetOptions
+      budgetOptions,
       // Step 3
-      scopeOfWorks,
-      // Step 4
       brandSupportType, brandSupportTypeOther, productValue, productReceiveMethod, logisticsPerInfluencer, reimbursement, requireTravel, onSiteType, eventDuration, locationDetails, buddyReviewSupport, condition, reviewerTravelExpense
     }, status);
   };
@@ -444,6 +565,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   if (!open) return null;
+
+  const activeOpt = budgetOptions.find(opt => opt.id === activeOptionId) || budgetOptions[0];
 
   return (
     <AnimatePresence>
@@ -755,68 +878,124 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
               {/* Section 2 */}
               {currentStep === 2 && (
-              <section>
+              <section className="flex-1 overflow-y-auto px-6 py-4">
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">2</span> 
-                  Budget
+                  Budget & SOW Options
                 </h3>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Budget Spending</label>
-                    <input type="text" value={budgetSpending} onChange={e => setBudgetSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">VAT</label>
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="vat" value="Incl. VAT" checked={vat === "Incl. VAT"} onChange={e => setVat(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Incl. VAT</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="vat" value="Excl. VAT" checked={vat === "Excl. VAT"} onChange={e => setVat(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Excl. VAT</span>
-                      </label>
+                
+                {/* Budget Options Tab Headers */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3 mb-6">
+                  {budgetOptions.map((opt, oIdx) => {
+                    const isActive = opt.id === activeOptionId;
+                    return (
+                      <div key={opt.id} className="relative flex items-center pr-3 pb-1">
+                        <button
+                          type="button"
+                          onClick={() => setActiveOptionId(opt.id)}
+                          className={cn(
+                            "px-4 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2",
+                            isActive
+                              ? "bg-[#6D5DF6] text-white shadow-sm"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          )}
+                        >
+                          <span>{opt.name || `Option ${String.fromCharCode(65 + oIdx)}`}</span>
+                        </button>
+                        {budgetOptions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveOption(opt.id);
+                            }}
+                            className={cn(
+                              "absolute top-0 right-2 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shadow-sm transition",
+                              isActive
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-slate-300 text-slate-700 hover:bg-slate-400"
+                            )}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={handleAddOption}
+                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#6D5DF6] px-3 text-xs font-semibold text-[#6D5DF6] transition hover:bg-violet-50"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Option
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                  {/* Option Name & Budget Fields */}
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-200 pb-2">Budget Details for {activeOpt.name}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-slate-700 font-semibold text-[#6D5DF6]">Option Name</label>
+                        <input
+                          type="text"
+                          value={activeOpt.name}
+                          onChange={e => updateActiveOption("name", e.target.value)}
+                          placeholder="e.g. Option A: 300K Budget"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Budget Spending</label>
+                        <input type="text" value={activeOpt.budgetSpending} onChange={e => updateActiveOption("budgetSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">VAT</label>
+                        <div className="flex items-center gap-6 py-2">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name={`vat-${activeOpt.id}`} value="Incl. VAT" checked={activeOpt.vat === "Incl. VAT"} onChange={e => updateActiveOption("vat", e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                            <span className="text-sm text-slate-700">Incl. VAT</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name={`vat-${activeOpt.id}`} value="Excl. VAT" checked={activeOpt.vat === "Excl. VAT"} onChange={e => updateActiveOption("vat", e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                            <span className="text-sm text-slate-700">Excl. VAT</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Condition</label>
+                        <input type="text" value={activeOpt.budgetCondition} onChange={e => updateActiveOption("budgetCondition", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Estimated Brand Spending</label>
+                        <input type="text" value={activeOpt.estimatedBrandSpending} onChange={e => updateActiveOption("estimatedBrandSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Budget per Influencer (If any)</label>
+                        <input type="text" value={activeOpt.budgetPerInfluencer} onChange={e => updateActiveOption("budgetPerInfluencer", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Expected Number of Influencers (If any)</label>
+                        <input type="number" value={activeOpt.expectedNumInfluencers} onChange={e => updateActiveOption("expectedNumInfluencers", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Expected Reach</label>
+                        <input type="text" value={activeOpt.expectedReach} onChange={e => updateActiveOption("expectedReach", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Condition</label>
-                    <input type="text" value={budgetCondition} onChange={e => setBudgetCondition(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Estimated Brand Spending</label>
-                    <input type="text" value={estimatedBrandSpending} onChange={e => setEstimatedBrandSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Budget per Influencer (If any)</label>
-                    <input type="text" value={budgetPerInfluencer} onChange={e => setBudgetPerInfluencer(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Expected Number of Influencers (If any)</label>
-                    <input type="number" value={expectedNumInfluencers} onChange={e => setExpectedNumInfluencers(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Expected Reach</label>
-                    <input type="text" value={expectedReach} onChange={e => setExpectedReach(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                </div>
-              </section>
-              )}
-
-              {/* Section 3 */}
-              {currentStep === 3 && (
-              <section>
-                <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">3</span> 
-                  Scope of Work (SOW)
-                </h3>
-                <div className="flex flex-col gap-4">
+                
+                  {/* SOW list nested under option */}
+                  <div className="mt-8 space-y-4 border-t border-slate-200 pt-6">
+                    <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <label className="block text-sm font-medium text-slate-700">Scope of Work Items</label>
                     <Button variant="ghost" onClick={handleAddScope} className="h-8 px-2 text-xs">
                       <Plus className="h-4 w-4" /> Add Scope
                     </Button>
                   </div>
-                  {scopeOfWorks.map((scope, index) => {
+                  {activeOpt.scopeOfWorks.map((scope, index) => {
                     const getAvailableContentTypes = (plats) => {
                       const allTypes = new Set();
                       plats.forEach(p => {
@@ -834,7 +1013,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
                     return (
                     <div key={scope.id} className="rounded-xl border border-slate-200 bg-slate-50 p-6 relative mb-6">
-                      {scopeOfWorks.length > 1 && (
+                      {activeOpt.scopeOfWorks.length > 1 && (
                         <button 
                           type="button" 
                           onClick={() => handleRemoveScope(scope.id)}
@@ -1063,14 +1242,16 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     );
                   })}
                 </div>
+                  </div>
+</div>
               </section>
               )}
 
               {/* Section 4 */}
-              {currentStep === 4 && (
+              {currentStep === 3 && (
               <section>
                 <h3 className="mb-4 text-base font-semibold text-[#6D5DF6] flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">4</span> 
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">3</span> 
                   Brand Support & Condition
                 </h3>
                 <div className="flex flex-col gap-6">
@@ -1449,6 +1630,7 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
                             onClick={() => {
                               const url = `${window.location.origin}${window.location.pathname}?briefId=${b.id}`;
                               navigator.clipboard.writeText(url);
+                              alert("คัดลอกลิงก์สำเร็จ!");
                               if (window.showToast) window.showToast("Copied Brief Link!");
                             }}
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
@@ -1716,6 +1898,18 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
       : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
   );
 
+  const hasKpi = brief && (
+    Array.isArray(brief.packageType) 
+      ? brief.packageType.some(p => {
+          if (typeof p !== "string") return false;
+          if (p === "Others") {
+            return brief.packageTypeOther && brief.packageTypeOther.toLowerCase().includes("kpi");
+          }
+          return p.toLowerCase().includes("kpi");
+        })
+      : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("kpi"))
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -1798,7 +1992,15 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
               <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
               <div className="flex flex-col gap-3">
                 <Button className="w-full" onClick={() => showToast && showToast("download dealsheet soon")}><Download className="mr-2 h-4 w-4" /> Export Dealsheet</Button>
-                <Button variant="secondary" className="w-full" onClick={() => showToast && showToast("download proposal soon")}><Download className="mr-2 h-4 w-4" /> Export Proposal</Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full" 
+                  onClick={() => showToast && showToast("download proposal soon")}
+                  disabled={!hasKpi}
+                  title={!hasKpi ? "Only package types containing 'KPI' can export proposal" : ""}
+                >
+                  <Download className="mr-2 h-4 w-4" /> Export Proposal
+                </Button>
               </div>
             </div>
             <ActivityTimeline logs={brief.activityLog || []} />
@@ -1814,6 +2016,48 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentEditStep, setCurrentEditStep] = useState(1);
+  const [activeSubTab, setActiveSubTab] = useState("overview");
+  
+  const [expandedDocs, setExpandedDocs] = useState({
+    product: true,
+    previous: false,
+    competitor: false,
+    additional: false
+  });
+
+  const toggleDoc = (key) => {
+    setExpandedDocs(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0 
+    ? brief.budgetOptions 
+    : [{
+        id: "legacy",
+        name: "Option A",
+        budgetSpending: brief.budgetSpending,
+        vat: brief.vat,
+        budgetCondition: brief.budgetCondition,
+        estimatedBrandSpending: brief.estimatedBrandSpending,
+        budgetPerInfluencer: brief.budgetPerInfluencer,
+        expectedNumInfluencers: brief.expectedNumInfluencers,
+        expectedReach: brief.expectedReach,
+        scopeOfWorks: brief.scopeOfWorks || []
+      }];
+
+  const [activeOptId, setActiveOptId] = useState(() => budgetOptions[0]?.id);
+
+  useEffect(() => {
+    if (brief.budgetOptions && brief.budgetOptions.length > 0) {
+      if (!brief.budgetOptions.some(o => o.id === activeOptId)) {
+        setActiveOptId(brief.budgetOptions[0].id);
+      }
+    } else {
+      setActiveOptId("legacy");
+    }
+  }, [brief]);
+
+  const activeOpt = budgetOptions.find(o => o.id === activeOptId) || budgetOptions[0];
+  const allSowsWithOpt = budgetOptions.flatMap((opt, oIdx) => (opt.scopeOfWorks || []).map(s => ({ ...s, optionName: opt.name || `Option ${String.fromCharCode(65 + oIdx)}` })));
   
   const handleEditSection = (step) => {
     setCurrentEditStep(step);
@@ -1898,6 +2142,13 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     return String(items);
   };
 
+  const formatCurrency = (val) => {
+    if (val === "" || val === undefined || val === null) return "-";
+    const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+    if (isNaN(num)) return val;
+    return `฿${num.toLocaleString()}`;
+  };
+
   const hasStandard = Array.isArray(brief.packageType) 
     ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
     : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"));
@@ -1919,8 +2170,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     setSubmitModalOpen(false);
   };
 
-
-
   const toggleSowSelection = (sowId) => {
     if (selectedSows.includes(sowId)) {
       setSelectedSows(selectedSows.filter(id => id !== sowId));
@@ -1929,227 +2178,857 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     }
   };
 
+  const tabs = [
+    { id: "overview", label: "Overview", icon: Folder },
+    { id: "budget", label: "Budget & SOW Options", icon: Coins, count: activeOpt.scopeOfWorks?.length },
+    { id: "logistics", label: "Support & Logistics", icon: Truck },
+    { id: "activity", label: "Activity Log", icon: History, count: brief.activityLog?.length }
+  ];
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Column (Main Content) */}
-        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
-        <div className="mb-8 border-b border-slate-100 pb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-[#6D5DF6] ring-1 ring-violet-100">
-              {brief.id} • {brief.clientStatus || "New"}
+      
+      {/* Top Breadcrumb & Back Row */}
+      <div className="flex items-center justify-between mb-4">
+        <button 
+          onClick={onBack} 
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-650 hover:text-[#6D5DF6] transition cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Briefs</span>
+        </button>
+        <div className="text-xs text-slate-400">
+          Brief ID: <span className="font-semibold text-slate-600">{brief.id}</span>
+        </div>
+      </div>
+
+      {/* Modern Gradient Header Card */}
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-6 lg:p-8 shadow-2xs mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-[#6D5DF6] ring-1 ring-violet-100/50">
+                {brief.brand || "Client Name"}
+              </span>
+              <span className={cn(
+                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border",
+                brief.clientStatus === "New" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-blue-50 text-blue-700 border-blue-100"
+              )}>
+                {brief.clientStatus || "New Client"}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200">
+                {brief.customerType || "Key Account"}
+              </span>
             </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">
+              {brief.campaignName || "Unnamed Campaign"}
+            </h1>
+            
+            {/* Timeline Progress Row */}
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-3.5">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4 text-slate-400" />
+                <span className="font-semibold text-slate-700">Period:</span>
+                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignStartDate || "-"}</span>
+                <span className="text-slate-400">to</span>
+                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignEndDate || "-"}</span>
+              </div>
+              <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-slate-400" />
+                <span className="font-semibold text-slate-700">Internal Status:</span>
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full font-bold border text-[10px] uppercase",
+                  brief.internalStatus === "Submitted to Traffic" || brief.internalStatus === "Assign Planner/Buyer"
+                    ? "bg-violet-50 text-[#6D5DF6] border-violet-100"
+                    : brief.internalStatus === "Draft Dealsheet"
+                    ? "bg-blue-50 text-blue-700 border-blue-100"
+                    : "bg-slate-100 text-slate-600 border-slate-200"
+                )}>
+                  {brief.internalStatus || "Draft"}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => {
                 const url = `${window.location.origin}${window.location.pathname}?briefId=${brief.id}`;
                 navigator.clipboard.writeText(url);
+                alert("คัดลอกลิงก์สำเร็จ!");
                 if (window.showToast) window.showToast("Copied Brief Link!");
               }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
               title="Copy link to this brief"
             >
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className="h-4 w-4" />
               Copy Link
             </button>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 lg:text-3xl">{brief.campaignName}</h1>
-          <p className="text-slate-500 mt-1">{brief.brand} • Created: {brief.createdAt}</p>
         </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
         
-        <div className="grid gap-8">
+        {/* Left Column (Main content area with Tabbed Panels) */}
+        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
           
-          {/* Section 1 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">1. Client & Project Details</h3><button onClick={() => handleEditSection(1)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Customer Type</dt><dd className="font-medium text-slate-900">{brief.customerType || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Sales Owner</dt><dd className="font-medium text-slate-900">{brief.salesOwner || "-"}</dd></div>
-              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Package Type</dt><dd className="font-medium text-slate-900">{renderList(brief.packageType)} {brief.packageTypeOther ? `(${brief.packageTypeOther})` : ""}</dd></div>
-              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Product Details</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.product || "-" }}></dd></div>
-              <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Objective</dt><dd className="font-medium text-slate-900">{renderList(brief.objective)}</dd></div>
-              <div className="md:col-span-4"><dt className="text-slate-500 mb-1">Objective Note</dt><dd className="font-medium text-slate-900">{brief.objectiveNote || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Gender</dt><dd className="font-medium text-slate-900">{renderList(brief.gender)}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Age</dt><dd className="font-medium text-slate-900">{renderList(brief.ageRange) || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Country</dt><dd className="font-medium text-slate-900">{brief.country || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Target Province</dt><dd className="font-medium text-slate-900">{brief.province || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Campaign Date</dt><dd className="font-medium text-slate-900">{brief.campaignStartDate ? `${brief.campaignStartDate} to ${brief.campaignEndDate}` : "-"}</dd></div>
-              <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Platform</dt><dd className="font-medium text-slate-900">{renderList(brief.platform)} {brief.platformOther ? `(${brief.platformOther})` : ""}</dd></div>
-              <div className="md:col-span-4 pt-2 border-t border-slate-100">
-                <dt className="text-slate-500 mb-1">Buddy Boost Required</dt>
-                <dd className="font-medium text-slate-900">{brief.isBuddyBoostRequired ? "Yes" : "No"}</dd>
-                {brief.isBuddyBoostRequired && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3 bg-[#6D5DF6]/5 p-3 rounded-lg border border-[#6D5DF6]/10">
-                    <div><dt className="text-slate-500 mb-1 text-xs">Target Boost</dt><dd className="font-medium text-slate-900 text-sm">{renderList(brief.targetBoost)}</dd></div>
-                    <div><dt className="text-slate-500 mb-1 text-xs">Budget Boost Spending</dt><dd className="font-medium text-slate-900 text-sm">{brief.budgetBoostSpending || "-"}</dd></div>
-                    <div className="md:col-span-3"><dt className="text-slate-500 mb-1 text-xs">Detail</dt><dd className="font-medium text-slate-900 text-sm">{brief.buddyBoostDetail || "-"}</dd></div>
+          {/* Dashboard Tab Buttons Row */}
+          <div className="flex border-b border-slate-200 bg-white px-2 pt-2 rounded-t-2xl shadow-3xs overflow-x-auto whitespace-nowrap scrollbar-none">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSubTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-all cursor-pointer relative",
+                    isActive 
+                      ? "border-[#6D5DF6] text-[#6D5DF6] font-bold" 
+                      : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", isActive ? "text-[#6D5DF6]" : "text-slate-400")} />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className={cn(
+                      "ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                      isActive ? "bg-violet-100 text-[#6D5DF6]" : "bg-slate-100 text-slate-600"
+                    )}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Tab Panel Content */}
+          <div className="bg-white border border-slate-200 border-t-0 rounded-b-3xl p-6 lg:p-8 shadow-2xs">
+            
+            {/* TAB 1: OVERVIEW */}
+            {activeSubTab === "overview" && (
+              <div className="space-y-8">
+                
+                {/* Visual Header & Edit Button */}
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800">Project & Client Information</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Key parameters, target brand specs, and targeted audiences.</p>
                   </div>
-                )}
-              </div>
-              <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Previous Campaign / Work Ref</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.previousCampaign || "-" }}></dd></div>
-              <div className="md:col-span-2 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Competitor Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.competitor || "-" }}></dd></div>
-              <div className="md:col-span-4 pt-2 border-t border-slate-100"><dt className="text-slate-500 mb-1">Additional Info</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-sm mt-1" dangerouslySetInnerHTML={{ __html: brief.additionalInfo || "-" }}></dd></div>
-            </div>
-          </div>
-
-          {/* Section 2 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">2. Budget Details</h3><button onClick={() => handleEditSection(2)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><dt className="text-slate-500 mb-1">Budget Spending (THB)</dt><dd className="font-medium text-slate-900">{brief.budgetSpending || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">VAT</dt><dd className="font-medium text-slate-900">{brief.vat || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Budget Condition</dt><dd className="font-medium text-slate-900">{brief.budgetCondition || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Estimated Brand Spending</dt><dd className="font-medium text-slate-900">{brief.estimatedBrandSpending || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Budget Per Influencer</dt><dd className="font-medium text-slate-900">{brief.budgetPerInfluencer || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Expected No. of Influencers</dt><dd className="font-medium text-slate-900">{brief.expectedNumInfluencers || "-"}</dd></div>
-              <div><dt className="text-slate-500 mb-1">Expected Reach/Impression</dt><dd className="font-medium text-slate-900">{brief.expectedReach || "-"}</dd></div>
-            </div>
-          </div>
-
-          {/* Section 3 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">3. Scope of Work (SOW)</h3><button onClick={() => handleEditSection(3)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="space-y-6">
-              {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
-                brief.scopeOfWorks.map((sow, idx) => (
-                  <div key={idx} className="bg-white p-5 rounded-lg border border-slate-200 text-sm shadow-sm">
-                    <div className="font-bold text-slate-900 text-base mb-4 border-b border-slate-100 pb-3">Scope {idx + 1}: {sow.name || "Unnamed"}</div>
-                    
-                    {/* SOW Details */}
-                    <div className="mb-6">
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">General SOW Info</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                        <div><dt className="text-slate-500 mb-1">Content Type</dt><dd className="font-medium text-slate-900">{renderList(sow.contentType)}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Follower Req.</dt><dd className="font-medium text-slate-900">{sow.followerReq || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Influencer Qty.</dt><dd className="font-medium text-slate-900">{sow.numInfluencers || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Allocation %</dt><dd className="font-medium text-slate-900">{sow.allocationPercent ? `${sow.allocationPercent}%` : "-"}</dd></div>
-                        <div className="md:col-span-4"><dt className="text-slate-500 mb-1">Platforms</dt><dd className="font-medium text-slate-900">{renderList(sow.platforms)}</dd></div>
-                      </div>
-                      <div><dt className="text-slate-500 mb-1">SOW Details</dt>
-                        <dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-xs mt-1" dangerouslySetInnerHTML={{ __html: sow.details || "-" }} />
-                      </div>
-                    </div>
-
-                    {/* SOW Persona */}
-                    <div className="mb-6 border-t border-slate-100 pt-4">
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Influencer Persona</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div><dt className="text-slate-500 mb-1">Demographic</dt><dd className="font-medium text-slate-900">{sow.persona?.infDemographic || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Location</dt><dd className="font-medium text-slate-900">{sow.persona?.infLocation || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Occupation</dt><dd className="font-medium text-slate-900">{sow.persona?.infOccupation || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Persona</dt><dd className="font-medium text-slate-900">{sow.persona?.infPersona || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Content Category</dt><dd className="font-medium text-slate-900">{sow.persona?.infContent || "-"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Story Telling</dt><dd className="font-medium text-slate-900">{sow.persona?.infStoryTelling || "-"}</dd></div>
-                        <div className="md:col-span-3"><dt className="text-slate-500 mb-1">Influencer Preference</dt><dd className="font-medium text-slate-800 bg-slate-50 p-3 rounded text-xs mt-1" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference || "-" }}></dd></div>
-                      </div>
-                    </div>
-
-                    {/* SOW Service Scope */}
-                    <div className="border-t border-slate-100 pt-4">
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Service Scope</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><dt className="text-slate-500 mb-1">Buyout</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.buyoutRequired ? `Yes (${renderList(sow.serviceScope?.buyoutDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Boost Post</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.boostRequired ? `Yes (${renderList(sow.serviceScope?.boostDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Add Ads</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.addAdsRequired ? `Yes (${renderList(sow.serviceScope?.addAdsDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Paid Partnership</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.paidPartnershipRequired ? `Yes (${renderList(sow.serviceScope?.paidPartnershipDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Gen Code</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.genCodeRequired ? `Yes (${renderList(sow.serviceScope?.genCodeDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">TikTok Shop</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.tiktokShopRequired ? `Yes (${renderList(sow.serviceScope?.tiktokShopDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Branded Content</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.fbBrandedContentRequired ? `Yes (${renderList(sow.serviceScope?.fbBrandedContentDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">Youtube Discovery</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.youtubeDiscoveryRequired ? `Yes (${renderList(sow.serviceScope?.youtubeDiscoveryDuration)})` : "No"}</dd></div>
-                        <div><dt className="text-slate-500 mb-1">X Whitelisting</dt><dd className="font-medium text-slate-900">{sow.serviceScope?.xWhitelistingRequired ? `Yes (${renderList(sow.serviceScope?.xWhitelistingDuration)})` : "No"}</dd></div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-slate-500 text-center py-6">No scope of work defined.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Section 4 */}
-          <div className="rounded-xl bg-slate-50 p-5 border border-slate-100">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2"><h3 className="text-sm font-semibold text-slate-900 text-[#6D5DF6]">4. Brand Support & Condition</h3><button onClick={() => handleEditSection(4)} className="text-xs font-semibold text-slate-500 hover:text-[#6D5DF6]">Edit</button></div>
-            <div className="space-y-6 text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-slate-500 mb-1">Brand Support Type</dt>
-                  <dd className="font-medium text-slate-900">
-                    {brief.brandSupportType || "No Sponsor"}
-                    {brief.brandSupportType === "Other" && brief.brandSupportTypeOther && ` (${brief.brandSupportTypeOther})`}
-                  </dd>
+                  <button 
+                    onClick={() => handleEditSection(1)} 
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    <Edit className="h-3.5 w-3.5" /> Edit Profile
+                  </button>
                 </div>
-                <div><dt className="text-slate-500 mb-1">วิธีการรับสินค้า/บริการ</dt><dd className="font-medium text-slate-900">{brief.productReceiveMethod || "-"}</dd></div>
-                {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(brief.productReceiveMethod) && (
-                  <div><dt className="text-slate-500 mb-1">ค่าจัดส่งต่อ Influencer</dt><dd className="font-medium text-slate-900">{brief.logisticsPerInfluencer ? `${brief.logisticsPerInfluencer} บาท` : "-"}</dd></div>
-                )}
-                {brief.brandSupportType === "No Sponsor" && brief.productReceiveMethod === "Influencer ซื้อเอง" && (
-                  <div><dt className="text-slate-500 mb-1">การเบิกค่าใช้จ่าย</dt><dd className="font-medium text-slate-900">{brief.reimbursement || "-"}</dd></div>
-                )}
-                {brief.brandSupportType === "No Sponsor" && (
-                  <div><dt className="text-slate-500 mb-1">มูลค่าสินค้า (บาท)</dt><dd className="font-medium text-slate-900">{brief.productValue ? `${brief.productValue} บาท` : "-"}</dd></div>
-                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Client Profile Box */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+                      <Briefcase className="h-4 w-4 text-[#6D5DF6]" />
+                      Client Profile & Lead
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Client Status:</span>
+                        <span className={cn(
+                          "text-xs font-bold px-2.5 py-0.5 rounded-full border",
+                          brief.clientStatus === "New" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-blue-50 text-blue-700 border-blue-100"
+                        )}>
+                          {brief.clientStatus || "New"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Customer Type:</span>
+                        <span className="font-semibold text-slate-800">{brief.customerType || "Key Account"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Project Owner (Sales):</span>
+                        <span className="font-semibold text-[#6D5DF6]">{brief.salesOwner || "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-start border-t border-slate-200/50 pt-3">
+                        <span className="text-slate-500 mt-0.5">Package Type:</span>
+                        <div className="flex flex-wrap gap-1 justify-end max-w-[65%]">
+                          {(Array.isArray(brief.packageType) ? brief.packageType : [brief.packageType || "Standard"]).map(pkg => (
+                            <span key={pkg} className="bg-violet-50 text-[#6D5DF6] border border-violet-100 px-2 py-0.5 rounded-md text-xs font-semibold">
+                              {pkg === "Others" && brief.packageTypeOther ? `Others (${brief.packageTypeOther})` : pkg}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Channel & Platforms Box */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+                      <Compass className="h-4 w-4 text-[#6D5DF6]" />
+                      Campaign Channels
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="text-slate-500 text-xs block mb-1.5">Target Platforms:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(Array.isArray(brief.platform) ? brief.platform : [brief.platform || "Instagram"]).map(plat => (
+                            <span key={plat} className={cn(
+                              "text-xs font-semibold px-2.5 py-0.5 rounded-lg border",
+                              plat === "TikTok" ? "bg-black text-white border-black" :
+                              plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-400" :
+                              plat === "YouTube" ? "bg-red-50 text-red-700 border-red-200" :
+                              plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                              "bg-slate-100 text-slate-700 border-slate-200"
+                            )}>
+                              {plat === "Others" && brief.platformOther ? `Others (${brief.platformOther})` : plat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Buddy Boost specs */}
+                      <div className="border-t border-slate-200/50 pt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 text-xs">Buddy Boost Required:</span>
+                          <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", brief.isBuddyBoostRequired ? "bg-violet-100 text-[#6D5DF6] border-violet-200" : "bg-slate-200 text-slate-700 border-slate-350")}>
+                            {brief.isBuddyBoostRequired ? "Yes" : "No"}
+                          </span>
+                        </div>
+                        {brief.isBuddyBoostRequired && (
+                          <div className="mt-2 p-2.5 rounded-lg bg-white border border-slate-200 text-xs space-y-1.5 shadow-3xs">
+                            <div className="flex justify-between"><span className="text-slate-400">Target Boost:</span> <span className="font-semibold text-slate-800">{renderList(brief.targetBoost)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">Boost Budget:</span> <span className="font-semibold text-[#6D5DF6]">{brief.budgetBoostSpending || "-"}</span></div>
+                            {brief.buddyBoostDetail && <div className="border-t border-slate-100 pt-1 mt-1 text-slate-500 italic">{brief.buddyBoostDetail}</div>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Target Audience Profile */}
+                  <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+                      <Users className="h-4 w-4 text-[#6D5DF6]" />
+                      Target Audience Demographics
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Gender</span>
+                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{renderList(brief.gender)}</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Age Range</span>
+                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{renderList(brief.ageRange) || "-"}</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Country</span>
+                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{brief.country || "-"}</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Province</span>
+                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{brief.province || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Campaign Objectives */}
+                  <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+                      <Sparkles className="h-4 w-4 text-[#6D5DF6]" />
+                      Campaign Objectives & Goals
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {["Awareness (Reach)", "Interest (Engagement)", "Trust (Post)"].map(obj => {
+                          const isSelected = brief.objective && brief.objective.includes(obj);
+                          return (
+                            <span key={obj} className={cn(
+                              "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition",
+                              isSelected 
+                                ? "bg-violet-50 text-[#6D5DF6] border-violet-200 shadow-3xs" 
+                                : "bg-white text-slate-300 border-slate-200 opacity-50 line-through"
+                            )}>
+                              {isSelected && <Check className="h-3.5 w-3.5 text-[#6D5DF6] stroke-[3]" />}
+                              {obj}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {brief.objectiveNote && (
+                        <div className="text-xs text-slate-650 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed shadow-3xs mt-2.5">
+                          <span className="font-bold text-slate-700 block mb-1">Objective Note:</span>
+                          {brief.objectiveNote}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Collapsible Reference Sheets (Product Info, Competitors etc.) */}
+                  <div className="md:col-span-2 space-y-3 pt-2">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-slate-450" />
+                      Brand Specifications & Reference Sheets
+                    </h4>
+
+                    {/* Product Details Document */}
+                    {brief.product && (
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
+                        <button 
+                          onClick={() => toggleDoc("product")}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
+                        >
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Product Name & Specifications</span>
+                          {expandedDocs.product ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                        </button>
+                        {expandedDocs.product && (
+                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[300px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.product }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Previous Campaigns Document */}
+                    {brief.previousCampaign && (
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
+                        <button 
+                          onClick={() => toggleDoc("previous")}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
+                        >
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Previous Campaign References</span>
+                          {expandedDocs.previous ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                        </button>
+                        {expandedDocs.previous && (
+                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.previousCampaign }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Competitor Info Document */}
+                    {brief.competitor && (
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
+                        <button 
+                          onClick={() => toggleDoc("competitor")}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
+                        >
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Competitor Analysis & Notes</span>
+                          {expandedDocs.competitor ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                        </button>
+                        {expandedDocs.competitor && (
+                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.competitor }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Additional Info Document */}
+                    {brief.additionalInfo && (
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
+                        <button 
+                          onClick={() => toggleDoc("additional")}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
+                        >
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Campaign Guidelines</span>
+                          {expandedDocs.additional ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                        </button>
+                        {expandedDocs.additional && (
+                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[200px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.additionalInfo }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
               </div>
-              
-              <div className="border-t border-slate-100 pt-4">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">On-Site & Travel Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Require Travel?</dt><dd className="font-medium text-slate-900">{brief.requireTravel || "-"}</dd></div>
-                  {brief.requireTravel && brief.requireTravel.includes("ต้อง") && (
-                    <>
-                      <div><dt className="text-slate-500 mb-1">On-Site Type</dt><dd className="font-medium text-slate-900">{brief.onSiteType || "-"}</dd></div>
-                      {brief.onSiteType === "เข้าร่วม Event" && (
-                        <div><dt className="text-slate-500 mb-1">Event Duration</dt><dd className="font-medium text-slate-900">{brief.eventDuration ? `${brief.eventDuration} ชั่วโมง` : "-"}</dd></div>
-                      )}
-                      {["ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"].includes(brief.onSiteType) && (
-                        <div><dt className="text-slate-500 mb-1">ค่าเดินทางต่อ Influencer</dt><dd className="font-medium text-slate-900">{brief.reviewerTravelExpense || "-"}</dd></div>
-                      )}
-                      <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Buddy Review Support Required?</dt><dd className="font-medium text-slate-900">{brief.buddyReviewSupport || "No"}</dd></div>
-                      <div className="md:col-span-2"><dt className="text-slate-500 mb-1">Location Details</dt><dd className="font-medium text-slate-900 whitespace-pre-wrap bg-white p-3 rounded border border-slate-200 mt-1">{brief.locationDetails || "-"}</dd></div>
-                    </>
+            )}
+
+            {/* TAB 2: BUDGET & SOW OPTIONS */}
+            {activeSubTab === "budget" && (
+              <div className="space-y-6">
+                
+                {/* Header Row */}
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800">Budget Packages & Scopes of Work</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Option variations, budget details, and scope guidelines.</p>
+                  </div>
+                  <button 
+                    onClick={() => handleEditSection(2)} 
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    <Edit className="h-3.5 w-3.5" /> Edit Options
+                  </button>
+                </div>
+
+                {/* Option Tabs Navigation (within this tab) */}
+                {budgetOptions.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                    {budgetOptions.map((opt, oIdx) => {
+                      const isActive = opt.id === activeOptId;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setActiveOptId(opt.id)}
+                          className={cn(
+                            "px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer",
+                            isActive
+                              ? "bg-white text-slate-900 shadow-3xs border border-slate-200"
+                              : "text-slate-600 hover:text-slate-900"
+                          )}
+                        >
+                          {opt.name || `Option ${String.fromCharCode(65 + oIdx)}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Financial Metric Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+                  
+                  {/* Budget Spending */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Budget Spending</span>
+                      <span className="text-xl font-bold text-[#6D5DF6] block mt-1">
+                        {formatCurrency(activeOpt.budgetSpending)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                      Tax Status: {activeOpt.vat || "-"}
+                    </span>
+                  </div>
+
+                  {/* Estimated Brand Spending */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Est. Brand Spend</span>
+                      <span className="text-xl font-bold text-slate-800 block mt-1">
+                        {formatCurrency(activeOpt.estimatedBrandSpending)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                      Evaluation estimate
+                    </span>
+                  </div>
+
+                  {/* Budget / KOL */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Budget Per Influencer</span>
+                      <span className="text-xl font-bold text-slate-800 block mt-1">
+                        {formatCurrency(activeOpt.budgetPerInfluencer)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                      Target budget average
+                    </span>
+                  </div>
+
+                  {/* Target Deliverables */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Expected KOLs & Reach</span>
+                      <span className="text-base font-bold text-slate-800 block mt-1">
+                        KOLs: {activeOpt.expectedNumInfluencers || "-"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-1 block">
+                      Reach: {activeOpt.expectedReach || "-"}
+                    </span>
+                  </div>
+
+                </div>
+
+                {/* Option Level Condition */}
+                {activeOpt.budgetCondition && (
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <span className="font-bold text-slate-700 block mb-1">Option Condition / Note:</span>
+                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{activeOpt.budgetCondition}</p>
+                  </div>
+                )}
+
+                {/* SOW Scope list */}
+                <div className="space-y-4 pt-2">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Scope of Work List ({activeOpt.scopeOfWorks?.length || 0})</span>
+                  </h4>
+                  
+                  {activeOpt.scopeOfWorks && activeOpt.scopeOfWorks.length > 0 ? (
+                    activeOpt.scopeOfWorks.map((sow, idx) => (
+                      <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 text-sm shadow-3xs space-y-4 hover:shadow-2xs transition">
+                        
+                        {/* Scope Header */}
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <span className="font-bold text-slate-900 text-sm">
+                            Scope {idx + 1}: {sow.name || "Unnamed Scope"}
+                          </span>
+                          <div className="flex gap-1.5">
+                            {(sow.platforms || []).map(plat => (
+                              <span key={plat} className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                plat === "TikTok" ? "bg-black text-white border-black" :
+                                plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-500" :
+                                plat === "YouTube" ? "bg-red-50 text-red-750 border-red-200" :
+                                plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-750 border-blue-200" :
+                                plat === "X" ? "bg-slate-900 text-white border-slate-900" :
+                                plat === "Lemon8" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
+                                "bg-slate-100 text-slate-700 border-slate-200"
+                              )}>
+                                {plat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Deliverables Overview */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-0.5">Content Type</span>
+                            <span className="font-semibold text-slate-800 text-sm">{renderList(sow.contentType)}</span>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-0.5">Followers Required</span>
+                            <span className="font-semibold text-slate-800 text-sm">{sow.followerReq || "-"}</span>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-0.5">KOL Qty</span>
+                            <span className="font-semibold text-slate-800 text-sm">{sow.numInfluencers || "-"}</span>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-0.5">Budget Allocation</span>
+                            <span className="font-semibold text-slate-800 text-sm">
+                              {sow.allocationPercent ? `${sow.allocationPercent}%` : sow.allocation ? `${sow.allocation}%` : "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* SOW Details Content */}
+                        {sow.details && (
+                          <div className="text-xs p-3 rounded-xl border border-slate-150 bg-slate-50/30">
+                            <h5 className="font-bold text-slate-400 mb-1">Details & Guidelines</h5>
+                            <div className="font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none max-h-[150px] overflow-y-auto" dangerouslySetInnerHTML={{ __html: sow.details }} />
+                          </div>
+                        )}
+
+                        {/* Columns split for Persona and Active services */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          
+                          {/* Influencer Persona */}
+                          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 text-xs">
+                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#6D5DF6]" /> Influencer Persona
+                            </h5>
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                              <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{sow.persona?.demographic || sow.persona?.infDemographic || "-"}</span></div>
+                              <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{sow.persona?.location || sow.persona?.infLocation || "-"}</span></div>
+                              <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{sow.persona?.occupation || sow.persona?.infOccupation || "-"}</span></div>
+                              <div><span className="text-slate-400">Tone:</span> <span className="font-semibold text-slate-800">{sow.persona?.persona || sow.persona?.infPersona || "-"}</span></div>
+                              <div className="col-span-2"><span className="text-slate-400">Content Category:</span> <span className="font-semibold text-slate-800">{sow.persona?.contentCategory || sow.persona?.infContent || "-"}</span></div>
+                              <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{sow.persona?.storyTelling || sow.persona?.infStoryTelling || "-"}</span></div>
+                            </div>
+                            {sow.persona?.infPreference && (
+                              <div className="mt-2 pt-2 border-t border-slate-200/50 text-slate-650">
+                                <span className="text-[10px] text-slate-400 font-bold block mb-1 uppercase">Influencer Preferences</span>
+                                <div className="bg-white p-2 rounded-lg border border-slate-250 max-h-[100px] overflow-y-auto" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference }} />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Active Services */}
+                          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 text-xs">
+                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Special Services Requested
+                            </h5>
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {sow.serviceScope?.buyoutRequired && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  buyout: {renderList(sow.serviceScope?.buyoutDuration)}
+                                </span>
+                              )}
+                              {(sow.serviceScope?.boostPostRequired || sow.serviceScope?.boostRequired) && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  boost: {renderList(sow.serviceScope?.boostPostDuration || sow.serviceScope?.boostDuration)}
+                                </span>
+                              )}
+                              {sow.serviceScope?.addAdsRequired && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  add ads: {renderList(sow.serviceScope?.addAdsDuration)}
+                                </span>
+                              )}
+                              {sow.serviceScope?.paidPartnershipRequired && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  partnership: {renderList(sow.serviceScope?.paidPartnershipDuration)}
+                                </span>
+                              )}
+                              {sow.serviceScope?.genCodeRequired && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  gen code: {renderList(sow.serviceScope?.genCodeDuration)}
+                                </span>
+                              )}
+                              {sow.serviceScope?.tiktokShopRequired && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  shop: {renderList(sow.serviceScope?.tiktokShopDuration)}
+                                </span>
+                              )}
+                              {(sow.serviceScope?.brandedContentRequired || sow.serviceScope?.fbBrandedContentRequired) && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  branded: {renderList(sow.serviceScope?.brandedContentDuration || sow.serviceScope?.fbBrandedContentDuration)}
+                                </span>
+                              )}
+                              {(sow.serviceScope?.discoveryRequired || sow.serviceScope?.youtubeDiscoveryRequired) && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  discovery: {renderList(sow.serviceScope?.discoveryDuration || sow.serviceScope?.youtubeDiscoveryDuration)}
+                                </span>
+                              )}
+                              {(sow.serviceScope?.whitelistingRequired || sow.serviceScope?.xWhitelistingRequired) && (
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                  whitelisting: {renderList(sow.serviceScope?.whitelistingDuration || sow.serviceScope?.xWhitelistingDuration)}
+                                </span>
+                              )}
+                              
+                              {/* Empty State for services */}
+                              {!sow.serviceScope?.buyoutRequired && 
+                               !sow.serviceScope?.boostPostRequired && !sow.serviceScope?.boostRequired &&
+                               !sow.serviceScope?.addAdsRequired && 
+                               !sow.serviceScope?.paidPartnershipRequired && 
+                               !sow.serviceScope?.genCodeRequired && 
+                               !sow.serviceScope?.tiktokShopRequired && 
+                               !sow.serviceScope?.brandedContentRequired && !sow.serviceScope?.fbBrandedContentRequired &&
+                               !sow.serviceScope?.discoveryRequired && !sow.serviceScope?.youtubeDiscoveryRequired &&
+                               !sow.serviceScope?.whitelistingRequired && !sow.serviceScope?.xWhitelistingRequired && (
+                                <span className="text-slate-400 italic font-medium">No special rights or whitelisting requested.</span>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-slate-400 italic text-center py-8 bg-slate-50 border border-slate-200 rounded-xl">
+                      No scope of work items configured.
+                    </div>
                   )}
                 </div>
-              </div>
 
-              <div className="border-t border-slate-100 pt-4">
-                <dt className="text-slate-500 mb-2">Conditions (Terms & Notes)</dt>
-                <dd className="font-medium text-slate-800 bg-white border border-slate-200 p-4 rounded whitespace-pre-wrap leading-relaxed">
-                  {brief.condition || "-"}
-                </dd>
               </div>
-            </div>
+            )}
+
+            {/* TAB 3: SUPPORT & LOGISTICS */}
+            {activeSubTab === "logistics" && (
+              <div className="space-y-6">
+                
+                {/* Header Row */}
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800">Support, Travel & On-Site Logistics</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Product sponsorships, logistics and reviewer travel terms.</p>
+                  </div>
+                  <button 
+                    onClick={() => handleEditSection(3)} 
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    <Edit className="h-3.5 w-3.5" /> Edit Support
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Delivery & Logistics */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                      <Coins className="h-4 w-4 text-[#6D5DF6]" />
+                      Brand Support & Delivery
+                    </h4>
+                    
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Support Type:</span>
+                        <span className="font-bold text-slate-800">
+                          {brief.brandSupportType || "No Sponsor"}
+                          {brief.brandSupportType === "Other" && brief.brandSupportTypeOther && ` (${brief.brandSupportTypeOther})`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Receive Method:</span>
+                        <span className="font-semibold text-slate-850">{brief.productReceiveMethod || "-"}</span>
+                      </div>
+                      
+                      {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(brief.productReceiveMethod) && (
+                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
+                          <span className="text-slate-500">Logistics Cost / KOL:</span>
+                          <span className="font-bold text-[#6D5DF6]">
+                            {brief.logisticsPerInfluencer ? formatCurrency(brief.logisticsPerInfluencer) : "-"}
+                          </span>
+                        </div>
+                      )}
+
+                      {brief.brandSupportType === "No Sponsor" && brief.productReceiveMethod === "Influencer ซื้อเอง" && (
+                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
+                          <span className="text-slate-500">Reimbursement Type:</span>
+                          <span className="font-semibold text-slate-800">{brief.reimbursement || "-"}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
+                        <span className="text-slate-500">Product Value:</span>
+                        <span className="font-bold text-[#6D5DF6]">
+                          {brief.productValue ? formatCurrency(brief.productValue) : "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Travel & On-Site */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                      <MapPin className="h-4 w-4 text-[#6D5DF6]" />
+                      On-Site & Travel Details
+                    </h4>
+
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Travel Required:</span>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2.5 py-0.5 rounded-full border",
+                          brief.requireTravel && brief.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-650 border-slate-200"
+                        )}>
+                          {brief.requireTravel || "ไม่ต้อง"}
+                        </span>
+                      </div>
+                      
+                      {brief.requireTravel && brief.requireTravel.includes("ต้อง") && (
+                        <>
+                          <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
+                            <span className="text-slate-500">On-Site Type:</span>
+                            <span className="font-semibold text-slate-800">{brief.onSiteType || "-"}</span>
+                          </div>
+                          {brief.onSiteType === "เข้าร่วม Event" && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500">Event Duration:</span>
+                              <span className="font-semibold text-slate-800">{brief.eventDuration ? `${brief.eventDuration} Hours` : "-"}</span>
+                            </div>
+                          )}
+                          {["ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"].includes(brief.onSiteType) && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500">Travel Expense Reimbursement:</span>
+                              <span className="font-bold text-[#6D5DF6]">
+                                {brief.reviewerTravelExpense ? formatCurrency(brief.reviewerTravelExpense) : "-"}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500">Buddy Frontline Support:</span>
+                            <span className="font-semibold text-slate-800">{brief.buddyReviewSupport || "No"}</span>
+                          </div>
+                          
+                          {brief.locationDetails && (
+                            <div className="border-t border-slate-200/50 pt-2 text-xs">
+                              <span className="text-slate-400 font-bold block mb-1">On-site Location Details</span>
+                              <p className="text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed whitespace-pre-wrap">{brief.locationDetails}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* General Campaign Conditions */}
+                  {brief.condition && (
+                    <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Campaign Conditions & Remarks</h4>
+                      <div className="text-slate-700 bg-white border border-slate-200 p-4 rounded-xl whitespace-pre-wrap leading-relaxed text-xs shadow-3xs">
+                        {brief.condition}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: ACTIVITY LOG */}
+            {activeSubTab === "activity" && (
+              <div className="space-y-6">
+                <div className="border-b border-slate-100 pb-3">
+                  <h3 className="text-base font-bold text-slate-800">Brief Version & Audit Log</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Audit log history of all field changes and timeline events.</p>
+                </div>
+                <ActivityTimeline logs={brief.activityLog || []} />
+              </div>
+            )}
+
           </div>
+
         </div>
 
-          </div>
-
-        </div>
-
-      {/* Right Column (Actions & Timeline) */}
+        {/* Right Column (Actions Sidebar) */}
         <div className="w-full lg:w-1/4 shrink-0">
           <div className="sticky top-6 space-y-6">
             
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
-              <div className="flex flex-col gap-3">
+            {/* Actions Panel */}
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
+              
+              {/* Internal Status Badge */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Current Phase</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+                  {brief.internalStatus || "Draft"}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button className="w-full" onClick={() => setSubmitModalOpen(true)}>
+                  <Button className="w-full py-2.5 font-bold" onClick={() => setSubmitModalOpen(true)}>
                     {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
                   </Button>
                 )}
-                <Button variant="secondary" className="w-full"><Copy className="mr-2 h-4 w-4" /> Duplicate</Button>
+                <Button variant="secondary" className="w-full py-2.5 font-bold cursor-pointer">
+                  <Copy className="mr-2 h-4 w-4" /> Duplicate Brief
+                </Button>
               </div>
             </div>
 
-            <ActivityTimeline logs={brief.activityLog || []} />
+            {/* General Info Card */}
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-3.5 text-xs">
+              <h3 className="font-bold text-slate-400 uppercase tracking-wider">System Metadata</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">ID:</span>
+                <span className="font-semibold text-slate-850">{brief.id}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Created At:</span>
+                <span className="font-semibold text-slate-850">{brief.createdAt || "-"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Last Active Tab:</span>
+                <span className="font-semibold text-slate-850 capitalize">{brief.activeTab || "Brief"}</span>
+              </div>
+            </div>
+
           </div>
         </div>
+
       </div>
 
       {/* Submit Modal */}
       <AnimatePresence>
         {submitModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-2xs p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2157,25 +3036,42 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
             >
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">{hasStandard ? "Create Dealsheet" : "Submit to Traffic"}</h2>
-                <p className="text-sm text-slate-500 mb-6">Select the Scope of Work (SOW) you want to include in this submission.</p>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">
+                  {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
+                </h2>
+                <p className="text-sm text-slate-500 mb-6">Select the Scope of Work (SOW) items you want to submit.</p>
 
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                  {brief.scopeOfWorks && brief.scopeOfWorks.length > 0 ? (
-                    brief.scopeOfWorks.map((sow, idx) => (
-                      <label key={idx} className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition ${selectedSows.includes(sow.id) ? 'border-[#6D5DF6] bg-violet-50/50' : 'border-slate-200 hover:border-slate-300'}`}>
-                        <div className="mt-1 flex h-4 w-4 items-center justify-center rounded border border-slate-300 bg-white">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                  {allSowsWithOpt && allSowsWithOpt.length > 0 ? (
+                    allSowsWithOpt.map((sow, idx) => (
+                      <label 
+                        key={idx} 
+                        className={cn(
+                          "flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition",
+                          selectedSows.includes(sow.id) 
+                            ? 'border-[#6D5DF6] bg-violet-50/50' 
+                            : 'border-slate-200 hover:border-slate-300'
+                        )}
+                      >
+                        <div className="mt-1 flex h-4 w-4 items-center justify-center rounded border border-slate-300 bg-white relative">
                           <input 
                             type="checkbox" 
-                            className="h-full w-full opacity-0 cursor-pointer"
+                            className="h-full w-full opacity-0 cursor-pointer absolute inset-0 z-10"
                             checked={selectedSows.includes(sow.id)}
                             onChange={() => toggleSowSelection(sow.id)}
                           />
                           {selectedSows.includes(sow.id) && <Check className="absolute h-3 w-3 text-[#6D5DF6]" />}
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-sm text-slate-900">Scope {idx + 1}: {sow.name || sow.contentType || "Unnamed SOW"}</div>
-                          <div className="text-xs text-slate-500 mt-1">{renderList(sow.platforms)} • {sow.numInfluencers} Influencers</div>
+                          <div className="font-semibold text-sm text-slate-900">
+                            Scope {idx + 1}: {sow.name || sow.contentType || "Unnamed SOW"} 
+                            <span className="ml-2 inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-[#6D5DF6]">
+                              {sow.optionName}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1">
+                            {renderList(sow.platforms)} • {sow.numInfluencers} Influencers
+                          </div>
                         </div>
                       </label>
                     ))
@@ -2186,7 +3082,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                 <div className="mt-8 flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSubmitToTraffic} disabled={!brief.scopeOfWorks || brief.scopeOfWorks.length === 0}>
+                  <Button onClick={handleSubmitToTraffic} disabled={!allSowsWithOpt || allSowsWithOpt.length === 0}>
                     {hasStandard ? "Create Dealsheet" : "Submit Brief"}
                   </Button>
                 </div>
@@ -2210,14 +3106,15 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       </AnimatePresence>
     </motion.div>
   );
-}
-
-// --- Sub-components for Tracker ---
+}// --- Sub-components for Tracker ---
 function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false, readOnly = false }) {
   const influencers = trackerData.influencers || [];
-  const submittedSows = brief.internalStatus === "Submitted to Traffic" && brief.submittedSows 
-    ? (brief.scopeOfWorks || []).filter(s => brief.submittedSows.includes(s.id))
+  const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
+    ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
     : (brief.scopeOfWorks || []);
+  const submittedSows = brief.internalStatus === "Submitted to Traffic" && brief.submittedSows 
+    ? allSOWs.filter(s => brief.submittedSows.includes(s.id))
+    : allSOWs;
 
   const updateInf = (id, field, value) => {
     const updated = influencers.map(inf => inf.id === id ? { ...inf, [field]: value } : inf);

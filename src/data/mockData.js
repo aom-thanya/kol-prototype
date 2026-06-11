@@ -195,5 +195,28 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
 แบรนด์ตรวจคลิปได้ 1 ครั้ง`,
     
     createdAt: "2025-01-10",
+  },
+  {
+    id: "BRD-2193",
+    internalStatus: "Assign Planner/Buyer",
+    version: 1,
+    campaignName: "Mega Bangna Event",
+    customerId: "CUST-001",
+    brand: "Mega Bangna",
+    product: "Event details at Mega Bangna",
+    clientStatus: "New",
+    customerType: "Key Account",
+    salesOwner: "พี่ bankie",
+    packageType: ["Rate Card KPI (1.5 D)"],
+    objective: ["Awareness (Reach)"],
+    objectiveNote: "",
+    gender: ["Male", "Female"],
+    country: "Thailand",
+    province: "Bangkok",
+    ageRange: "18 - 45",
+    campaignStartDate: "2025-06-01",
+    campaignEndDate: "2025-06-15",
+    platform: ["Instagram", "Tiktok"],
+    createdAt: "2025-05-10"
   }
 ];

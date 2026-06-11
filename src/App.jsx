@@ -520,7 +520,7 @@ function Select({ value, onChange, options, icon: Icon = ChevronDown, label, cla
   );
 }
 
-function DetailPage({ list, onBack, showToast }) {
+function DetailPage({ list, onBack, showToast, briefs = [] }) {
   const [tab, setTab] = useState("example");
   const [search, setSearch] = useState("");
   const [exampleInfluencers, setExampleInfluencers] = useState(influencerSeed.slice(0, 5));
@@ -671,6 +671,7 @@ function DetailPage({ list, onBack, showToast }) {
                 }}
                 onProfile={setProfile}
                 loading={loading}
+                briefs={briefs}
               />
             </motion.div>
           ) : (
@@ -683,12 +684,14 @@ function DetailPage({ list, onBack, showToast }) {
                 setSelected={setSelectedShort}
                 onMoveToExample={moveToExampleList}
                 onExport={() => exportCsv(selectedShort.length ? shortList.filter((r) => selectedShort.includes(r.id)) : shortList, "short-list.csv")}
+                onExportProposal={() => showToast("download proposal soon")}
                 onRemove={(id) => {
                   setShortList((prev) => prev.filter((row) => row.id !== id));
                   setSelectedShort((prev) => prev.filter((rowId) => rowId !== id));
                   showToast("Influencer removed from Short List.");
                 }}
                 onProfile={setProfile}
+                briefs={briefs}
               />
             </motion.div>
           )}
@@ -744,11 +747,28 @@ function TabButton({ active, children, onClick }) {
   );
 }
 
-function TableSection({ mode, search, rows, selected, setSelected, onAdd, onExport, onCopy, onMoveToExample, onConfirm, onRemove, onProfile, loading }) {
+function TableSection({ mode, search, rows, selected, setSelected, onAdd, onExport, onExportProposal, onCopy, onMoveToExample, onConfirm, onRemove, onProfile, loading, briefs = [] }) {
   const filteredRows = rows.filter((r) => r.username.toLowerCase().includes(search.toLowerCase()));
   const allSelected = filteredRows.length > 0 && selected.length === filteredRows.length;
   const toggleAll = () => setSelected(allSelected ? [] : filteredRows.map((r) => r.id));
   const toggleOne = (id) => setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
+
+  const selectedRows = rows.filter(r => selected.includes(r.id));
+  const hasKPI = selectedRows.some(row => {
+    if (!row.briefId) return false;
+    const brief = briefs.find(b => b.id === row.briefId);
+    if (!brief) return false;
+    const pType = brief.packageType;
+    if (!pType) return false;
+    const pkgs = Array.isArray(pType) ? pType : [pType];
+    return pkgs.some(p => {
+      if (typeof p !== "string") return false;
+      if (p === "Others") {
+        return brief.packageTypeOther && brief.packageTypeOther.toLowerCase().includes("kpi");
+      }
+      return p.toLowerCase().includes("kpi");
+    });
+  });
 
   return (
     <div>
@@ -787,7 +807,14 @@ function TableSection({ mode, search, rows, selected, setSelected, onAdd, onExpo
                 <>
                   <button onClick={onMoveToExample} className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white whitespace-nowrap">Move to Example List</button>
                   <button onClick={onExport} className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white whitespace-nowrap">Export Shortlist (.csv)</button>
-                  <button className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white whitespace-nowrap">Export Proposal (.pptx)</button>
+                  <button 
+                    onClick={onExportProposal}
+                    disabled={!hasKPI}
+                    className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
+                    title={!hasKPI ? "Only package types containing 'KPI' can export proposal" : ""}
+                  >
+                    Export Proposal (.pptx)
+                  </button>
                 </>
               )}
             </div>
@@ -1179,7 +1206,7 @@ export default function App() {
               onCreate={() => setCreateModalOpen(true)}
             />
           ) : (
-            <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} />
+            <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} briefs={briefs} />
           )}
         </>
       )}

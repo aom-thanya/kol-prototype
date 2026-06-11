@@ -1,9 +1,2 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Prompt", "Kanit", sans-serif;
-}
-
-h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: "Kanit", sans-serif;
-}
