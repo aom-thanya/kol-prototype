@@ -124,6 +124,11 @@ const influencerSeed = [
     avgLikes: 19100,
     avgViews: 276000,
     avatar: "https://i.pravatar.cc/160?img=10",
+    briefId: "BRD-3001",
+    briefName: "Srichand Summer Collection",
+    rawCost: "฿320,000",
+    scopeOfWork: "VDO Clip 1 min",
+    condition: "รับตรวจงาน 2 ครั้ง",
   },
   {
     id: "inf_003",
@@ -151,6 +156,11 @@ const influencerSeed = [
     avgLikes: 2600,
     avgViews: 42000,
     avatar: "https://i.pravatar.cc/160?img=12",
+    briefId: "BRD-3002",
+    briefName: "Unilever Pure Drink Launch",
+    rawCost: "฿250,000",
+    scopeOfWork: "Post 1 Album",
+    condition: "ลงงานภายใน 3 วันหลังตรวจ",
   },
   {
     id: "inf_005",
@@ -807,11 +817,23 @@ function TableSection({ mode, search, rows, selected, setSelected, onAdd, onExpo
                 <>
                   <button onClick={onMoveToExample} className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white whitespace-nowrap">Move to Example List</button>
                   <button onClick={onExport} className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white whitespace-nowrap">Export Shortlist (.csv)</button>
-                  <button 
-                    onClick={onExportProposal}
-                    disabled={!hasKPI}
+                   <button 
+                    onClick={() => {
+                      const selectedBriefs = selectedRows.map(row => briefs.find(b => b.id === row.briefId)).filter(Boolean);
+                      const isAnyStandard = selectedBriefs.some(brief => {
+                        const pType = brief.packageType;
+                        if (!pType) return false;
+                        const pkgs = Array.isArray(pType) ? pType : [pType];
+                        return pkgs.some(p => typeof p === "string" && p.toLowerCase().includes("standard"));
+                      });
+                      const url = isAnyStandard 
+                        ? "https://docs.google.com/presentation/d/11CnO6DySSr7OQvtVEJZcAI0LJKBp7n2RCuLH5lQSfMc/edit?usp=sharing"
+                        : "https://docs.google.com/presentation/d/1toI8ovvmuFr-bH7LdqSo4h-9-wFcSzen/edit?slide=id.p1#slide=id.p1";
+                      window.open(url, "_blank");
+                    }}
+                    disabled={hasKPI}
                     className="rounded-lg bg-[#1E2335] px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-[#2A3143] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
-                    title={!hasKPI ? "Only package types containing 'KPI' can export proposal" : ""}
+                    title={hasKPI ? "Cannot export proposal for package types containing 'KPI'" : ""}
                   >
                     Export Proposal (.pptx)
                   </button>

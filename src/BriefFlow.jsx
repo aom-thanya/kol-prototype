@@ -27,7 +27,10 @@ import {
   Sparkles,
   Truck,
   Briefcase,
-  Folder
+  Folder,
+  DollarSign,
+  Percent,
+  Calculator
 } from "lucide-react";
 
 // Helper utilities
@@ -1793,7 +1796,8 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
     steps.push({ id: "exampleList", label: "Example List" });
   }
   
-  steps.push({ id: "dealsheet", label: "Dealsheet & Proposal" });
+  steps.push({ id: "dealsheet", label: "Dealsheet" });
+  steps.push({ id: "proposal", label: "Proposal" });
 
   const activeIdx = steps.findIndex(s => s.id === activeTab);
   
@@ -1801,21 +1805,20 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
     if (!status || status === "Draft") return 0; // Brief
     
     if (hasStandard) {
-      // If Standard, we skip Assign Planner/Buyer and Example List
-      // So if it's not Draft, we are at Dealsheet
-      return 1; 
+      if (activeTab === "proposal") return 2;
+      return 1; // Dealsheet
     }
 
-    // If planner is assigned, we're at least past step 1 (Assign)
     if (brief.planner || brief.buyer) {
-      // Rate card - Check if influencers are ready for dealsheet
       let hasDone = false;
       if (brief.groupTrackers) {
         Object.values(brief.groupTrackers).forEach(t => {
           if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
         });
       }
-      return hasDone ? 3 : 2; // Dealsheet : Example List
+      if (!hasDone) return 2; // Example List
+      if (activeTab === "proposal") return 4;
+      return 3; // Dealsheet
     }
     
     return 1; // Assign Planner/Buyer
@@ -1874,10 +1877,663 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
 }
 
 // --- Dealsheet & Proposal Page Component ---
+
+// Helper for formatting currency safely
+const formatCurrency = (val) => {
+  if (val === "" || val === undefined || val === null) return "฿0.00";
+  const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+  if (isNaN(num)) return val;
+  return `฿${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+// Seeding engine to compute dashboard rates & metrics from brief input
+function getCampaignCalculations(brief, activeOptId) {
+  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0 
+    ? brief.budgetOptions 
+    : [{
+        id: "legacy",
+        name: "Option A",
+        budgetSpending: brief.budgetSpending,
+        vat: brief.vat,
+        budgetCondition: brief.budgetCondition,
+        estimatedBrandSpending: brief.estimatedBrandSpending,
+        budgetPerInfluencer: brief.budgetPerInfluencer,
+        expectedNumInfluencers: brief.expectedNumInfluencers,
+        expectedReach: brief.expectedReach,
+        scopeOfWorks: brief.scopeOfWorks || []
+      }];
+
+  const activeOpt = budgetOptions.find(o => o.id === activeOptId) || budgetOptions[0];
+
+  const totalBudget = parseFloat(String(activeOpt.budgetSpending || brief.budgetSpending || 15000).replace(/,/g, '')) || 15000;
+  const totalBoostAds = parseFloat(String(activeOpt.budgetBoostSpending || brief.budgetBoostSpending || 0).replace(/,/g, '')) || 0;
+  const totalOtherServices = parseFloat(String(activeOpt.estimatedBrandSpending || brief.estimatedBrandSpending || 0).replace(/,/g, '')) || 0;
+  
+  const availableBudget = totalBudget - totalBoostAds - totalOtherServices;
+  const rawCostForInfluencer = availableBudget / 2.1;
+  const contingencies = rawCostForInfluencer * 0.05;
+  const rawCostForCampaign = rawCostForInfluencer - contingencies;
+
+  // Logistics parameters
+  const productValue = parseFloat(String(brief.productValue || activeOpt.productValue || 200).replace(/,/g, '')) || 200;
+  const travelExpense = parseFloat(String(brief.reviewerTravelExpense || 500).replace(/,/g, '')) || 500;
+  const logisticsFee = parseFloat(String(brief.logisticsPerInfluencer || 0).replace(/,/g, '')) || 0;
+
+  const getFollowerTier = (str) => {
+    if (!str) return 2; // Default to 10K-50K (index 2)
+    const normalized = str.toLowerCase().replace(/,/g, '');
+    if (normalized.includes('100k') || normalized.includes('100000')) return 4;
+    if (normalized.includes('50k') || normalized.includes('50000')) return 3;
+    if (normalized.includes('10k') || normalized.includes('10000')) return 2;
+    if (normalized.includes('5k') || normalized.includes('5000')) return 1;
+    return 0; // default to 1K-5K
+  };
+
+  const getPlatformRates = (platformName, tierIdx) => {
+    const plat = String(platformName || "").toLowerCase();
+    if (plat.includes("tiktok")) {
+      const socialRates = [50, 125, 325, 625, 1250];
+      const supportRates = [1250, 1675, 1875, 1875, 3250];
+      return {
+        social: socialRates[tierIdx] || 325,
+        support: supportRates[tierIdx] || 1875
+      };
+    } else if (plat.includes("facebook")) {
+      const socialRates = [50, 100, 150, 400, 1000];
+      const supportRates = [900, 1200, 1500, 2000, 3000];
+      return {
+        social: socialRates[tierIdx] || 150,
+        support: supportRates[tierIdx] || 1500
+      };
+    } else if (plat.includes("lemon")) {
+      const supportRates = [1500, 2000, 2250, 3000, 3000];
+      return {
+        social: 0,
+        support: supportRates[tierIdx] || 2250
+      };
+    } else {
+      const socialRates = [100, 200, 450, 2000, 3000];
+      const supportRates = [900, 1200, 1500, 2000, 3000];
+      return {
+        social: socialRates[tierIdx] || 450,
+        support: supportRates[tierIdx] || 1500
+      };
+    }
+  };
+
+  const sowItems = activeOpt.scopeOfWorks && activeOpt.scopeOfWorks.length > 0
+    ? activeOpt.scopeOfWorks
+    : [{ id: "default", name: "All in TikTok 10,000 - 50,000", platforms: ["TikTok"], followerReq: "10K - 50K", allocationPercent: 100 }];
+
+  const parsedChannels = sowItems.map(sow => {
+    const platform = sow.platforms?.[0] || "TikTok";
+    const tierIdx = getFollowerTier(sow.followerReq);
+    const rates = getPlatformRates(platform, tierIdx);
+    
+    const social = rates.social;
+    const support = rates.support;
+    const logistics = logisticsFee;
+    const product = productValue;
+    const travel = travelExpense;
+    
+    const channelCost = social + support + product + travel + logistics;
+    const allocationPercent = parseFloat(String(sow.allocationPercent || sow.allocation || 100).replace(/%/g, '')) || 100;
+    
+    return {
+      id: sow.id,
+      name: sow.name || `All in ${platform} ${sow.followerReq || "10,000 - 50,000"}`,
+      platform,
+      followerReq: sow.followerReq || "10,000 - 50,000",
+      allocationPercent,
+      channelCost,
+      social,
+      support,
+      logistics,
+      product,
+      travel,
+      special: 0,
+      via: 0,
+      other: 0
+    };
+  });
+
+  const averageInfluencerCost = parsedChannels.reduce((acc, c) => acc + c.channelCost * (c.allocationPercent / 100), 0);
+  const totalInfluencers = averageInfluencerCost > 0 ? Math.floor(rawCostForCampaign / averageInfluencerCost) : 0;
+
+  let remainingInfs = totalInfluencers;
+  const channelBreakdown = parsedChannels.map((c, idx) => {
+    let numInfs = Math.round(totalInfluencers * (c.allocationPercent / 100));
+    if (idx === parsedChannels.length - 1) {
+      numInfs = remainingInfs;
+    } else {
+      remainingInfs -= numInfs;
+    }
+    numInfs = Math.max(0, numInfs);
+    const reserveInfs = Math.floor(numInfs / 20);
+    
+    const influencerCost = (c.social + c.support + c.special + c.via + c.other) * numInfs;
+    
+    return {
+      ...c,
+      numInfs,
+      reserveInfs,
+      influencerCost
+    };
+  });
+
+  const sumInfluencers = channelBreakdown.reduce((acc, c) => acc + c.numInfs, 0);
+  const sumReserveInfluencers = channelBreakdown.reduce((acc, c) => acc + c.reserveInfs, 0);
+  
+  const totalInfluencerCost = channelBreakdown.reduce((acc, c) => acc + c.influencerCost, 0);
+  const totalLogisticCost = channelBreakdown.reduce((acc, c) => acc + (c.numInfs + c.reserveInfs) * (c.logistics + c.product + c.travel), 0);
+  const totalInfluencerRawCost = totalInfluencerCost + totalLogisticCost;
+  const remainingRaw = rawCostForCampaign - totalInfluencerRawCost;
+
+  // KPI
+  const influencerReach = channelBreakdown.reduce((acc, c) => acc + (c.social * 10 * c.numInfs), 0);
+  const combinedFollower = influencerReach * 3;
+  const adsReach = 0;
+  const estimatedReach = influencerReach + adsReach;
+  const committedReach = estimatedReach * 0.8;
+  const estimatedEngagement = influencerReach * 0.05;
+
+  // Profitability
+  const salesPrice = totalBudget;
+  const campaignCost = totalBoostAds + totalOtherServices + totalInfluencerRawCost + contingencies;
+  const grossProfitPercent = salesPrice > 0 ? (1 - (campaignCost / salesPrice)) * 100 : 0;
+
+  return {
+    budgetOptions,
+    activeOpt,
+    totalBudget,
+    totalBoostAds,
+    totalOtherServices,
+    availableBudget,
+    rawCostForInfluencer,
+    contingencies,
+    rawCostForCampaign,
+    averageInfluencerCost,
+    sumInfluencers,
+    sumReserveInfluencers,
+    channelBreakdown,
+    totalInfluencerCost,
+    totalLogisticCost,
+    totalInfluencerRawCost,
+    remainingRaw,
+    influencerReach,
+    combinedFollower,
+    adsReach,
+    estimatedReach,
+    committedReach,
+    estimatedEngagement,
+    salesPrice,
+    campaignCost,
+    grossProfitPercent
+  };
+}
+
+function CampaignCalculationsView({ brief, activeOptId, setActiveOptId }) {
+  const calc = getCampaignCalculations(brief, activeOptId);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-3xl p-6 lg:p-8 shadow-xs mb-8 space-y-8">
+      {/* Title & Option Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="h-10 w-10 rounded-xl bg-violet-50 text-[#6D5DF6] flex items-center justify-center">
+            <Calculator className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">ผลการคำนวณ (Calculation Results)</h2>
+            <p className="text-xs text-slate-500 mt-0.5">ระบบคำนวณงบประมาณ ค่าตัว และเป้าหมาย KPI จากข้อมูล Brief</p>
+          </div>
+        </div>
+        
+        {calc.budgetOptions.length > 1 && (
+          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200/50">
+            {calc.budgetOptions.map((opt, oIdx) => {
+              const isActive = opt.id === activeOptId;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setActiveOptId(opt.id)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer",
+                    isActive
+                      ? "bg-white text-slate-900 shadow-2xs border border-slate-200"
+                      : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  {opt.name || `Option ${String.fromCharCode(65 + oIdx)}`}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Grid Panels */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {/* Summary */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 text-sm">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <FileText className="h-4 w-4 text-[#6D5DF6]" />
+            Summary
+          </h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-slate-500">Total Influencers</span>
+                <span className="text-[10px] text-slate-400 block italic">Sum of all channel influencers - Total Reserve Influencers</span>
+              </div>
+              <span className="font-semibold text-slate-800">{calc.sumInfluencers}</span>
+            </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-slate-500">Total Reserve Influencers</span>
+              </div>
+              <span className="font-semibold text-slate-800">{calc.sumReserveInfluencers}</span>
+            </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-slate-500">Total Influencer Cost</span>
+                <span className="text-[10px] text-slate-400 block italic">Sum of (Channel Cost × Number of Influencers)</span>
+              </div>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.totalInfluencerCost)}</span>
+            </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-slate-500">Total Logistic Cost</span>
+                <span className="text-[10px] text-slate-400 block italic">(Total + Reserve) × (Logistics + Product + Travel)</span>
+              </div>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.totalLogisticCost)}</span>
+            </div>
+            <div className="h-px bg-slate-200/60 my-1" />
+            <div className="flex justify-between items-start font-semibold">
+              <div>
+                <span className="text-slate-700">Total Influencer Raw Cost</span>
+                <span className="text-[10px] text-slate-400 block italic">Influencer Cost + Logistic Cost</span>
+              </div>
+              <span className="text-slate-900">{formatCurrency(calc.totalInfluencerRawCost)}</span>
+            </div>
+            <div className="flex justify-between items-start font-bold">
+              <div>
+                <span className="text-slate-700">Remaining Raw</span>
+                <span className="text-[10px] text-slate-400 block italic">Raw Cost for Campaign - Total Influencer Raw Cost</span>
+              </div>
+              <span className={calc.remainingRaw >= 0 ? "text-emerald-600" : "text-rose-600"}>
+                {formatCurrency(calc.remainingRaw)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Brief Input */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3.5 text-sm">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <Coins className="h-4 w-4 text-[#6D5DF6]" />
+            Brief Input
+          </h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Total Budget</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBudget)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Total Boost Ads</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBoostAds)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Total Other Services</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.totalOtherServices)}</span>
+            </div>
+            <div className="h-px bg-slate-200/60 my-1" />
+            <div className="flex justify-between font-semibold">
+              <span className="text-slate-700">Available Budget</span>
+              <span className="text-slate-900">{formatCurrency(calc.availableBudget)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Raw Cost for Influencer</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.rawCostForInfluencer)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Contingencies</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.contingencies)} (5%)</span>
+            </div>
+            <div className="h-px bg-slate-200/60 my-1" />
+            <div className="flex justify-between font-bold">
+              <span className="text-slate-700">Raw Cost for Campaign</span>
+              <span className="text-[#6D5DF6]">{formatCurrency(calc.rawCostForCampaign)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Influencer Calculations */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 text-sm">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <Users className="h-4 w-4 text-[#6D5DF6]" />
+            Influencer Calculations
+          </h3>
+          <div className="space-y-3">
+            <div>
+              <span className="text-slate-500 text-xs block">Average Influencer Cost</span>
+              <span className="font-bold text-slate-800 text-base mt-0.5 block">{formatCurrency(calc.averageInfluencerCost)}</span>
+              <span className="text-[10px] text-slate-400 italic">Sum of (Channel Cost × Allocation %)</span>
+            </div>
+            <div className="h-px bg-slate-200/60" />
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-slate-500 text-xs block">Total Influencers</span>
+                <span className="font-bold text-slate-900 text-base">{calc.sumInfluencers}</span>
+              </div>
+              <span className="text-[10px] text-slate-450 italic text-right font-medium max-w-[55%] leading-tight">
+                FLOOR.MATH(Raw Cost for Campaign ÷ Average Cost)
+              </span>
+            </div>
+            <div className="h-px bg-slate-200/60" />
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-slate-500 text-xs block">Total Reserve Influencers</span>
+                <span className="font-bold text-slate-900 text-base">{calc.sumReserveInfluencers}</span>
+              </div>
+              <span className="text-[10px] text-slate-455 italic text-right font-medium max-w-[55%] leading-tight">
+                Sum of (Channel Influencers ÷ 20)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sales & Profitability */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3.5 text-sm">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <TrendingUp className="h-4 w-4 text-[#6D5DF6]" />
+            Sales Value
+          </h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Sales Price</span>
+              <span className="font-bold text-slate-900">{formatCurrency(calc.salesPrice)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Campaign Cost</span>
+              <span className="font-semibold text-slate-800">{formatCurrency(calc.campaignCost)}</span>
+            </div>
+            <div className="text-[10px] text-slate-400 italic leading-tight pt-0.5">
+              Boost Ads + Other Services + Fee + Influencer Raw Cost + Contingencies
+            </div>
+            <div className="h-px bg-slate-200/60 my-1" />
+            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs">
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold block uppercase">Gross Profit (%)</span>
+                <span className="font-extrabold text-[#6D5DF6] text-xl block mt-0.5">{calc.grossProfitPercent.toFixed(2)}%</span>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-violet-50 text-[#6D5DF6] flex items-center justify-center">
+                <Percent className="h-5 w-5" strokeWidth={3} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Campaign KPI & Reach */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 text-sm md:col-span-1 lg:col-span-2">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <TrendingUp className="h-4 w-4 text-[#6D5DF6]" />
+            Campaign KPI
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-semibold">Total Influencer</span>
+              <span className="font-bold text-slate-900">{calc.sumInfluencers}</span>
+            </div>
+            
+            <div>
+              <span className="text-slate-400 text-xs font-bold uppercase block mb-1">Influencers by Channel</span>
+              <div className="space-y-2 pl-2 border-l border-slate-200">
+                {calc.channelBreakdown.map((chan, idx) => (
+                  <div key={idx} className="flex justify-between items-start text-xs">
+                    <div>
+                      <span className="font-medium text-slate-700">{chan.platform} ({chan.followerReq}):</span>
+                      <span className="text-[10px] text-slate-400 block">{chan.numInfs} influencers - {chan.reserveInfs} reserve</span>
+                    </div>
+                    <span className="font-bold text-slate-800">{chan.numInfs}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-200/60" />
+
+            <div>
+              <span className="text-slate-400 text-xs font-bold uppercase block mb-2">Reach & Engagement KPI</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Influencer Reach</span>
+                  <span className="font-bold text-[#6D5DF6] text-sm mt-0.5 block">{calc.influencerReach.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Sum of (Social Cost × 10 × Number of Influencers by Channel)</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Combined Follower</span>
+                  <span className="font-bold text-slate-800 text-sm mt-0.5 block">{calc.combinedFollower.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Influencer Reach × 3</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Ads Reach</span>
+                  <span className="font-bold text-slate-800 text-sm mt-0.5 block">{calc.adsReach.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Sum of (Ads ÷ CPR)</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Estimated Reach</span>
+                  <span className="font-bold text-slate-800 text-sm mt-0.5 block">{calc.estimatedReach.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Influencer Reach + Ads Reach</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Committed Reach</span>
+                  <span className="font-bold text-emerald-600 text-sm mt-0.5 block">{calc.committedReach.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Estimated Reach × 0.8</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Estimated Engagement</span>
+                  <span className="font-bold text-slate-800 text-sm mt-0.5 block">{calc.estimatedEngagement.toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 leading-tight">Influencer Reach × 0.05</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Channel Breakdown */}
+        <div className="md:col-span-2 lg:col-span-3 space-y-4">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+            <Truck className="h-4 w-4 text-[#6D5DF6]" />
+            Channel Breakdown (All-in)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {calc.channelBreakdown.map((chan, idx) => (
+              <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3.5 shadow-2xs hover:shadow-xs transition">
+                <div className="flex justify-between items-start border-b border-slate-100 pb-2">
+                  <div>
+                    <span className="font-bold text-slate-800 text-sm">{chan.name}</span>
+                    <span className="text-[10px] text-slate-450 block mt-0.5">Allocation: {chan.allocationPercent}%</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-[#6D5DF6] text-sm block">{formatCurrency(chan.channelCost)}</span>
+                    <span className="text-[9px] text-slate-400 block mt-0.5">Avg Cost / KOL</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Logistics</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.logistics)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Product</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.product)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Travel</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.travel)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Social</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.social)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Support</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.support)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Special</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.special)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Via</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.via)}</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-400 font-semibold block text-[9px] uppercase">Other (Add Ads)</span>
+                    <span className="font-semibold text-slate-700">{formatCurrency(chan.other)}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex gap-4">
+                    <div>
+                      <span className="text-slate-500 font-semibold">Number of Influencers:</span> <span className="font-bold text-slate-800">{chan.numInfs}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-semibold">Reserve Influencers:</span> <span className="font-bold text-slate-800">{chan.reserveInfs}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-semibold">Influencer Cost:</span> <span className="font-bold text-[#6D5DF6]">{formatCurrency(chan.influencerCost)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 function DealsheetPage({ brief, onUpdateBrief, showToast }) {
+  const [activeOptId, setActiveOptId] = useState(() => {
+    if (brief.budgetOptions && brief.budgetOptions.length > 0) return brief.budgetOptions[0].id;
+    return "legacy";
+  });
+
   const activeGroups = Object.keys(brief.groupTrackers || {});
   
-  // Create a filtered version of groupTrackers containing only "Done" influencers
+  const filteredTrackers = {};
+  let totalDoneCount = 0;
+  
+  activeGroups.forEach(grp => {
+    const tracker = brief.groupTrackers[grp];
+    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Done");
+    if (doneInfluencers.length > 0) {
+      filteredTrackers[grp] = { ...tracker, influencers: doneInfluencers };
+      totalDoneCount += doneInfluencers.length;
+    }
+  });
+
+  const filteredGroups = Object.keys(filteredTrackers);
+
+  const hasStandard = brief && (
+    Array.isArray(brief.packageType) 
+      ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+      : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
+  );
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+      
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
+          {hasStandard ? (
+            <CampaignCalculationsView brief={brief} activeOptId={activeOptId} setActiveOptId={setActiveOptId} />
+          ) : (
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+              <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dealsheet Preview</h1>
+                  <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
+                </div>
+              </div>
+
+              {totalDoneCount === 0 ? (
+                <div className="text-center py-16 text-slate-550 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
+                    <CheckCircle2 className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
+                  <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Done" in Example List to view them here.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {filteredGroups.map(grp => (
+                    <TrackerTable 
+                      key={grp}
+                      groupName={grp}
+                      brief={brief}
+                      trackerData={filteredTrackers[grp]}
+                      onUpdateTracker={(updatedTracker) => {
+                        const newTrackers = { ...brief.groupTrackers };
+                        const originalInfluencers = newTrackers[grp].influencers;
+                        const updatedMap = {};
+                        updatedTracker.influencers.forEach(inf => {
+                          updatedMap[inf.id] = inf;
+                        });
+                        const mergedInfluencers = originalInfluencers.map(inf => {
+                          return updatedMap[inf.id] ? updatedMap[inf.id] : inf;
+                        });
+                        newTrackers[grp] = { ...newTrackers[grp], influencers: mergedInfluencers };
+                        onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+                      }}
+                      onAddClick={() => {}}
+                      hideAddButton={true}
+                      readOnly={true}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="w-full lg:w-1/4 shrink-0">
+          <div className="sticky top-6 space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    if (hasStandard) {
+                      window.open("https://docs.google.com/spreadsheets/d/18ns-87lEe4Ct2qzfQ0nsEYrb4WdpJlmqoRSnP2J_UF0/edit?usp=sharing", "_blank");
+                    } else {
+                      showToast && showToast("download dealsheet soon");
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" /> Export Dealsheet
+                </Button>
+              </div>
+            </div>
+            <ActivityTimeline logs={brief.activityLog || []} />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ProposalPage({ brief, onUpdateBrief, showToast }) {
+  const activeGroups = Object.keys(brief.groupTrackers || {});
+  
   const filteredTrackers = {};
   let totalDoneCount = 0;
   
@@ -1910,39 +2566,168 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
       : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("kpi"))
   );
 
+  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0 
+    ? brief.budgetOptions 
+    : [{
+        id: "legacy",
+        name: "Option A",
+        budgetSpending: brief.budgetSpending,
+        vat: brief.vat,
+        budgetCondition: brief.budgetCondition,
+        estimatedBrandSpending: brief.estimatedBrandSpending,
+        budgetPerInfluencer: brief.budgetPerInfluencer,
+        expectedNumInfluencers: brief.expectedNumInfluencers,
+        expectedReach: brief.expectedReach,
+        scopeOfWorks: brief.scopeOfWorks || []
+      }];
+
+  const calculatedOptions = budgetOptions.map(opt => getCampaignCalculations(brief, opt.id));
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+      
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-3/4 space-y-6 min-w-0">
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
-            <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+            <div className="mb-6 border-b border-slate-100 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dealsheet & Proposal</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Proposal Preview</h1>
                 <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
               </div>
             </div>
 
             {hasStandard ? (
-              <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm p-10 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 rounded-full bg-[#6D5DF6]/10 flex items-center justify-center mb-4">
-                  <ExternalLink className="h-8 w-8 text-[#6D5DF6]" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">Standard Dealsheet is Ready</h3>
-                <p className="text-slate-500 max-w-md mb-8">
-                  Your standard Dealsheet & Proposal is hosted on Canva. Click the button below to view it in a new tab.
-                </p>
-                <a 
-                  href="https://bubblely-standard-dealsheet.my.canva.site/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-xl bg-[#6D5DF6] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
-                >
-                  Open Dealsheet in Canva
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </a>
+              <div className="w-full rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+                <table className="w-full text-left border-collapse table-fixed">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-1/4">Option</th>
+                      {calculatedOptions.map((opt, idx) => (
+                        <th key={opt.activeOpt.id} className="px-6 py-4 text-sm font-extrabold text-slate-800 text-center">
+                          {opt.activeOpt.name || `Option ${String.fromCharCode(65 + idx)}`}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">
+                        Budget <br />
+                        <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tight">[ Exclude Vat 7% ]</span>
+                      </td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-[#6D5DF6] font-bold text-base text-center">
+                          {opt.totalBudget.toLocaleString()} Baht
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Total Influencer</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
+                          <div className="font-bold text-[#6D5DF6]">{opt.sumInfluencers} Pax // {opt.sumInfluencers} Posts</div>
+                          <div className="text-[11px] text-slate-400 mt-1">โดยแบ่งตาม SOW ดังนี้</div>
+                          <div className="text-[11px] text-slate-550 mt-1 space-y-0.5 inline-block text-left">
+                            {opt.channelBreakdown.map((chan, cIdx) => (
+                              <div key={cIdx}>
+                                • {chan.platform} ({chan.followerReq}) = {chan.numInfs} Pax // {chan.numInfs} Posts
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Scope of Work</td>
+                      {calculatedOptions.map((opt) => {
+                        const platforms = [...new Set(opt.channelBreakdown.map(c => c.platform.toLowerCase()))];
+                        return (
+                          <td key={opt.activeOpt.id} className="px-6 py-5">
+                            <div className="space-y-4 text-left">
+                              {platforms.includes("tiktok") && (
+                                <div>
+                                  <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                                    สำหรับช่องทาง TikTok
+                                  </div>
+                                  <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
+                                    Influencer เดินทางไปที่ Lotus's สาขาใกล้บ้าน รีวิว Mechanic กิจกรรม + How to อธิบายวิธีร่วมกิจกรรม
+                                  </div>
+                                </div>
+                              )}
+                              {(platforms.includes("x") || platforms.includes("twitter") || platforms.includes("instagram") || platforms.includes("facebook") || platforms.includes("ig")) && (
+                                <div>
+                                  <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                                    สำหรับช่องทาง X / Instagram / Facebook
+                                  </div>
+                                  <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
+                                    Influencer Capture MV มาโพสต์ลงโซเชียลมีเดีย และใส่แคปชั่นพูดถึงเพลงดังกล่าว
+                                  </div>
+                                </div>
+                              )}
+                              <div className="text-rose-600 font-bold text-xs pt-1 text-center border-t border-slate-100 mt-2">
+                                ** ซื้อสินค้าเองในราคา {(brief.productValue || 200).toLocaleString()} บาท // Scope นี้ ทางแบรนด์จัดเตรียม Material ให้ **
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Combined Follower</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
+                          Est. ~{opt.combinedFollower.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Reach</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
+                          <span className="text-slate-500">Est. ~{opt.estimatedReach.toLocaleString()}</span>
+                          <span className="text-slate-400 mx-1.5">//</span>
+                          <span className="font-semibold text-slate-800">Commit {opt.committedReach.toLocaleString()}</span>
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Engagement</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
+                          Est. ~{opt.estimatedEngagement.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Influencers Type</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
+                          <div className="text-xs font-medium space-y-1.5 leading-relaxed">
+                            <div>● <strong className="text-slate-950">Gender:</strong> {brief.gender || 'All Gender'}</div>
+                            <div>● <strong className="text-slate-950">Age:</strong> {brief.ageRange || '25 Years Old+'}</div>
+                            <div>● <strong className="text-slate-950">Lifestyle:</strong> {brief.lifestyle || 'Lifestyle'}</div>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Conditions</td>
+                      {calculatedOptions.map((opt) => (
+                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
+                          <div className="space-y-1.5 text-xs leading-relaxed">
+                            <div>● สามารถเลือก Influencer และตรวจ Draft ได้ 1 ครั้ง (สงวนสิทธิ์แก้ไขเฉพาะการตัดต่อและแคปชั่นเท่านั้น)</div>
+                            <div>● ราคาข้างต้น ไม่รวม Vat 7%, Boost Post, Boost Fee, Buy Out Asset</div>
+                            <div>● สงวนสิทธิ์ให้ Influencer เลือกสาขาที่จะเข้าไปถ่ายคอนเทนต์ด้วยตนเอง</div>
+                            <div>● เก็บโพสต์ขั้นต่ำ 30 วันเท่านั้น</div>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             ) : totalDoneCount === 0 ? (
-              <div className="text-center py-16 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+              <div className="text-center py-16 text-slate-555 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
                 <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
                   <CheckCircle2 className="h-8 w-8 text-slate-300" />
                 </div>
@@ -1958,27 +2743,21 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                     brief={brief}
                     trackerData={filteredTrackers[grp]}
                     onUpdateTracker={(updatedTracker) => {
-                      // We need to merge the updated "Done" influencers back into the full list
                       const newTrackers = { ...brief.groupTrackers };
                       const originalInfluencers = newTrackers[grp].influencers;
-                      
-                      // Map the updated influencers by ID
                       const updatedMap = {};
                       updatedTracker.influencers.forEach(inf => {
                         updatedMap[inf.id] = inf;
                       });
-                      
-                      // Replace the original ones with updated ones if they exist
                       const mergedInfluencers = originalInfluencers.map(inf => {
                         return updatedMap[inf.id] ? updatedMap[inf.id] : inf;
                       });
-                      
                       newTrackers[grp] = { ...newTrackers[grp], influencers: mergedInfluencers };
                       onUpdateBrief({ ...brief, groupTrackers: newTrackers });
                     }}
-                    onAddClick={() => {}} // Disabled adding in dealsheet view
-                    hideAddButton={true} // We'll add this prop to TrackerTable to hide the add button
-                    readOnly={true} // Prevent editing any data in this view
+                    onAddClick={() => {}}
+                    hideAddButton={true}
+                    readOnly={true}
                   />
                 ))}
               </div>
@@ -1991,13 +2770,16 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
               <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
               <div className="flex flex-col gap-3">
-                <Button className="w-full" onClick={() => showToast && showToast("download dealsheet soon")}><Download className="mr-2 h-4 w-4" /> Export Dealsheet</Button>
                 <Button 
-                  variant="secondary" 
                   className="w-full" 
-                  onClick={() => showToast && showToast("download proposal soon")}
-                  disabled={!hasKpi}
-                  title={!hasKpi ? "Only package types containing 'KPI' can export proposal" : ""}
+                  onClick={() => {
+                    const url = hasStandard 
+                      ? "https://docs.google.com/presentation/d/11CnO6DySSr7OQvtVEJZcAI0LJKBp7n2RCuLH5lQSfMc/edit?usp=sharing"
+                      : "https://docs.google.com/presentation/d/1toI8ovvmuFr-bH7LdqSo4h-9-wFcSzen/edit?slide=id.p1#slide=id.p1";
+                    window.open(url, "_blank");
+                  }}
+                  disabled={hasKpi}
+                  title={hasKpi ? "Cannot export proposal for package types containing 'KPI'" : ""}
                 >
                   <Download className="mr-2 h-4 w-4" /> Export Proposal
                 </Button>
@@ -2010,7 +2792,6 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
     </motion.div>
   );
 }
-
 // --- Brief Detail Page Component ---
 function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
@@ -2186,59 +2967,59 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20 text-base">
       
       {/* Top Breadcrumb & Back Row */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <button 
           onClick={onBack} 
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-650 hover:text-[#6D5DF6] transition cursor-pointer"
+          className="inline-flex items-center gap-2 text-base font-semibold text-slate-650 hover:text-[#6D5DF6] transition cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
           <span>Back to Briefs</span>
         </button>
-        <div className="text-xs text-slate-400">
+        <div className="text-sm text-slate-400">
           Brief ID: <span className="font-semibold text-slate-600">{brief.id}</span>
         </div>
       </div>
 
       {/* Modern Gradient Header Card */}
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-6 lg:p-8 shadow-2xs mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-[#6D5DF6] ring-1 ring-violet-100/50">
+            <div className="flex flex-wrap items-center gap-2.5 mb-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-sm font-bold text-[#6D5DF6] ring-1 ring-violet-100/50">
                 {brief.brand || "Client Name"}
               </span>
               <span className={cn(
-                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border",
+                "inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold border",
                 brief.clientStatus === "New" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-blue-50 text-blue-700 border-blue-100"
               )}>
                 {brief.clientStatus || "New Client"}
               </span>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 border border-slate-200">
                 {brief.customerType || "Key Account"}
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 lg:text-4xl">
               {brief.campaignName || "Unnamed Campaign"}
             </h1>
             
             {/* Timeline Progress Row */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-3.5">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 text-slate-400" />
+            <div className="flex flex-wrap items-center gap-5 text-sm text-slate-500 mt-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-slate-400" />
                 <span className="font-semibold text-slate-700">Period:</span>
-                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignStartDate || "-"}</span>
+                <span className="bg-white px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignStartDate || "-"}</span>
                 <span className="text-slate-400">to</span>
-                <span className="bg-white px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignEndDate || "-"}</span>
+                <span className="bg-white px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignEndDate || "-"}</span>
               </div>
-              <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-slate-400" />
+              <div className="h-5 w-px bg-slate-200 hidden sm:block"></div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-slate-400" />
                 <span className="font-semibold text-slate-700">Internal Status:</span>
                 <span className={cn(
-                  "px-2.5 py-0.5 rounded-full font-bold border text-[10px] uppercase",
+                  "px-3 py-1 rounded-full font-bold border text-xs uppercase",
                   brief.internalStatus === "Submitted to Traffic" || brief.internalStatus === "Assign Planner/Buyer"
                     ? "bg-violet-50 text-[#6D5DF6] border-violet-100"
                     : brief.internalStatus === "Draft Dealsheet"
@@ -2259,10 +3040,10 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 alert("คัดลอกลิงก์สำเร็จ!");
                 if (window.showToast) window.showToast("Copied Brief Link!");
               }}
-              className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-5 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
               title="Copy link to this brief"
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="h-5 w-5" />
               Copy Link
             </button>
           </div>
@@ -2284,17 +3065,17 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   key={tab.id}
                   onClick={() => setActiveSubTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-all cursor-pointer relative",
+                    "flex items-center gap-2.5 px-6 py-4.5 text-base font-semibold border-b-2 transition-all cursor-pointer relative",
                     isActive 
                       ? "border-[#6D5DF6] text-[#6D5DF6] font-bold" 
                       : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", isActive ? "text-[#6D5DF6]" : "text-slate-400")} />
+                  <Icon className={cn("h-5 w-5", isActive ? "text-[#6D5DF6]" : "text-slate-400")} />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && tab.count > 0 && (
                     <span className={cn(
-                      "ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                      "ml-1.5 text-xs font-bold px-2 py-0.5 rounded-full",
                       isActive ? "bg-violet-100 text-[#6D5DF6]" : "bg-slate-100 text-slate-600"
                     )}>
                       {tab.count}
@@ -2313,16 +3094,16 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <div className="space-y-8">
                 
                 {/* Visual Header & Edit Button */}
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-800">Project & Client Information</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Key parameters, target brand specs, and targeted audiences.</p>
+                    <h3 className="text-lg font-bold text-slate-800">Project & Client Information</h3>
+                    <p className="text-sm text-slate-400 mt-1">Key parameters, target brand specs, and targeted audiences.</p>
                   </div>
                   <button 
                     onClick={() => handleEditSection(1)} 
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-655 hover:bg-slate-55 transition cursor-pointer"
                   >
-                    <Edit className="h-3.5 w-3.5" /> Edit Profile
+                    <Edit className="h-4 w-4" /> Edit Profile
                   </button>
                 </div>
 
@@ -2330,11 +3111,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   
                   {/* Client Profile Box */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
-                      <Briefcase className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5">
+                      <Briefcase className="h-5 w-5 text-[#6D5DF6]" />
                       Client Profile & Lead
                     </h4>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-3.5 text-base">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Client Status:</span>
                         <span className={cn(
@@ -2352,11 +3133,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                         <span className="text-slate-500">Project Owner (Sales):</span>
                         <span className="font-semibold text-[#6D5DF6]">{brief.salesOwner || "-"}</span>
                       </div>
-                      <div className="flex justify-between items-start border-t border-slate-200/50 pt-3">
+                      <div className="flex justify-between items-start border-t border-slate-200/50 pt-3.5">
                         <span className="text-slate-500 mt-0.5">Package Type:</span>
-                        <div className="flex flex-wrap gap-1 justify-end max-w-[65%]">
+                        <div className="flex flex-wrap gap-1.5 justify-end max-w-[65%]">
                           {(Array.isArray(brief.packageType) ? brief.packageType : [brief.packageType || "Standard"]).map(pkg => (
-                            <span key={pkg} className="bg-violet-50 text-[#6D5DF6] border border-violet-100 px-2 py-0.5 rounded-md text-xs font-semibold">
+                            <span key={pkg} className="bg-violet-50 text-[#6D5DF6] border border-violet-100 px-2.5 py-0.5 rounded-md text-xs font-bold">
                               {pkg === "Others" && brief.packageTypeOther ? `Others (${brief.packageTypeOther})` : pkg}
                             </span>
                           ))}
@@ -2367,13 +3148,13 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                   {/* Channel & Platforms Box */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
-                      <Compass className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5">
+                      <Compass className="h-5 w-5 text-[#6D5DF6]" />
                       Campaign Channels
                     </h4>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-3.5 text-base">
                       <div>
-                        <span className="text-slate-500 text-xs block mb-1.5">Target Platforms:</span>
+                        <span className="text-slate-500 text-sm block mb-1.5">Target Platforms:</span>
                         <div className="flex flex-wrap gap-1.5">
                           {(Array.isArray(brief.platform) ? brief.platform : [brief.platform || "Instagram"]).map(plat => (
                             <span key={plat} className={cn(
@@ -2391,18 +3172,18 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       </div>
                       
                       {/* Buddy Boost specs */}
-                      <div className="border-t border-slate-200/50 pt-3">
+                      <div className="border-t border-slate-200/50 pt-3.5">
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-500 text-xs">Buddy Boost Required:</span>
-                          <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", brief.isBuddyBoostRequired ? "bg-violet-100 text-[#6D5DF6] border-violet-200" : "bg-slate-200 text-slate-700 border-slate-350")}>
+                          <span className="text-slate-500 text-sm">Buddy Boost Required:</span>
+                          <span className={cn("text-xs font-bold px-2.5 py-0.5 rounded-full border", brief.isBuddyBoostRequired ? "bg-violet-100 text-[#6D5DF6] border-violet-200" : "bg-slate-200 text-slate-700 border-slate-350")}>
                             {brief.isBuddyBoostRequired ? "Yes" : "No"}
                           </span>
                         </div>
                         {brief.isBuddyBoostRequired && (
-                          <div className="mt-2 p-2.5 rounded-lg bg-white border border-slate-200 text-xs space-y-1.5 shadow-3xs">
+                          <div className="mt-2.5 p-3 rounded-lg bg-white border border-slate-200 text-sm space-y-1.5 shadow-3xs">
                             <div className="flex justify-between"><span className="text-slate-400">Target Boost:</span> <span className="font-semibold text-slate-800">{renderList(brief.targetBoost)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">Boost Budget:</span> <span className="font-semibold text-[#6D5DF6]">{brief.budgetBoostSpending || "-"}</span></div>
-                            {brief.buddyBoostDetail && <div className="border-t border-slate-100 pt-1 mt-1 text-slate-500 italic">{brief.buddyBoostDetail}</div>}
+                            {brief.buddyBoostDetail && <div className="border-t border-slate-100 pt-1.5 mt-1 text-slate-500 italic">{brief.buddyBoostDetail}</div>}
                           </div>
                         )}
                       </div>
@@ -2411,55 +3192,55 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                   {/* Target Audience Profile */}
                   <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
-                      <Users className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5">
+                      <Users className="h-5 w-5 text-[#6D5DF6]" />
                       Target Audience Demographics
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Gender</span>
-                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{renderList(brief.gender)}</span>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-xs text-slate-400 font-bold block uppercase">Gender</span>
+                        <span className="font-bold text-slate-800 text-base mt-1 block">{renderList(brief.gender)}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Age Range</span>
-                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{renderList(brief.ageRange) || "-"}</span>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-xs text-slate-400 font-bold block uppercase">Age Range</span>
+                        <span className="font-bold text-slate-800 text-base mt-1 block">{renderList(brief.ageRange) || "-"}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Country</span>
-                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{brief.country || "-"}</span>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-xs text-slate-400 font-bold block uppercase">Country</span>
+                        <span className="font-bold text-slate-800 text-base mt-1 block">{brief.country || "-"}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-3xs">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Province</span>
-                        <span className="font-bold text-slate-800 text-sm mt-0.5 block">{brief.province || "-"}</span>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
+                        <span className="text-xs text-slate-400 font-bold block uppercase">Province</span>
+                        <span className="font-bold text-slate-800 text-base mt-1 block">{brief.province || "-"}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Campaign Objectives */}
                   <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
-                      <Sparkles className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5">
+                      <Sparkles className="h-5 w-5 text-[#6D5DF6]" />
                       Campaign Objectives & Goals
                     </h4>
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2.5">
                         {["Awareness (Reach)", "Interest (Engagement)", "Trust (Post)"].map(obj => {
                           const isSelected = brief.objective && brief.objective.includes(obj);
                           return (
                             <span key={obj} className={cn(
-                              "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition",
+                              "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold border transition",
                               isSelected 
                                 ? "bg-violet-50 text-[#6D5DF6] border-violet-200 shadow-3xs" 
                                 : "bg-white text-slate-300 border-slate-200 opacity-50 line-through"
                             )}>
-                              {isSelected && <Check className="h-3.5 w-3.5 text-[#6D5DF6] stroke-[3]" />}
+                              {isSelected && <Check className="h-4 w-4 text-[#6D5DF6] stroke-[3]" />}
                               {obj}
                             </span>
                           );
                         })}
                       </div>
                       {brief.objectiveNote && (
-                        <div className="text-xs text-slate-650 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed shadow-3xs mt-2.5">
+                        <div className="text-sm text-slate-650 bg-white p-4 rounded-xl border border-slate-200 leading-relaxed shadow-3xs mt-2.5">
                           <span className="font-bold text-slate-700 block mb-1">Objective Note:</span>
                           {brief.objectiveNote}
                         </div>
@@ -2468,9 +3249,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   </div>
 
                   {/* Collapsible Reference Sheets (Product Info, Competitors etc.) */}
-                  <div className="md:col-span-2 space-y-3 pt-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <FileText className="h-4 w-4 text-slate-450" />
+                  <div className="md:col-span-2 space-y-4 pt-2">
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="h-5 w-5 text-slate-450" />
                       Brand Specifications & Reference Sheets
                     </h4>
 
@@ -2481,12 +3262,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           onClick={() => toggleDoc("product")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Product Name & Specifications</span>
-                          {expandedDocs.product ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                          <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Product Name & Specifications</span>
+                          {expandedDocs.product ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                         </button>
                         {expandedDocs.product && (
-                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[300px] overflow-y-auto">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.product }} />
+                          <div className="p-5 border-t border-slate-200 text-sm text-slate-750 leading-relaxed max-h-[300px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: brief.product }} />
                           </div>
                         )}
                       </div>
@@ -2499,12 +3280,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           onClick={() => toggleDoc("previous")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Previous Campaign References</span>
-                          {expandedDocs.previous ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                          <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Previous Campaign References</span>
+                          {expandedDocs.previous ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                         </button>
                         {expandedDocs.previous && (
-                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.previousCampaign }} />
+                          <div className="p-5 border-t border-slate-200 text-sm text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: brief.previousCampaign }} />
                           </div>
                         )}
                       </div>
@@ -2517,12 +3298,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           onClick={() => toggleDoc("competitor")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Competitor Analysis & Notes</span>
-                          {expandedDocs.competitor ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                          <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Competitor Analysis & Notes</span>
+                          {expandedDocs.competitor ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                         </button>
                         {expandedDocs.competitor && (
-                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.competitor }} />
+                          <div className="p-5 border-t border-slate-200 text-sm text-slate-750 leading-relaxed max-h-[250px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: brief.competitor }} />
                           </div>
                         )}
                       </div>
@@ -2535,12 +3316,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           onClick={() => toggleDoc("additional")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Campaign Guidelines</span>
-                          {expandedDocs.additional ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                          <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Additional Campaign Guidelines</span>
+                          {expandedDocs.additional ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                         </button>
                         {expandedDocs.additional && (
-                          <div className="p-4 border-t border-slate-200 text-xs text-slate-750 leading-relaxed max-h-[200px] overflow-y-auto">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: brief.additionalInfo }} />
+                          <div className="p-5 border-t border-slate-200 text-sm text-slate-750 leading-relaxed max-h-[200px] overflow-y-auto">
+                            <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: brief.additionalInfo }} />
                           </div>
                         )}
                       </div>
@@ -2559,20 +3340,20 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 {/* Header Row */}
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-slate-800">Budget Packages & Scopes of Work</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Option variations, budget details, and scope guidelines.</p>
+                    <h3 className="text-lg font-bold text-slate-800">Budget Packages & Scopes of Work</h3>
+                    <p className="text-sm text-slate-400 mt-1">Option variations, budget details, and scope guidelines.</p>
                   </div>
                   <button 
                     onClick={() => handleEditSection(2)} 
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-55 transition cursor-pointer"
                   >
-                    <Edit className="h-3.5 w-3.5" /> Edit Options
+                    <Edit className="h-4 w-4" /> Edit Options
                   </button>
                 </div>
 
                 {/* Option Tabs Navigation (within this tab) */}
                 {budgetOptions.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                  <div className="flex flex-wrap items-center gap-2.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
                     {budgetOptions.map((opt, oIdx) => {
                       const isActive = opt.id === activeOptId;
                       return (
@@ -2581,7 +3362,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           type="button"
                           onClick={() => setActiveOptId(opt.id)}
                           className={cn(
-                            "px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer",
+                            "px-5 py-2.5 text-sm font-bold rounded-lg transition cursor-pointer",
                             isActive
                               ? "bg-white text-slate-900 shadow-3xs border border-slate-200"
                               : "text-slate-600 hover:text-slate-900"
@@ -2598,53 +3379,53 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
                   
                   {/* Budget Spending */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Budget Spending</span>
-                      <span className="text-xl font-bold text-[#6D5DF6] block mt-1">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Budget Spending</span>
+                      <span className="text-2xl font-bold text-[#6D5DF6] block mt-1.5">
                         {formatCurrency(activeOpt.budgetSpending)}
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                    <span className="text-xs font-semibold text-slate-450 mt-3 block">
                       Tax Status: {activeOpt.vat || "-"}
                     </span>
                   </div>
 
                   {/* Estimated Brand Spending */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Est. Brand Spend</span>
-                      <span className="text-xl font-bold text-slate-800 block mt-1">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Est. Brand Spend</span>
+                      <span className="text-2xl font-bold text-slate-800 block mt-1.5">
                         {formatCurrency(activeOpt.estimatedBrandSpending)}
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                    <span className="text-xs font-semibold text-slate-455 mt-3 block">
                       Evaluation estimate
                     </span>
                   </div>
 
                   {/* Budget / KOL */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Budget Per Influencer</span>
-                      <span className="text-xl font-bold text-slate-800 block mt-1">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Budget Per Influencer</span>
+                      <span className="text-2xl font-bold text-slate-800 block mt-1.5">
                         {formatCurrency(activeOpt.budgetPerInfluencer)}
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400 mt-2 block">
+                    <span className="text-xs font-semibold text-slate-455 mt-3 block">
                       Target budget average
                     </span>
                   </div>
 
                   {/* Target Deliverables */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Expected KOLs & Reach</span>
-                      <span className="text-base font-bold text-slate-800 block mt-1">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Expected KOLs & Reach</span>
+                      <span className="text-lg font-bold text-slate-800 block mt-1.5">
                         KOLs: {activeOpt.expectedNumInfluencers || "-"}
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-1 block">
+                    <span className="text-xs font-semibold text-slate-500 mt-2 block">
                       Reach: {activeOpt.expectedReach || "-"}
                     </span>
                   </div>
@@ -2653,31 +3434,31 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                 {/* Option Level Condition */}
                 {activeOpt.budgetCondition && (
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                  <div className="p-4.5 rounded-xl bg-slate-50 border border-slate-200 text-sm">
                     <span className="font-bold text-slate-700 block mb-1">Option Condition / Note:</span>
-                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{activeOpt.budgetCondition}</p>
+                    <p className="text-slate-650 leading-relaxed whitespace-pre-wrap">{activeOpt.budgetCondition}</p>
                   </div>
                 )}
 
                 {/* SOW Scope list */}
-                <div className="space-y-4 pt-2">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <div className="space-y-5 pt-2">
+                  <h4 className="text-sm font-bold text-slate-450 uppercase tracking-wider flex items-center justify-between">
                     <span>Scope of Work List ({activeOpt.scopeOfWorks?.length || 0})</span>
                   </h4>
                   
                   {activeOpt.scopeOfWorks && activeOpt.scopeOfWorks.length > 0 ? (
                     activeOpt.scopeOfWorks.map((sow, idx) => (
-                      <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 text-sm shadow-3xs space-y-4 hover:shadow-2xs transition">
+                      <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs space-y-4.5 hover:shadow-2xs transition">
                         
                         {/* Scope Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                          <span className="font-bold text-slate-900 text-sm">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+                          <span className="font-bold text-slate-900 text-base">
                             Scope {idx + 1}: {sow.name || "Unnamed Scope"}
                           </span>
-                          <div className="flex gap-1.5">
+                          <div className="flex gap-2">
                             {(sow.platforms || []).map(plat => (
                               <span key={plat} className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                "text-xs font-bold px-2.5 py-0.5 rounded-full border",
                                 plat === "TikTok" ? "bg-black text-white border-black" :
                                 plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-500" :
                                 plat === "YouTube" ? "bg-red-50 text-red-750 border-red-200" :
@@ -2693,22 +3474,22 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                         </div>
 
                         {/* Deliverables Overview */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-0.5">Content Type</span>
-                            <span className="font-semibold text-slate-800 text-sm">{renderList(sow.contentType)}</span>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-1">Content Type</span>
+                            <span className="font-bold text-slate-800 text-base">{renderList(sow.contentType)}</span>
                           </div>
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-0.5">Followers Required</span>
-                            <span className="font-semibold text-slate-800 text-sm">{sow.followerReq || "-"}</span>
+                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-1">Followers Required</span>
+                            <span className="font-bold text-slate-800 text-base">{sow.followerReq || "-"}</span>
                           </div>
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-0.5">KOL Qty</span>
-                            <span className="font-semibold text-slate-800 text-sm">{sow.numInfluencers || "-"}</span>
+                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-1">KOL Qty</span>
+                            <span className="font-bold text-slate-800 text-base">{sow.numInfluencers || "-"}</span>
                           </div>
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-0.5">Budget Allocation</span>
-                            <span className="font-semibold text-slate-800 text-sm">
+                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-slate-400 font-bold block mb-1">Budget Allocation</span>
+                            <span className="font-bold text-slate-800 text-base">
                               {sow.allocationPercent ? `${sow.allocationPercent}%` : sow.allocation ? `${sow.allocation}%` : "-"}
                             </span>
                           </div>
@@ -2716,9 +3497,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                         {/* SOW Details Content */}
                         {sow.details && (
-                          <div className="text-xs p-3 rounded-xl border border-slate-150 bg-slate-50/30">
-                            <h5 className="font-bold text-slate-400 mb-1">Details & Guidelines</h5>
-                            <div className="font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none max-h-[150px] overflow-y-auto" dangerouslySetInnerHTML={{ __html: sow.details }} />
+                          <div className="text-sm p-4 rounded-xl border border-slate-150 bg-slate-50/30">
+                            <h5 className="font-bold text-slate-400 mb-1.5">Details & Guidelines</h5>
+                            <div className="font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none max-h-[150px] overflow-y-auto text-sm" dangerouslySetInnerHTML={{ __html: sow.details }} />
                           </div>
                         )}
 
@@ -2726,11 +3507,11 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           
                           {/* Influencer Persona */}
-                          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 text-xs">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#6D5DF6]" /> Influencer Persona
+                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 text-sm">
+                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                              <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer Persona
                             </h5>
-                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                               <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{sow.persona?.demographic || sow.persona?.infDemographic || "-"}</span></div>
                               <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{sow.persona?.location || sow.persona?.infLocation || "-"}</span></div>
                               <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{sow.persona?.occupation || sow.persona?.infOccupation || "-"}</span></div>
@@ -2739,61 +3520,61 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                               <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{sow.persona?.storyTelling || sow.persona?.infStoryTelling || "-"}</span></div>
                             </div>
                             {sow.persona?.infPreference && (
-                              <div className="mt-2 pt-2 border-t border-slate-200/50 text-slate-650">
-                                <span className="text-[10px] text-slate-400 font-bold block mb-1 uppercase">Influencer Preferences</span>
-                                <div className="bg-white p-2 rounded-lg border border-slate-250 max-h-[100px] overflow-y-auto" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference }} />
+                              <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
+                                <span className="text-xs text-slate-400 font-bold block mb-1.5 uppercase">Influencer Preferences</span>
+                                <div className="bg-white p-3 rounded-lg border border-slate-250 max-h-[120px] overflow-y-auto text-sm" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference }} />
                               </div>
                             )}
                           </div>
 
                           {/* Active Services */}
-                          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 text-xs">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Special Services Requested
+                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-sm">
+                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" /> Special Services Requested
                             </h5>
-                            <div className="flex flex-wrap gap-1.5 pt-1">
+                            <div className="flex flex-wrap gap-2 pt-1">
                               {sow.serviceScope?.buyoutRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   buyout: {renderList(sow.serviceScope?.buyoutDuration)}
                                 </span>
                               )}
                               {(sow.serviceScope?.boostPostRequired || sow.serviceScope?.boostRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   boost: {renderList(sow.serviceScope?.boostPostDuration || sow.serviceScope?.boostDuration)}
                                 </span>
                               )}
                               {sow.serviceScope?.addAdsRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   add ads: {renderList(sow.serviceScope?.addAdsDuration)}
                                 </span>
                               )}
                               {sow.serviceScope?.paidPartnershipRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   partnership: {renderList(sow.serviceScope?.paidPartnershipDuration)}
                                 </span>
                               )}
                               {sow.serviceScope?.genCodeRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   gen code: {renderList(sow.serviceScope?.genCodeDuration)}
                                 </span>
                               )}
                               {sow.serviceScope?.tiktokShopRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   shop: {renderList(sow.serviceScope?.tiktokShopDuration)}
                                 </span>
                               )}
                               {(sow.serviceScope?.brandedContentRequired || sow.serviceScope?.fbBrandedContentRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   branded: {renderList(sow.serviceScope?.brandedContentDuration || sow.serviceScope?.fbBrandedContentDuration)}
                                 </span>
                               )}
                               {(sow.serviceScope?.discoveryRequired || sow.serviceScope?.youtubeDiscoveryRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   discovery: {renderList(sow.serviceScope?.discoveryDuration || sow.serviceScope?.youtubeDiscoveryDuration)}
                                 </span>
                               )}
                               {(sow.serviceScope?.whitelistingRequired || sow.serviceScope?.xWhitelistingRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-md font-semibold text-[10px]">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
                                   whitelisting: {renderList(sow.serviceScope?.whitelistingDuration || sow.serviceScope?.xWhitelistingDuration)}
                                 </span>
                               )}
@@ -2808,7 +3589,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                                !sow.serviceScope?.brandedContentRequired && !sow.serviceScope?.fbBrandedContentRequired &&
                                !sow.serviceScope?.discoveryRequired && !sow.serviceScope?.youtubeDiscoveryRequired &&
                                !sow.serviceScope?.whitelistingRequired && !sow.serviceScope?.xWhitelistingRequired && (
-                                <span className="text-slate-400 italic font-medium">No special rights or whitelisting requested.</span>
+                                <span className="text-slate-400 italic font-semibold">No special rights or whitelisting requested.</span>
                               )}
                             </div>
                           </div>
@@ -2818,7 +3599,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       </div>
                     ))
                   ) : (
-                    <div className="text-slate-400 italic text-center py-8 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="text-slate-400 italic text-center py-8 bg-slate-50 border border-slate-200 rounded-xl text-base">
                       No scope of work items configured.
                     </div>
                   )}
@@ -2834,14 +3615,14 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 {/* Header Row */}
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-slate-800">Support, Travel & On-Site Logistics</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Product sponsorships, logistics and reviewer travel terms.</p>
+                    <h3 className="text-lg font-bold text-slate-800">Support, Travel & On-Site Logistics</h3>
+                    <p className="text-sm text-slate-400 mt-1">Product sponsorships, logistics and reviewer travel terms.</p>
                   </div>
                   <button 
                     onClick={() => handleEditSection(3)} 
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-655 hover:bg-slate-50 transition cursor-pointer"
                   >
-                    <Edit className="h-3.5 w-3.5" /> Edit Support
+                    <Edit className="h-4 w-4" /> Edit Support
                   </button>
                 </div>
 
@@ -2849,12 +3630,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   
                   {/* Delivery & Logistics */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                      <Coins className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2.5">
+                      <Coins className="h-5 w-5 text-[#6D5DF6]" />
                       Brand Support & Delivery
                     </h4>
                     
-                    <div className="space-y-3.5 text-sm">
+                    <div className="space-y-3.5 text-base">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Support Type:</span>
                         <span className="font-bold text-slate-800">
@@ -2868,7 +3649,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       </div>
                       
                       {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(brief.productReceiveMethod) && (
-                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
+                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-3">
                           <span className="text-slate-500">Logistics Cost / KOL:</span>
                           <span className="font-bold text-[#6D5DF6]">
                             {brief.logisticsPerInfluencer ? formatCurrency(brief.logisticsPerInfluencer) : "-"}
@@ -2877,14 +3658,14 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       )}
 
                       {brief.brandSupportType === "No Sponsor" && brief.productReceiveMethod === "Influencer ซื้อเอง" && (
-                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
+                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-3">
                           <span className="text-slate-500">Reimbursement Type:</span>
                           <span className="font-semibold text-slate-800">{brief.reimbursement || "-"}</span>
                         </div>
                       )}
 
-                      <div className="flex justify-between items-center border-t border-slate-200/50 pt-2.5">
-                        <span className="text-slate-500">Product Value:</span>
+                      <div className="flex justify-between items-center border-t border-slate-200/50 pt-3 font-semibold">
+                        <span className="text-slate-500 font-normal">Product Value:</span>
                         <span className="font-bold text-[#6D5DF6]">
                           {brief.productValue ? formatCurrency(brief.productValue) : "-"}
                         </span>
@@ -2894,17 +3675,17 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                   {/* Travel & On-Site */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                      <MapPin className="h-4 w-4 text-[#6D5DF6]" />
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2.5">
+                      <MapPin className="h-5 w-5 text-[#6D5DF6]" />
                       On-Site & Travel Details
                     </h4>
 
-                    <div className="space-y-3.5 text-sm">
+                    <div className="space-y-3.5 text-base">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Travel Required:</span>
                         <span className={cn(
-                          "text-[10px] font-bold px-2.5 py-0.5 rounded-full border",
-                          brief.requireTravel && brief.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-650 border-slate-200"
+                          "text-xs font-bold px-3 py-1 rounded-full border",
+                          brief.requireTravel && brief.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"
                         )}>
                           {brief.requireTravel || "ไม่ต้อง"}
                         </span>
@@ -2912,7 +3693,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                       
                       {brief.requireTravel && brief.requireTravel.includes("ต้อง") && (
                         <>
-                          <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
+                          <div className="flex justify-between items-center border-t border-slate-200/50 pt-3">
                             <span className="text-slate-500">On-Site Type:</span>
                             <span className="font-semibold text-slate-800">{brief.onSiteType || "-"}</span>
                           </div>
@@ -2936,9 +3717,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           </div>
                           
                           {brief.locationDetails && (
-                            <div className="border-t border-slate-200/50 pt-2 text-xs">
-                              <span className="text-slate-400 font-bold block mb-1">On-site Location Details</span>
-                              <p className="text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed whitespace-pre-wrap">{brief.locationDetails}</p>
+                            <div className="border-t border-slate-200/50 pt-3 text-sm">
+                              <span className="text-slate-400 font-bold block mb-1.5">On-site Location Details</span>
+                              <p className="text-slate-600 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed whitespace-pre-wrap">{brief.locationDetails}</p>
                             </div>
                           )}
                         </>
@@ -2948,9 +3729,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                   {/* General Campaign Conditions */}
                   {brief.condition && (
-                    <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Campaign Conditions & Remarks</h4>
-                      <div className="text-slate-700 bg-white border border-slate-200 p-4 rounded-xl whitespace-pre-wrap leading-relaxed text-xs shadow-3xs">
+                    <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3.5">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Campaign Conditions & Remarks</h4>
+                      <div className="text-slate-700 bg-white border border-slate-200 p-5 rounded-xl whitespace-pre-wrap leading-relaxed text-sm shadow-3xs">
                         {brief.condition}
                       </div>
                     </div>
@@ -2964,10 +3745,12 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             {activeSubTab === "activity" && (
               <div className="space-y-6">
                 <div className="border-b border-slate-100 pb-3">
-                  <h3 className="text-base font-bold text-slate-800">Brief Version & Audit Log</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Audit log history of all field changes and timeline events.</p>
+                  <h3 className="text-lg font-bold text-slate-800">Brief Version & Audit Log</h3>
+                  <p className="text-sm text-slate-400 mt-1">Audit log history of all field changes and timeline events.</p>
                 </div>
-                <ActivityTimeline logs={brief.activityLog || []} />
+                <div className="text-sm">
+                  <ActivityTimeline logs={brief.activityLog || []} />
+                </div>
               </div>
             )}
 
@@ -2976,47 +3759,47 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
         </div>
 
         {/* Right Column (Actions Sidebar) */}
-        <div className="w-full lg:w-1/4 shrink-0">
+        <div className="w-full lg:w-1/4 shrink-0 text-sm">
           <div className="sticky top-6 space-y-6">
             
             {/* Actions Panel */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
               
               {/* Internal Status Badge */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <span className="text-[10px] text-slate-400 font-bold block uppercase">Current Phase</span>
-                <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <span className="text-xs text-slate-400 font-bold block uppercase">Current Phase</span>
+                <span className="font-bold text-slate-800 text-base mt-1 block">
                   {brief.internalStatus || "Draft"}
                 </span>
               </div>
 
-              <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button className="w-full py-2.5 font-bold" onClick={() => setSubmitModalOpen(true)}>
+                  <Button className="w-full py-3 text-base font-bold" onClick={() => setSubmitModalOpen(true)}>
                     {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
                   </Button>
                 )}
-                <Button variant="secondary" className="w-full py-2.5 font-bold cursor-pointer">
-                  <Copy className="mr-2 h-4 w-4" /> Duplicate Brief
+                <Button variant="secondary" className="w-full py-3 text-base font-bold cursor-pointer">
+                  <Copy className="mr-2 h-5 w-5" /> Duplicate Brief
                 </Button>
               </div>
             </div>
 
             {/* General Info Card */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-3.5 text-xs">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-3.5 text-sm">
               <h3 className="font-bold text-slate-400 uppercase tracking-wider">System Metadata</h3>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">ID:</span>
-                <span className="font-semibold text-slate-850">{brief.id}</span>
+                <span className="font-semibold text-slate-800">{brief.id}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Created At:</span>
-                <span className="font-semibold text-slate-850">{brief.createdAt || "-"}</span>
+                <span className="font-semibold text-slate-800">{brief.createdAt || "-"}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Last Active Tab:</span>
-                <span className="font-semibold text-slate-850 capitalize">{brief.activeTab || "Brief"}</span>
+                <span className="font-semibold text-slate-800 capitalize">{brief.activeTab || "Brief"}</span>
               </div>
             </div>
 
@@ -3689,7 +4472,9 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
               onUpdateBrief={handleUpdateBrief}
             />
           ) : currentBrief.activeTab === "dealsheet" ? (
-            <DealsheetPage brief={currentBrief} onUpdateBrief={handleUpdateBrief} showToast={showToast} onBack={() => setCurrentBrief(null)} />
+            <DealsheetPage brief={currentBrief} onUpdateBrief={handleUpdateBrief} showToast={showToast} />
+          ) : currentBrief.activeTab === "proposal" ? (
+            <ProposalPage brief={currentBrief} onUpdateBrief={handleUpdateBrief} showToast={showToast} />
           ) : (
             <BriefDetailPage 
               brief={currentBrief} 

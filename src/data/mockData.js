@@ -218,5 +218,77 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     campaignEndDate: "2025-06-15",
     platform: ["Instagram", "Tiktok"],
     createdAt: "2025-05-10"
+  },
+  {
+    id: "BRD-3001",
+    internalStatus: "Assign Planner/Buyer",
+    version: 1,
+    campaignName: "Srichand Summer Collection",
+    customerId: "CUST-002",
+    brand: "Srichand",
+    product: "เครื่องสำอางคอลเลคชันใหม่สำหรับหน้าร้อน กันน้ำกันเหงื่อ ติดทนนาน",
+    clientStatus: "New",
+    customerType: "Non-Key Account",
+    salesOwner: "พี่ bankie",
+    packageType: ["Ratecard KPI"],
+    objective: ["Trust (Post)"],
+    objectiveNote: "เน้นรีวิวจากบิวตี้บล็อกเกอร์ให้เกิดความมั่นใจในสินค้า",
+    gender: ["Female"],
+    country: "Thailand",
+    province: "Bangkok",
+    ageRange: "18 - 35",
+    campaignStartDate: "2025-07-01",
+    campaignEndDate: "2025-07-31",
+    platform: ["Tiktok"],
+    createdAt: "2025-06-01"
+  },
+  {
+    id: "BRD-3002",
+    internalStatus: "Draft",
+    version: 1,
+    campaignName: "Unilever Pure Drink Launch",
+    customerId: "CUST-003",
+    brand: "Unilever",
+    product: "เครื่องดื่มชาเขียวเพื่อสุขภาพสูตรไม่มีน้ำตาล",
+    clientStatus: "New",
+    customerType: "Key Account",
+    salesOwner: "พี่ bankie",
+    packageType: ["Standard KPI"],
+    objective: ["Awareness (Reach)"],
+    objectiveNote: "สร้างการรับรู้ในกลุ่มคนทำงานรักสุขภาพ",
+    gender: ["Male", "Female"],
+    country: "Thailand",
+    province: "Bangkok",
+    ageRange: "20 - 45",
+    campaignStartDate: "2025-08-01",
+    campaignEndDate: "2025-08-31",
+    platform: ["Instagram", "Facebook"],
+    createdAt: "2025-06-05",
+    productValue: 200,
+    logisticsPerInfluencer: 0,
+    travelExpense: 0,
+    budgetOptions: [
+      {
+        id: "opt-1",
+        name: "Option A (TikTok Focus)",
+        totalBudget: "15000",
+        totalBoostAds: "0",
+        totalOtherServices: "0",
+        scopeOfWorks: [
+          { id: "sow-1", name: "All in TikTok 10,000 - 50,000", platforms: ["TikTok"], followerReq: "10K - 50K", allocationPercent: 100 }
+        ]
+      },
+      {
+        id: "opt-2",
+        name: "Option B (TikTok + Instagram)",
+        totalBudget: "30000",
+        totalBoostAds: "2000",
+        totalOtherServices: "1000",
+        scopeOfWorks: [
+          { id: "sow-2", name: "All in TikTok 10,000 - 50,000", platforms: ["TikTok"], followerReq: "10K - 50K", allocationPercent: 50 },
+          { id: "sow-3", name: "All in Instagram 10,000 - 50,000", platforms: ["Instagram"], followerReq: "10K - 50K", allocationPercent: 50 }
+        ]
+      }
+    ]
   }
 ];
