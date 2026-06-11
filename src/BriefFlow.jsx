@@ -1455,7 +1455,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                   ) : (
                     <div className="flex items-center gap-3">
                       <Button variant="secondary" onClick={() => handleSubmit("Draft")}>Save as Draft</Button>
-                      <Button onClick={() => handleSubmit("Assign Planner/Buyer")} disabled={!campaignName || !brand}>Create Brief</Button>
+                      <Button onClick={() => handleSubmit("Example List")} disabled={!campaignName || !brand}>Create Brief</Button>
                     </div>
                   )}
                 </>
@@ -1787,17 +1787,33 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
       : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
   );
   
+  const hasKpi = brief && (
+    Array.isArray(brief.packageType) 
+      ? brief.packageType.some(p => {
+          if (typeof p !== "string") return false;
+          if (p === "Others") {
+            return brief.packageTypeOther && brief.packageTypeOther.toLowerCase().includes("kpi");
+          }
+          return p.toLowerCase().includes("kpi");
+        })
+      : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("kpi"))
+  );
+
+  const isStandardKpi = hasStandard && hasKpi;
+
   const steps = [
     { id: "brief", label: "Brief" }
   ];
   
   if (!hasStandard) {
-    steps.push({ id: "assign", label: "Assign Planner/Buyer" });
     steps.push({ id: "exampleList", label: "Example List" });
   }
   
   steps.push({ id: "dealsheet", label: "Dealsheet" });
-  steps.push({ id: "proposal", label: "Proposal" });
+  
+  if (!isStandardKpi) {
+    steps.push({ id: "proposal", label: "Proposal" });
+  }
 
   const activeIdx = steps.findIndex(s => s.id === activeTab);
   
@@ -1809,19 +1825,15 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
       return 1; // Dealsheet
     }
 
-    if (brief.planner || brief.buyer) {
-      let hasDone = false;
-      if (brief.groupTrackers) {
-        Object.values(brief.groupTrackers).forEach(t => {
-          if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
-        });
-      }
-      if (!hasDone) return 2; // Example List
-      if (activeTab === "proposal") return 4;
-      return 3; // Dealsheet
+    let hasDone = false;
+    if (brief.groupTrackers) {
+      Object.values(brief.groupTrackers).forEach(t => {
+        if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
+      });
     }
-    
-    return 1; // Assign Planner/Buyer
+    if (!hasDone) return 1; // Example List
+    if (activeTab === "proposal") return 3;
+    return 2; // Dealsheet
   };
   
   const progressIdx = getProgressIdx();
@@ -2448,13 +2460,166 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
       : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"))
   );
 
+  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0 
+    ? brief.budgetOptions 
+    : [{
+        id: "legacy",
+        name: "Option A",
+        budgetSpending: brief.budgetSpending,
+        vat: brief.vat,
+        budgetCondition: brief.budgetCondition,
+        estimatedBrandSpending: brief.estimatedBrandSpending,
+        budgetPerInfluencer: brief.budgetPerInfluencer,
+        expectedNumInfluencers: brief.expectedNumInfluencers,
+        expectedReach: brief.expectedReach,
+        scopeOfWorks: brief.scopeOfWorks || []
+      }];
+
+  const calculatedOptions = budgetOptions.map(opt => getCampaignCalculations(brief, opt.id));
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
       
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-3/4 space-y-6 min-w-0">
           {hasStandard ? (
-            <CampaignCalculationsView brief={brief} activeOptId={activeOptId} setActiveOptId={setActiveOptId} />
+            <div className="space-y-6">
+              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+                <div className="mb-6 border-b border-slate-100 pb-6">
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900">KPI</h2>
+                </div>
+                <div className="w-full rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+                  <table className="w-full text-left border-collapse table-fixed">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-1/4">Option</th>
+                        {calculatedOptions.map((opt, idx) => (
+                          <th key={opt.activeOpt.id} className="px-6 py-4 text-sm font-extrabold text-slate-800 text-center">
+                            {opt.activeOpt.name || `Option ${String.fromCharCode(65 + idx)}`}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm">
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">
+                          Budget <br />
+                          <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tight">[ Exclude Vat 7% ]</span>
+                        </td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-[#6D5DF6] font-bold text-base text-center">
+                            {opt.totalBudget.toLocaleString()} Baht
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Total Influencer</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
+                            <div className="font-bold text-[#6D5DF6]">{opt.sumInfluencers} Pax // {opt.sumInfluencers} Posts</div>
+                            <div className="text-[11px] text-slate-400 mt-1">โดยแบ่งตาม SOW ดังนี้</div>
+                            <div className="text-[11px] text-slate-550 mt-1 space-y-0.5 inline-block text-left">
+                              {opt.channelBreakdown.map((chan, cIdx) => (
+                                <div key={cIdx}>
+                                  • {chan.platform} ({chan.followerReq}) = {chan.numInfs} Pax // {chan.numInfs} Posts
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Scope of Work</td>
+                        {calculatedOptions.map((opt) => {
+                          const platforms = [...new Set(opt.channelBreakdown.map(c => c.platform.toLowerCase()))];
+                          return (
+                            <td key={opt.activeOpt.id} className="px-6 py-5">
+                              <div className="space-y-4 text-left">
+                                {platforms.includes("tiktok") && (
+                                  <div>
+                                    <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                                      สำหรับช่องทาง TikTok
+                                    </div>
+                                    <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
+                                      Influencer เดินทางไปที่ Lotus's สาขาใกล้บ้าน รีวิว Mechanic กิจกรรม + How to อธิบายวิธีร่วมกิจกรรม
+                                    </div>
+                                  </div>
+                                )}
+                                {(platforms.includes("x") || platforms.includes("twitter") || platforms.includes("instagram") || platforms.includes("facebook") || platforms.includes("ig")) && (
+                                  <div>
+                                    <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                                      สำหรับช่องทาง X / Instagram / Facebook
+                                    </div>
+                                    <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
+                                      Influencer Capture MV มาโพสต์ลงโซเชียลมีเดีย และใส่แคปชั่นพูดถึงเพลงดังกล่าว
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="text-rose-600 font-bold text-xs pt-1 text-center border-t border-slate-100 mt-2">
+                                  ** ซื้อสินค้าเองในราคา {(brief.productValue || 200).toLocaleString()} บาท // Scope นี้ ทางแบรนด์จัดเตรียม Material ให้ **
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Combined Follower</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
+                            Est. ~{opt.combinedFollower.toLocaleString()}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Reach</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
+                            <span className="text-slate-500">Est. ~{opt.estimatedReach.toLocaleString()}</span>
+                            <span className="text-slate-400 mx-1.5">//</span>
+                            <span className="font-semibold text-slate-800">Commit {opt.committedReach.toLocaleString()}</span>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Engagement</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
+                            Est. ~{opt.estimatedEngagement.toLocaleString()}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Influencers Type</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
+                            <div className="text-xs font-medium space-y-1.5 leading-relaxed">
+                              <div>● <strong className="text-slate-950">Gender:</strong> {brief.gender || 'All Gender'}</div>
+                              <div>● <strong className="text-slate-950">Age:</strong> {brief.ageRange || '25 Years Old+'}</div>
+                              <div>● <strong className="text-slate-950">Lifestyle:</strong> {brief.lifestyle || 'Lifestyle'}</div>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Conditions</td>
+                        {calculatedOptions.map((opt) => (
+                          <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
+                            <div className="space-y-1.5 text-xs leading-relaxed">
+                              <div>● สามารถเลือก Influencer และตรวจ Draft ได้ 1 ครั้ง (สงวนสิทธิ์แก้ไขเฉพาะการตัดต่อและแคปชั่นเท่านั้น)</div>
+                              <div>● ราคาข้างต้น ไม่รวม Vat 7%, Boost Post, Boost Fee, Buy Out Asset</div>
+                              <div>● สงวนสิทธิ์ให้ Influencer เลือกสาขาที่จะเข้าไปถ่ายคอนเทนต์ด้วยตนเอง</div>
+                              <div>● เก็บโพสต์ขั้นต่ำ 30 วันเท่านั้น</div>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <CampaignCalculationsView brief={brief} activeOptId={activeOptId} setActiveOptId={setActiveOptId} />
+            </div>
           ) : (
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
               <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
@@ -2597,134 +2762,12 @@ function ProposalPage({ brief, onUpdateBrief, showToast }) {
             </div>
 
             {hasStandard ? (
-              <div className="w-full rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
-                <table className="w-full text-left border-collapse table-fixed">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-1/4">Option</th>
-                      {calculatedOptions.map((opt, idx) => (
-                        <th key={opt.activeOpt.id} className="px-6 py-4 text-sm font-extrabold text-slate-800 text-center">
-                          {opt.activeOpt.name || `Option ${String.fromCharCode(65 + idx)}`}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">
-                        Budget <br />
-                        <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tight">[ Exclude Vat 7% ]</span>
-                      </td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-[#6D5DF6] font-bold text-base text-center">
-                          {opt.totalBudget.toLocaleString()} Baht
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Total Influencer</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
-                          <div className="font-bold text-[#6D5DF6]">{opt.sumInfluencers} Pax // {opt.sumInfluencers} Posts</div>
-                          <div className="text-[11px] text-slate-400 mt-1">โดยแบ่งตาม SOW ดังนี้</div>
-                          <div className="text-[11px] text-slate-550 mt-1 space-y-0.5 inline-block text-left">
-                            {opt.channelBreakdown.map((chan, cIdx) => (
-                              <div key={cIdx}>
-                                • {chan.platform} ({chan.followerReq}) = {chan.numInfs} Pax // {chan.numInfs} Posts
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Scope of Work</td>
-                      {calculatedOptions.map((opt) => {
-                        const platforms = [...new Set(opt.channelBreakdown.map(c => c.platform.toLowerCase()))];
-                        return (
-                          <td key={opt.activeOpt.id} className="px-6 py-5">
-                            <div className="space-y-4 text-left">
-                              {platforms.includes("tiktok") && (
-                                <div>
-                                  <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
-                                    สำหรับช่องทาง TikTok
-                                  </div>
-                                  <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
-                                    Influencer เดินทางไปที่ Lotus's สาขาใกล้บ้าน รีวิว Mechanic กิจกรรม + How to อธิบายวิธีร่วมกิจกรรม
-                                  </div>
-                                </div>
-                              )}
-                              {(platforms.includes("x") || platforms.includes("twitter") || platforms.includes("instagram") || platforms.includes("facebook") || platforms.includes("ig")) && (
-                                <div>
-                                  <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center gap-1 text-[11px] uppercase tracking-wider">
-                                    สำหรับช่องทาง X / Instagram / Facebook
-                                  </div>
-                                  <div className="text-slate-600 text-xs mt-1.5 leading-relaxed">
-                                    Influencer Capture MV มาโพสต์ลงโซเชียลมีเดีย และใส่แคปชั่นพูดถึงเพลงดังกล่าว
-                                  </div>
-                                </div>
-                              )}
-                              <div className="text-rose-600 font-bold text-xs pt-1 text-center border-t border-slate-100 mt-2">
-                                ** ซื้อสินค้าเองในราคา {(brief.productValue || 200).toLocaleString()} บาท // Scope นี้ ทางแบรนด์จัดเตรียม Material ให้ **
-                              </div>
-                            </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Combined Follower</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
-                          Est. ~{opt.combinedFollower.toLocaleString()}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Reach</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center">
-                          <span className="text-slate-500">Est. ~{opt.estimatedReach.toLocaleString()}</span>
-                          <span className="text-slate-400 mx-1.5">//</span>
-                          <span className="font-semibold text-slate-800">Commit {opt.committedReach.toLocaleString()}</span>
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Engagement</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-900 text-center font-medium">
-                          Est. ~{opt.estimatedEngagement.toLocaleString()}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Influencers Type</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
-                          <div className="text-xs font-medium space-y-1.5 leading-relaxed">
-                            <div>● <strong className="text-slate-950">Gender:</strong> {brief.gender || 'All Gender'}</div>
-                            <div>● <strong className="text-slate-950">Age:</strong> {brief.ageRange || '25 Years Old+'}</div>
-                            <div>● <strong className="text-slate-950">Lifestyle:</strong> {brief.lifestyle || 'Lifestyle'}</div>
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-semibold text-slate-600 bg-slate-50/50">Conditions</td>
-                      {calculatedOptions.map((opt) => (
-                        <td key={opt.activeOpt.id} className="px-6 py-4 text-slate-700">
-                          <div className="space-y-1.5 text-xs leading-relaxed">
-                            <div>● สามารถเลือก Influencer และตรวจ Draft ได้ 1 ครั้ง (สงวนสิทธิ์แก้ไขเฉพาะการตัดต่อและแคปชั่นเท่านั้น)</div>
-                            <div>● ราคาข้างต้น ไม่รวม Vat 7%, Boost Post, Boost Fee, Buy Out Asset</div>
-                            <div>● สงวนสิทธิ์ให้ Influencer เลือกสาขาที่จะเข้าไปถ่ายคอนเทนต์ด้วยตนเอง</div>
-                            <div>● เก็บโพสต์ขั้นต่ำ 30 วันเท่านั้น</div>
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="text-center py-16 text-slate-555 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
+                  <CheckCircle2 className="h-8 w-8 text-slate-300" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-900">Dealsheet Table Moved</h3>
+                <p className="mb-4 text-sm text-slate-500 mt-1">The KPI table has been moved to the Dealsheet page.</p>
               </div>
             ) : totalDoneCount === 0 ? (
               <div className="text-center py-16 text-slate-555 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
@@ -2943,8 +2986,8 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     onUpdateBrief({
       ...brief,
       version: 1,
-      internalStatus: hasStandard ? "Draft Dealsheet" : "Assign Planner/Buyer",
-      activeTab: hasStandard ? "dealsheet" : "assign",
+      internalStatus: hasStandard ? "Draft Dealsheet" : "Example List",
+      activeTab: hasStandard ? "dealsheet" : "exampleList",
       submittedSows: selectedSows,
       activityLog: [...(brief.activityLog || []), log]
     });
@@ -3020,7 +3063,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 <span className="font-semibold text-slate-700">Internal Status:</span>
                 <span className={cn(
                   "px-3 py-1 rounded-full font-bold border text-xs uppercase",
-                  brief.internalStatus === "Submitted to Traffic" || brief.internalStatus === "Assign Planner/Buyer"
+                  brief.internalStatus === "Submitted to Traffic" || brief.internalStatus === "Example List"
                     ? "bg-violet-50 text-[#6D5DF6] border-violet-100"
                     : brief.internalStatus === "Draft Dealsheet"
                     ? "bg-blue-50 text-blue-700 border-blue-100"
@@ -3890,7 +3933,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     </motion.div>
   );
 }// --- Sub-components for Tracker ---
-function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, hideAddButton = false, readOnly = false }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, onReplaceClick, hideAddButton = false, readOnly = false }) {
   const influencers = trackerData.influencers || [];
   const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
     ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
@@ -3943,6 +3986,7 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
     { value: "Done", label: "Done", bg: "bg-[#047857]", text: "text-white" },
     { value: "ข้อมูลไม่ครบ", label: "ข้อมูลไม่ครบ", bg: "bg-[#DBEAFE]", text: "text-[#1E3A8A]" },
     { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" },
+    { value: "ถูกแทนที่", label: "ถูกแทนที่", bg: "bg-rose-100", text: "text-rose-700" },
   ];
 
   const getStatusColor = (statusValue) => {
@@ -4044,6 +4088,11 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
                         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                           <input type="text" value={inf.accountName} disabled={readOnly} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-white px-1.5 py-1 rounded outline-none border border-transparent hover:border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                          {inf.replacedFor && (
+                            <div className="text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded w-fit border border-rose-100 mt-1 mb-0.5">
+                              แทนที่: {inf.replacedFor}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 w-full">
                              <input type="text" value={inf.follower} disabled={readOnly} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
                              <select value={inf.channel} disabled={readOnly} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]">
@@ -4060,7 +4109,7 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
+                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
                       <select 
                         value={inf.contactStatus || ""} 
                         disabled={readOnly} onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
@@ -4070,6 +4119,14 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                           <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
                         ))}
                       </select>
+                      {inf.contactStatus === "Done" && !readOnly && onReplaceClick && (
+                        <button 
+                          onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
+                          className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
+                        >
+                          Replace
+                        </button>
+                      )}
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} disabled={readOnly} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="Email, Line, Tel" /></td>
                     <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
@@ -4141,6 +4198,7 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
   const [selectModalOpen, setSelectModalOpen] = useState(false);
   const [selectGroupModalOpen, setSelectGroupModalOpen] = useState(false);
   const [currentGroupId, setCurrentGroupId] = useState(null);
+  const [replacingInfInfo, setReplacingInfInfo] = useState(null);
 
   const activeGroups = Object.keys(groupTrackers);
 
@@ -4174,11 +4232,60 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
 
   const handleAddInfluencerClick = (groupId) => {
     setCurrentGroupId(groupId);
+    setReplacingInfInfo(null);
+    setSelectModalOpen(true);
+  };
+
+  const handleReplaceInfluencerClick = (groupId, infId, infName) => {
+    setReplacingInfInfo({ groupId, infId, infName });
     setSelectModalOpen(true);
   };
 
   const handleSelectInfluencer = (inf) => {
     setSelectModalOpen(false);
+
+    if (replacingInfInfo) {
+      const { groupId, infId, infName } = replacingInfInfo;
+      const currentData = groupTrackers[groupId] || { influencers: [] };
+      
+      const newInfluencer = {
+        id: Date.now() + Math.random(),
+        accountName: inf ? inf.username : "",
+        accountLink: inf ? `https://${inf.platform.toLowerCase()}.com/${inf.username.replace("@", "")}` : "",
+        follower: inf ? inf.followers.toString() : "",
+        channel: inf ? inf.platform : "Other",
+        contact: "",
+        rawCost: inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, "") : "",
+        creditTerm: "",
+        paymentType: "",
+        services: {},
+        scopeOfWork: "",
+        detail: "",
+        condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง =\n2. ใส่ # สูงสุดได้กี่อัน =\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ =\n4. ระยะเวลาทำ Script/Idea  =\n5. ระยะเวลาทำ Draft = \n6. ลบโพสต์หรือไม่ = ",
+        brandSupports: {},
+        competitorNote: "",
+        note: "",
+        replacedFor: infName,
+        internalStatus: "Pitching",
+        postingStatus: "Pending",
+        clientStatus: "Pending"
+      };
+
+      const newData = {
+        ...currentData,
+        influencers: currentData.influencers.map(i => i.id === infId ? { ...i, contactStatus: "ถูกแทนที่" } : i).concat(newInfluencer)
+      };
+
+      const newTrackers = {
+        ...groupTrackers,
+        [groupId]: newData
+      };
+      setGroupTrackers(newTrackers);
+      onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+      setReplacingInfInfo(null);
+      return;
+    }
+
     if (!currentGroupId) return;
 
     const currentData = groupTrackers[currentGroupId] || { influencers: [] };
@@ -4247,6 +4354,7 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
                       onUpdateBrief({ ...brief, groupTrackers: newTrackers });
                     }}
                     onAddClick={handleAddInfluencerClick}
+                    onReplaceClick={handleReplaceInfluencerClick}
                   />
                 ))}
               </div>
@@ -4316,7 +4424,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
   }, [forceOpenBrief]);
 
   const handleCreateClick = (data, status) => {
-    const briefData = { ...data, internalStatus: status || "Assign Planner/Buyer" };
+    const briefData = { ...data, internalStatus: status || "Example List" };
     if (status === "Draft") {
       executeCreate(briefData);
     } else {
@@ -4427,11 +4535,14 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
               <button
                 onClick={() => {
                   setSuccessModalOpen(false);
-                  setCurrentBrief({ ...createdBrief, activeTab: "assign" });
+                  const hasStd = Array.isArray(createdBrief?.packageType) 
+                    ? createdBrief.packageType.some(p => p.toLowerCase().includes("standard"))
+                    : (typeof createdBrief?.packageType === "string" && createdBrief.packageType.toLowerCase().includes("standard"));
+                  setCurrentBrief({ ...createdBrief, activeTab: hasStd ? "dealsheet" : "exampleList" });
                 }}
                 className="w-full rounded-xl bg-[#6D5DF6] py-3 text-sm font-bold text-white transition hover:bg-[#5a4add]"
               >
-                Proceed to Assign Role
+                Proceed to Next Step
               </button>
             </motion.div>
           </div>
@@ -4454,18 +4565,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
             status={currentBrief.internalStatus}
             brief={currentBrief}
           />
-          {currentBrief.activeTab === "assign" ? (
-            <AssignRolePage
-              brief={currentBrief}
-              onUpdateBrief={handleUpdateBrief}
-              onNext={() => {
-                const hasStandard = Array.isArray(currentBrief.packageType) 
-                  ? currentBrief.packageType.some(p => p.toLowerCase().includes("standard"))
-                  : (typeof currentBrief.packageType === "string" && currentBrief.packageType.toLowerCase().includes("standard"));
-                handleUpdateBrief({ ...currentBrief, activeTab: hasStandard ? "dealsheet" : "exampleList" });
-              }}
-            />
-          ) : currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
+          {currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
             <PlannerTrackerPage
               brief={currentBrief}
               onBack={() => setCurrentBrief(null)}
