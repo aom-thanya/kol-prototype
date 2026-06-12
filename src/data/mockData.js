@@ -25,7 +25,7 @@ export const customersSeed = [
 export const briefsSeed = [
   {
     id: "NRP202501020",
-    internalStatus: "Assign Planner/Buyer",
+    internalStatus: "Example List",
     version: 1,
     activityLog: [{
       date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -38,7 +38,7 @@ export const briefsSeed = [
     product: "เป็น Skincare ใหม่ ภายใต้แบรนด์ XXX ค่ะ โดยจะ launch สินค้าในช่วง April 2025 ค่ะ มีสินค้าทั้งหมด 5 SKU : Cleanser / ครีมกันแดด / serum ผลัดเซลล์ผิว / serum booster เพิ่มความกระจ่างใส / Moisturizer สินค้าราคาขายเริ่มที่ 390++",
     clientStatus: "New",
     customerType: "Key Account",
-    salesOwner: "พี่ bankie",
+    salesOwner: "ซาร่า",
     packageType: ["Rate Card (2 D)"],
     objective: ["Awareness (Reach)", "Interest (Engagement)"],
     objectiveNote: "เป้าหมายหลัก ต้องการให้เกิดยอดขาย เป้าหมายรอง brand awareness",
@@ -121,6 +121,108 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
 แปะ Link ของ Platform ที่นำเสนอทุกช่องทาง`,
     
     createdAt: "2025-01-09",
+    
+    groupTrackers: {
+      "Tiktok Review": {
+        influencers: [
+          {
+            id: "inf-1",
+            accountName: "@baifernbah",
+            accountLink: "https://tiktok.com/@baifernbah",
+            follower: "5.2M",
+            channel: "TikTok",
+            contact: "Line: @baifern_work",
+            rawCost: "250000",
+            creditTerm: "30",
+            paymentType: "บริษัท",
+            services: {
+              "buyoutRequired_6 เดือน": { status: "รับ", price: "50000", note: "" },
+              "boostRequired_30 days": { status: "รับ", price: "20000", note: "" },
+              "genCodeRequired_30 days": { status: "รับ", price: "10000", note: "" },
+              "Affiliate": { status: "ไม่รับ", price: "", note: "" }
+            },
+            scopeOfWork: "1",
+            condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง = 2\n2. ใส่ # สูงสุดได้กี่อัน = 3\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ = ได้\n4. ระยะเวลาทำ Script/Idea  = 3 วัน\n5. ระยะเวลาทำ Draft = 5 วัน\n6. ลบโพสต์หรือไม่ = ไม่ลบ",
+            brandSupports: { "Sponsor สินค้า": "ส่งขวดใหญ่ 50ml" },
+            detail: "เหมาะกับกลุ่มเป้าหมายผู้หญิงวัยทำงาน",
+            note: "",
+            contactStatus: "Selected"
+          },
+          {
+            id: "inf-2",
+            accountName: "@mimi_healthy",
+            accountLink: "https://tiktok.com/@mimi_healthy",
+            follower: "450K",
+            channel: "TikTok",
+            contact: "mimi.healthy@gmail.com",
+            rawCost: "35000",
+            creditTerm: "30",
+            paymentType: "บุคคล",
+            services: {
+              "buyoutRequired_6 เดือน": { status: "รับ", price: "5000", note: "" },
+              "boostRequired_30 days": { status: "รับ", price: "3000", note: "" },
+              "genCodeRequired_30 days": { status: "รับ", price: "2000", note: "" },
+              "Affiliate": { status: "รับ", price: "10%", note: "" }
+            },
+            scopeOfWork: "1",
+            condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง = 2\n2. ใส่ # สูงสุดได้กี่อัน = 3\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ = ได้\n4. ระยะเวลาทำ Script/Idea  = 2 วัน\n5. ระยะเวลาทำ Draft = 4 วัน\n6. ลบโพสต์หรือไม่ = ไม่ลบ",
+            brandSupports: { "Sponsor สินค้า": "ส่งขนาดทดลอง 5 ชิ้น" },
+            detail: "แนวสายสุขภาพ เล่าเรื่องเก่ง",
+            note: "",
+            contactStatus: "Rejected"
+          },
+          {
+            id: "inf-3",
+            accountName: "@ice_beautyy",
+            accountLink: "https://tiktok.com/@ice_beautyy",
+            follower: "820K",
+            channel: "TikTok",
+            contact: "081-234-5678",
+            rawCost: "60000",
+            creditTerm: "30",
+            paymentType: "บุคคล",
+            services: {
+              "buyoutRequired_6 เดือน": { status: "รับ", price: "10000", note: "" },
+              "boostRequired_30 days": { status: "รับ", price: "5000", note: "" },
+              "genCodeRequired_30 days": { status: "รับ", price: "3000", note: "" },
+              "Affiliate": { status: "ไม่รับ", price: "", note: "" }
+            },
+            scopeOfWork: "1",
+            condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง = 1\n2. ใส่ # สูงสุดได้กี่อัน = 2\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ = ไม่ได้\n4. ระยะเวลาทำ Script/Idea  = 2 วัน\n5. ระยะเวลาทำ Draft = 3 วัน\n6. ลบโพสต์หรือไม่ = ไม่ลบ",
+            brandSupports: { "Sponsor สินค้า": "ส่งขวดใหญ่ 50ml" },
+            detail: "บิวตี้บล็อกเกอร์ยอดนิยมช่วงนี้",
+            note: "",
+            contactStatus: ""
+          }
+        ]
+      },
+      "IG Reel Review": {
+        influencers: [
+          {
+            id: "inf-4",
+            accountName: "@pearypie",
+            accountLink: "https://instagram.com/pearypie",
+            follower: "1.5M",
+            channel: "Instagram",
+            contact: "work.pearypie@gmail.com",
+            rawCost: "180000",
+            creditTerm: "45",
+            paymentType: "บริษัท",
+            services: {
+              "buyoutRequired_6 เดือน": { status: "รับ", price: "30000", note: "" },
+              "boostRequired_30 days": { status: "รับ", price: "15000", note: "" },
+              "genCodeRequired_30 days": { status: "รับ", price: "8000", note: "" }
+            },
+            scopeOfWork: "2",
+            condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง = 2\n2. ใส่ # สูงสุดได้กี่อัน = 3\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ = ได้\n4. ระยะเวลาทำ Script/Idea  = 3 วัน\n5. ระยะเวลาทำ Draft = 5 วัน\n6. ลบโพสต์หรือไม่ = ไม่ลบ",
+            brandSupports: { "Sponsor สินค้า": "ส่งขวดใหญ่ 50ml" },
+            detail: "ภาพสวย พรีเมียมมาก",
+            note: "",
+            contactStatus: "Selected"
+          }
+        ]
+      }
+    }
   },
   {
     id: "NRP202501021",
@@ -132,7 +234,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     product: "ขนมขบเคี้ยวรสใหม่",
     clientStatus: "New",
     customerType: "Non-Key Account",
-    salesOwner: "พี่ bankie",
+    salesOwner: "ไนซ์",
     packageType: ["Standard (1 D)"],
     objective: ["Awareness (Reach)"],
     objectiveNote: "เน้นสร้าง awareness ให้คนรู้จักรสชาติใหม่",
@@ -206,7 +308,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     product: "Event details at Mega Bangna",
     clientStatus: "New",
     customerType: "Key Account",
-    salesOwner: "พี่ bankie",
+    salesOwner: "ข้าว",
     packageType: ["Rate Card KPI (1.5 D)"],
     objective: ["Awareness (Reach)"],
     objectiveNote: "",
@@ -229,7 +331,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     product: "เครื่องสำอางคอลเลคชันใหม่สำหรับหน้าร้อน กันน้ำกันเหงื่อ ติดทนนาน",
     clientStatus: "New",
     customerType: "Non-Key Account",
-    salesOwner: "พี่ bankie",
+    salesOwner: "เอก",
     packageType: ["Ratecard KPI"],
     objective: ["Trust (Post)"],
     objectiveNote: "เน้นรีวิวจากบิวตี้บล็อกเกอร์ให้เกิดความมั่นใจในสินค้า",
@@ -252,7 +354,7 @@ Buddy Review เป็นผู้ประสานงานกับ Influence
     product: "เครื่องดื่มชาเขียวเพื่อสุขภาพสูตรไม่มีน้ำตาล",
     clientStatus: "New",
     customerType: "Key Account",
-    salesOwner: "พี่ bankie",
+    salesOwner: "ซาร่า",
     packageType: ["Standard KPI"],
     objective: ["Awareness (Reach)"],
     objectiveNote: "สร้างการรับรู้ในกลุ่มคนทำงานรักสุขภาพ",

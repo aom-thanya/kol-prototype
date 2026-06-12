@@ -1547,14 +1547,115 @@ function ReviewChangeModal({ open, pendingChanges, onApply, onLater }) {
   );
 }
 
+function getBriefProgressStatus(brief) {
+  const status = brief.internalStatus;
+  if (!status || status === "Draft") return "Brief";
+
+  const hasStandard = Array.isArray(brief.packageType) 
+    ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
+    : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"));
+  
+  const hasKpi = Array.isArray(brief.packageType) 
+    ? brief.packageType.some(p => {
+        if (typeof p !== "string") return false;
+        if (p === "Others") {
+          return brief.packageTypeOther && brief.packageTypeOther.toLowerCase().includes("kpi");
+        }
+        return p.toLowerCase().includes("kpi");
+      })
+    : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("kpi"));
+
+  const isStandardKpi = hasStandard && hasKpi;
+
+  const steps = [
+    { id: "brief", label: "Brief" }
+  ];
+  
+  if (!hasStandard) {
+    steps.push({ id: "exampleList", label: "Rate card list" });
+  }
+  
+  steps.push({ id: "dealsheet", label: "Dealsheet" });
+  
+  if (!isStandardKpi) {
+    steps.push({ id: "proposal", label: "Proposal" });
+  }
+
+  const activeTab = brief.activeTab || "brief";
+  
+  const getProgressIdx = () => {
+    if (!status || status === "Draft") return 0;
+    
+    if (hasStandard) {
+      if (activeTab === "proposal" && !isStandardKpi) return 2;
+      return 1;
+    }
+
+    let hasDone = false;
+    if (brief.groupTrackers) {
+      Object.values(brief.groupTrackers).forEach(t => {
+        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected")) hasDone = true;
+      });
+    }
+    if (!hasDone) return 1;
+    if (activeTab === "proposal") return 3;
+    return 2;
+  };
+
+  const progressIdx = getProgressIdx();
+  return steps[progressIdx]?.label || status;
+}
+
+function getBriefDefaultTab(brief) {
+  if (!brief) return "brief";
+  const progressStatus = getBriefProgressStatus(brief);
+  switch (progressStatus) {
+    case "Rate card list":
+      return "exampleList";
+    case "Dealsheet":
+      return "dealsheet";
+    case "Proposal":
+      return "proposal";
+    case "Brief":
+    default:
+      return "brief";
+  }
+}
+
 function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
   const [search, setSearch] = useState("");
+  const [selectedSales, setSelectedSales] = useState("");
+
+  const salesOwners = useMemo(() => {
+    const owners = new Set();
+    briefs.forEach((b) => {
+      if (b.salesOwner) owners.add(b.salesOwner);
+    });
+    return Array.from(owners).sort();
+  }, [briefs]);
 
   const filtered = useMemo(() => {
     return briefs.filter((b) => {
-      return `${b.id} ${b.campaignName} ${b.brand}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = `${b.id} ${b.campaignName} ${b.brand}`.toLowerCase().includes(search.toLowerCase());
+      const matchSales = !selectedSales || b.salesOwner === selectedSales;
+      return matchSearch && matchSales;
     });
-  }, [briefs, search]);
+  }, [briefs, search, selectedSales]);
+
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case "Brief":
+        return "bg-slate-100 text-slate-600 border border-slate-200";
+      case "Rate card list":
+        return "bg-blue-50 text-blue-700 border border-blue-100";
+      case "Dealsheet":
+        return "bg-violet-50 text-[#6D5DF6] border border-[#e8e4ff]";
+      case "Proposal":
+        return "bg-emerald-50 text-emerald-700 border border-emerald-100";
+      default:
+        return "bg-slate-100 text-slate-600 border border-slate-200";
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -1571,7 +1672,7 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center gap-4 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -1581,6 +1682,18 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
             className="h-10 w-full bg-transparent pl-10 pr-4 text-sm outline-none text-slate-700"
           />
         </div>
+        <div className="w-full sm:w-64">
+          <select
+            value={selectedSales}
+            onChange={(e) => setSelectedSales(e.target.value)}
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-650 outline-none focus:border-[#6D5DF6] font-medium"
+          >
+            <option value="">All Sales Owners</option>
+            {salesOwners.map(owner => (
+              <option key={owner} value={owner}>{owner}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -1588,37 +1701,40 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
           <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-white text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                {["Brief No", "Campaign Name", "Brand", "Package Type", "Client Status", "Status", "Created Date", "Management"].map((head) => (
+                {["Brief No", "Campaign Name", "Brand", "Sales Owner", "Package Type", "Client Status", "Status", "Created Date", "Management"].map((head) => (
                   <th key={head} className="px-6 py-4">
                     <span className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-700 transition">
                       {head}
-                      {head !== "Management" && <ArrowUpDown className="h-3.5 w-3.5" />}
+                      {head !== "Management" && head !== "Sales Owner" && <ArrowUpDown className="h-3.5 w-3.5" />}
                     </span>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filtered.map((b) => (
-                <tr key={b.id} className="transition hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-semibold text-[#6D5DF6] text-sm">{b.id}</td>
-                  <td className="px-6 py-4 font-normal text-slate-800 text-sm">{b.campaignName}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{b.brand}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {Array.isArray(b.packageType) ? b.packageType.join(", ") : b.packageType || "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{b.clientStatus || "New"}</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    <span className={cn(
-                        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                        b.internalStatus === "Draft" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-600"
-                    )}>
-                      {b.internalStatus}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{b.createdAt}</td>
+              {filtered.map((b) => {
+                const progressStatus = getBriefProgressStatus(b);
+                return (
+                  <tr key={b.id} className="transition hover:bg-slate-50/50">
+                    <td className="px-6 py-4 font-semibold text-[#6D5DF6] text-sm">{b.id}</td>
+                    <td className="px-6 py-4 font-normal text-slate-800 text-sm">{b.campaignName}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{b.brand}</td>
+                    <td className="px-6 py-4 text-sm text-slate-700 font-medium">{b.salesOwner || "-"}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {Array.isArray(b.packageType) ? b.packageType.join(", ") : b.packageType || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{b.clientStatus || "New"}</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      <span className={cn(
+                          "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          getStatusBadgeStyle(progressStatus)
+                      )}>
+                        {progressStatus}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{b.createdAt}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       {!listOnly && (
@@ -1646,10 +1762,11 @@ function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center text-slate-500 text-sm">
+                  <td colSpan="9" className="px-6 py-10 text-center text-slate-500 text-sm">
                     No briefs found matching your search.
                   </td>
                 </tr>
@@ -1806,7 +1923,7 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
   ];
   
   if (!hasStandard) {
-    steps.push({ id: "exampleList", label: "Example List" });
+    steps.push({ id: "exampleList", label: "Rate card list" });
   }
   
   steps.push({ id: "dealsheet", label: "Dealsheet" });
@@ -1828,7 +1945,7 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
     let hasDone = false;
     if (brief.groupTrackers) {
       Object.values(brief.groupTrackers).forEach(t => {
-        if (t.influencers && t.influencers.some(i => i.contactStatus === "Done")) hasDone = true;
+        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected")) hasDone = true;
       });
     }
     if (!hasDone) return 1; // Example List
@@ -1844,12 +1961,6 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
         <button onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-[#6D5DF6] flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Back to Briefs
         </button>
-        {status && (
-          <div className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
-            <span className="mr-1.5 flex h-2 w-2 rounded-full bg-indigo-500"></span>
-            Status: {status}
-          </div>
-        )}
       </div>
       
       <div className="relative flex items-center justify-between w-full max-w-3xl mx-auto px-4">
@@ -1869,9 +1980,17 @@ function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
           return (
             <div key={step.id} className="relative z-10 flex flex-col items-center">
               <button
-                onClick={() => onTabChange(step.id)}
+                onClick={() => {
+                  if (index <= progressIdx) {
+                    onTabChange(step.id);
+                  }
+                }}
+                disabled={index > progressIdx}
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 border-[#FAFAFA] transition-all duration-300 shadow-sm
-                  ${isCompleted ? 'bg-[#6D5DF6] text-white' : 'bg-slate-200 text-slate-400 hover:bg-slate-300'}
+                  ${isCompleted 
+                    ? 'bg-[#6D5DF6] text-white cursor-pointer hover:bg-[#5d4df0]' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                  }
                   ${isViewing ? 'ring-2 ring-offset-2 ring-[#6D5DF6]' : ''}`}
               >
                 {index + 1}
@@ -2445,7 +2564,7 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
   
   activeGroups.forEach(grp => {
     const tracker = brief.groupTrackers[grp];
-    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Done");
+    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Selected");
     if (doneInfluencers.length > 0) {
       filteredTrackers[grp] = { ...tracker, influencers: doneInfluencers };
       totalDoneCount += doneInfluencers.length;
@@ -2635,7 +2754,7 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                     <CheckCircle2 className="h-8 w-8 text-slate-300" />
                   </div>
                   <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
-                  <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Done" in Example List to view them here.</p>
+                  <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Selected" in Rate card list to view them here.</p>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -2704,7 +2823,7 @@ function ProposalPage({ brief, onUpdateBrief, showToast }) {
   
   activeGroups.forEach(grp => {
     const tracker = brief.groupTrackers[grp];
-    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Done");
+    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Selected");
     if (doneInfluencers.length > 0) {
       filteredTrackers[grp] = { ...tracker, influencers: doneInfluencers };
       totalDoneCount += doneInfluencers.length;
@@ -2988,7 +3107,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       version: 1,
       internalStatus: hasStandard ? "Draft Dealsheet" : "Example List",
       activeTab: hasStandard ? "dealsheet" : "exampleList",
-      submittedSows: selectedSows,
+      submittedSows: hasStandard ? allSowsWithOpt.map(s => s.id) : selectedSows,
       activityLog: [...(brief.activityLog || []), log]
     });
     setSubmitModalOpen(false);
@@ -3013,16 +3132,9 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20 text-base">
       
       {/* Top Breadcrumb & Back Row */}
-      <div className="flex items-center justify-between mb-5">
-        <button 
-          onClick={onBack} 
-          className="inline-flex items-center gap-2 text-base font-semibold text-slate-650 hover:text-[#6D5DF6] transition cursor-pointer"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to Briefs</span>
-        </button>
+      <div className="flex items-center justify-end mb-5">
         <div className="text-sm text-slate-400">
-          Brief ID: <span className="font-semibold text-slate-600">{brief.id}</span>
+          Brief ID: <span className="font-semibold text-slate-650">{brief.id}</span>
         </div>
       </div>
 
@@ -3056,21 +3168,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 <span className="bg-white px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignStartDate || "-"}</span>
                 <span className="text-slate-400">to</span>
                 <span className="bg-white px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 font-bold">{brief.campaignEndDate || "-"}</span>
-              </div>
-              <div className="h-5 w-px bg-slate-200 hidden sm:block"></div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-slate-400" />
-                <span className="font-semibold text-slate-700">Internal Status:</span>
-                <span className={cn(
-                  "px-3 py-1 rounded-full font-bold border text-xs uppercase",
-                  brief.internalStatus === "Submitted to Traffic" || brief.internalStatus === "Example List"
-                    ? "bg-violet-50 text-[#6D5DF6] border-violet-100"
-                    : brief.internalStatus === "Draft Dealsheet"
-                    ? "bg-blue-50 text-blue-700 border-blue-100"
-                    : "bg-slate-100 text-slate-600 border-slate-200"
-                )}>
-                  {brief.internalStatus || "Draft"}
-                </span>
               </div>
             </div>
           </div>
@@ -3819,7 +3916,16 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
               <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button className="w-full py-3 text-base font-bold" onClick={() => setSubmitModalOpen(true)}>
+                  <Button 
+                    className="w-full py-3 text-base font-bold" 
+                    onClick={() => {
+                      if (hasStandard) {
+                        handleSubmitToTraffic();
+                      } else {
+                        setSubmitModalOpen(true);
+                      }
+                    }}
+                  >
                     {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
                   </Button>
                 )}
@@ -3933,7 +4039,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     </motion.div>
   );
 }// --- Sub-components for Tracker ---
-function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, onReplaceClick, hideAddButton = false, readOnly = false }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, onReplaceClick, hideAddButton = false, readOnly = false, allowStatusEdit = false }) {
   const influencers = trackerData.influencers || [];
   const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
     ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
@@ -3978,14 +4084,19 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
     onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
-  const STATUS_OPTIONS = [
+  const STATUS_OPTIONS = allowStatusEdit ? [
+    { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
+    { value: "Selected", label: "Selected", bg: "bg-emerald-50 text-emerald-700 border-emerald-200", text: "text-emerald-700 font-medium" },
+    { value: "Rejected", label: "Rejected", bg: "bg-rose-50 text-rose-700 border-rose-200", text: "text-rose-750 font-medium" }
+  ] : [
     { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
     { value: "ทักแล้ว", label: "ทักแล้ว", bg: "bg-[#FDE68A]", text: "text-[#92400E]" },
     { value: "โทรแล้ว", label: "โทรแล้ว", bg: "bg-[#FFDCC8]", text: "text-[#8C3A10]" },
     { value: "ตอบแล้ว", label: "ตอบแล้ว", bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
-    { value: "Done", label: "Done", bg: "bg-[#047857]", text: "text-white" },
+    { value: "Selected", label: "Selected", bg: "bg-emerald-55 text-[#047857] border-emerald-200", text: "text-[#047857] font-bold" },
     { value: "ข้อมูลไม่ครบ", label: "ข้อมูลไม่ครบ", bg: "bg-[#DBEAFE]", text: "text-[#1E3A8A]" },
     { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" },
+    { value: "Rejected", label: "Rejected", bg: "bg-rose-50 text-rose-700 border-rose-250", text: "text-rose-700 font-bold" },
     { value: "ถูกแทนที่", label: "ถูกแทนที่", bg: "bg-rose-100", text: "text-rose-700" },
   ];
 
@@ -4081,45 +4192,117 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                 </tr>
               ) : (
                 influencers.map((inf, idx) => (
-                  <tr key={inf.id} className={`group transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] hover:bg-[#D1FAE5]" : "hover:bg-slate-50"}`}>
-                    <td className={`px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 w-[50px] min-w-[50px] transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" : "bg-white group-hover:bg-slate-50"}`}>{idx + 1}</td>
-                    <td className={`px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] transition ${inf.contactStatus === "Done" ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" : "bg-white group-hover:bg-slate-50"}`}>
+                  <tr key={inf.id} className={`group transition 
+                    ${inf.contactStatus === "Selected" 
+                      ? "bg-[#ECFDF5] hover:bg-[#D1FAE5]" 
+                      : inf.contactStatus === "Rejected" 
+                      ? "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1" 
+                      : (inf.contactStatus === "ถูกแทนที่" ? "bg-slate-100 opacity-70" : "hover:bg-slate-50")
+                    }`}
+                  >
+                    <td className={`px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 w-[50px] min-w-[50px] transition 
+                      ${inf.contactStatus === "Selected" 
+                        ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" 
+                        : inf.contactStatus === "Rejected" 
+                        ? "bg-[#FFF5F5] group-hover:bg-[#FEE2E2] text-rose-700" 
+                        : (inf.contactStatus === "ถูกแทนที่" ? "bg-slate-100 group-hover:bg-slate-200" : "bg-white group-hover:bg-slate-50")
+                      }`}
+                    >
+                      {idx + 1}
+                    </td>
+                    <td className={`px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] transition 
+                      ${inf.contactStatus === "Selected" 
+                        ? "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]" 
+                        : inf.contactStatus === "Rejected" 
+                        ? "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1" 
+                        : (inf.contactStatus === "ถูกแทนที่" ? "bg-slate-100 opacity-70" : "hover:bg-slate-50")
+                      }`}
+                    >
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
-                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                          <input type="text" value={inf.accountName} disabled={readOnly} onChange={e => updateInf(inf.id, "accountName", e.target.value)} placeholder="Account Name (@handle)" className="w-full font-semibold text-slate-900 hover:text-[#6D5DF6] text-[13px] bg-white px-1.5 py-1 rounded outline-none border border-transparent hover:border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                        <div className="flex-1 min-w-0 flex flex-col gap-1.5 justify-center">
+                          {readOnly ? (
+                            <span className={`font-semibold text-[13px] px-1.5 py-0.5 
+                              ${inf.contactStatus === "Rejected" 
+                                ? "line-through text-rose-700 decoration-rose-500 decoration-1" 
+                                : inf.contactStatus === "ถูกแทนที่" 
+                                ? "line-through text-slate-500" 
+                                : "text-slate-900"
+                              }`}
+                            >
+                              {inf.accountName || "New Influencer"}
+                            </span>
+                          ) : (
+                            <input 
+                              type="text" 
+                              value={inf.accountName} 
+                              disabled={readOnly} 
+                              onChange={e => updateInf(inf.id, "accountName", e.target.value)} 
+                              placeholder="Account Name (@handle)" 
+                              className={`w-full font-semibold text-[13px] bg-transparent px-1.5 py-1 rounded outline-none border border-transparent placeholder:text-slate-300 
+                                ${inf.contactStatus === "Rejected" 
+                                  ? "line-through text-rose-700 decoration-rose-500 decoration-1" 
+                                  : inf.contactStatus === "ถูกแทนที่" 
+                                  ? "line-through text-slate-500" 
+                                  : "text-slate-900 hover:text-[#6D5DF6]"
+                                }`} 
+                            />
+                          )}
                           {inf.replacedFor && (
                             <div className="text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded w-fit border border-rose-100 mt-1 mb-0.5">
                               แทนที่: {inf.replacedFor}
                             </div>
                           )}
                           <div className="flex items-center gap-2 w-full">
-                             <input type="text" value={inf.follower} disabled={readOnly} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className="w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
-                             <select value={inf.channel} disabled={readOnly} onChange={e => updateInf(inf.id, "channel", e.target.value)} className="text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]">
-                               <option value="">Platform</option>
-                               <option value="Instagram">IG</option>
-                               <option value="TikTok">TT</option>
-                               <option value="Facebook">FB</option>
-                               <option value="YouTube">YT</option>
-                               <option value="X">X</option>
-                               <option value="Other">Other</option>
-                             </select>
+                            {readOnly ? (
+                              <span className={`text-xs text-slate-500 px-1.5 py-0.5 ${inf.contactStatus === "Rejected" ? "line-through" : ""}`}>
+                                {inf.follower ? `${Number(inf.follower.replace(/[^0-9]/g, '') || inf.follower).toLocaleString()} Followers` : "-"}
+                              </span>
+                            ) : (
+                              <input type="text" value={inf.follower} disabled={readOnly} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className={`w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300 ${inf.contactStatus === "Rejected" ? "line-through" : ""}`} />
+                            )}
+                            {readOnly ? (
+                              inf.channel && (
+                                <span className={`text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 ${inf.contactStatus === "Rejected" ? "line-through" : ""}`}>
+                                  {inf.channel}
+                                </span>
+                              )
+                            ) : (
+                              <select value={inf.channel} disabled={readOnly} onChange={e => updateInf(inf.id, "channel", e.target.value)} className={`text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6] ${inf.contactStatus === "Rejected" ? "line-through" : ""}`}>
+                                <option value="">Platform</option>
+                                <option value="Instagram">IG</option>
+                                <option value="TikTok">TT</option>
+                                <option value="Facebook">FB</option>
+                                <option value="YouTube">YT</option>
+                                <option value="X">X</option>
+                                <option value="Other">Other</option>
+                              </select>
+                            )}
                           </div>
-                          <input type="text" value={inf.accountLink} disabled={readOnly} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className="w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300" />
+                          {readOnly ? (
+                            inf.accountLink && (
+                              <a href={inf.accountLink} target="_blank" rel="noopener noreferrer" className={`w-full text-[10px] text-blue-500 hover:underline px-1.5 py-0.5 block truncate max-w-[200px] ${inf.contactStatus === "Rejected" ? "line-through" : ""}`}>
+                                {inf.accountLink}
+                              </a>
+                            )
+                          ) : (
+                            <input type="text" value={inf.accountLink} disabled={readOnly} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className={`w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300 ${inf.contactStatus === "Rejected" ? "line-through" : ""}`} />
+                          )}
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
                       <select 
                         value={inf.contactStatus || ""} 
-                        disabled={readOnly} onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
+                        disabled={readOnly && !allowStatusEdit} 
+                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
                         className={`w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none ${getStatusColor(inf.contactStatus)}`}
                       >
                         {STATUS_OPTIONS.map(opt => (
                           <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
                         ))}
                       </select>
-                      {inf.contactStatus === "Done" && !readOnly && onReplaceClick && (
+                      {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
                         <button 
                           onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
                           className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
@@ -4128,17 +4311,39 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         </button>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.contact} disabled={readOnly} onChange={e => updateInf(inf.id, "contact", e.target.value)} className="w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="Email, Line, Tel" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.rawCost} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
-                    <td className="px-3 py-2 border-r border-slate-100">
-                      <input type="text" value={inf.creditTerm} disabled={readOnly} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        <span className={inf.contactStatus === "Rejected" ? "line-through text-rose-700" : ""}>
+                          {inf.contact || "-"}
+                        </span>
+                      ) : (
+                        <input type="text" value={inf.contact} disabled={readOnly} onChange={e => updateInf(inf.id, "contact", e.target.value)} className={`w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white ${inf.contactStatus === "Rejected" ? "line-through text-rose-700" : ""}`} placeholder="Email, Line, Tel" />
+                      )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100">
-                      <select value={inf.paymentType || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
-                        <option value="">Select...</option>
-                        <option value="บุคคล">บุคคล</option>
-                        <option value="บริษัท">บริษัท</option>
-                      </select>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        <span>{inf.rawCost || "-"}</span>
+                      ) : (
+                        <input type="text" value={inf.rawCost} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" />
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        <span>{inf.creditTerm ? `${inf.creditTerm} วัน` : "-"}</span>
+                      ) : (
+                        <input type="text" value={inf.creditTerm} disabled={readOnly} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        <span>{inf.paymentType || "-"}</span>
+                      ) : (
+                        <select value={inf.paymentType || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
+                          <option value="">Select...</option>
+                          <option value="บุคคล">บุคคล</option>
+                          <option value="บริษัท">บริษัท</option>
+                        </select>
+                      )}
                     </td>
                     {requiredServices.map(srv => {
                       let srvData = inf.services?.[srv.key];
@@ -4150,38 +4355,96 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
                         };
                       }
                       return (
-                        <td key={srv.key} className="px-3 py-2 border-r border-slate-100 min-w-[150px] align-top">
-                          <div className="flex flex-col gap-2">
-                            <select value={srvData.status || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "status", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
-                              <option value="">เลือกสถานะ</option>
-                              <option value="รับ">รับ</option>
-                              <option value="ไม่รับ">ไม่รับ</option>
-                            </select>
-                            {srvData.status === "รับ" && (
-                              <input type="text" value={srvData.price || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "price", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white" placeholder="ราคา" />
-                            )}
-                            <textarea rows={1} value={srvData.note || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "note", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px] bg-white" placeholder="Note..."></textarea>
-                          </div>
+                        <td key={srv.key} className="px-3 py-2 border-r border-slate-100 min-w-[150px] align-top text-xs text-slate-750">
+                          {readOnly ? (
+                            <div className="flex flex-col gap-1">
+                              <div className="font-medium">
+                                {srvData.status === "รับ" ? (
+                                  <span className="text-emerald-650 font-semibold">รับ</span>
+                                ) : srvData.status === "ไม่รับ" ? (
+                                  <span className="text-rose-500 font-semibold">ไม่รับ</span>
+                                ) : (
+                                  <span className="text-slate-400">-</span>
+                                )}
+                              </div>
+                              {srvData.status === "รับ" && srvData.price && (
+                                <div className="text-slate-700 font-medium">฿{Number(srvData.price).toLocaleString()}</div>
+                              )}
+                              {srvData.note && (
+                                <div className="text-[10px] text-slate-500 italic bg-slate-50/50 p-1.5 rounded border border-slate-100 whitespace-pre-wrap">{srvData.note}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              <select value={srvData.status || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "status", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                                <option value="">เลือกสถานะ</option>
+                                <option value="รับ">รับ</option>
+                                <option value="ไม่รับ">ไม่รับ</option>
+                              </select>
+                              {srvData.status === "รับ" && (
+                                <input type="text" value={srvData.price || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "price", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white" placeholder="ราคา" />
+                              )}
+                              <textarea rows={1} value={srvData.note || ""} onChange={e => updateInfServiceField(inf.id, srv.key, "note", e.target.value)} className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px] bg-white" placeholder="Note..."></textarea>
+                            </div>
+                          )}
                         </td>
                       );
                     })}
-                    <td className="px-3 py-2 border-r border-slate-100">
-                      <select value={inf.scopeOfWork || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
-                        <option value="">Select SOW</option>
-                        {submittedSows.map(sow => (
-                          <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>
-                        ))}
-                      </select>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        (() => {
+                          const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
+                          const idx = submittedSows.indexOf(matchingSow);
+                          return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
+                        })()
+                      ) : (
+                        <select value={inf.scopeOfWork || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                          <option value="">Select SOW</option>
+                          {submittedSows.map(sow => (
+                            <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[220px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
+                      {readOnly ? (
+                        inf.condition || "-"
+                      ) : (
+                        <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                      )}
+                    </td>
                     {brandSupports.map(bs => (
-                      <td key={bs} className="px-3 py-2 border-r border-slate-100"><input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" /></td>
+                      <td key={bs} className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs text-center">
+                        {readOnly ? (
+                          inf.brandSupports?.[bs] || "-"
+                        ) : (
+                          <input type="text" value={inf.brandSupports?.[bs] || ""} onChange={e => updateInfBrandSupport(inf.id, bs, e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" />
+                        )}
+                      </td>
                     ))}
                     {hasCompetitor && (
-                      <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.competitorNote} disabled={readOnly} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                      <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[150px] whitespace-pre-wrap">
+                        {readOnly ? (
+                          inf.competitorNote || "-"
+                        ) : (
+                          <textarea rows={3} value={inf.competitorNote} disabled={readOnly} onChange={e => updateInf(inf.id, "competitorNote", e.target.value)} className="w-full min-w-[150px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                        )}
+                      </td>
                     )}
-                    <td className="px-3 py-2 border-r border-slate-100"><textarea rows={3} value={inf.detail || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
-                    <td className="px-3 py-2 border-slate-100"><textarea rows={3} value={inf.note} disabled={readOnly} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea></td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[180px] whitespace-pre-wrap">
+                      {readOnly ? (
+                        inf.detail || "-"
+                      ) : (
+                        <textarea rows={3} value={inf.detail || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-slate-100 text-slate-700 text-xs min-w-[180px] whitespace-pre-wrap">
+                      {readOnly ? (
+                        inf.note || "-"
+                      ) : (
+                        <textarea rows={3} value={inf.note} disabled={readOnly} onChange={e => updateInf(inf.id, "note", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -4330,7 +4593,7 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
             <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Example List</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Rate card list</h1>
                 <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
               </div>
             </div>
@@ -4355,6 +4618,9 @@ function PlannerTrackerPage({ brief, onUpdateBrief }) {
                     }}
                     onAddClick={handleAddInfluencerClick}
                     onReplaceClick={handleReplaceInfluencerClick}
+                    readOnly={true}
+                    allowStatusEdit={true}
+                    hideAddButton={true}
                   />
                 ))}
               </div>
@@ -4419,7 +4685,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
 
   useEffect(() => {
     if (forceOpenBrief) {
-      setCurrentBrief({ ...forceOpenBrief, activeTab: "brief" });
+      setCurrentBrief({ ...forceOpenBrief, activeTab: getBriefDefaultTab(forceOpenBrief) });
     }
   }, [forceOpenBrief]);
 
@@ -4552,7 +4818,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
       {!currentBrief || listOnly ? (
         <BriefListingPage 
           briefs={briefs} 
-          onView={(b) => listOnly ? null : setCurrentBrief({ ...b, activeTab: "brief" })} 
+          onView={(b) => listOnly ? null : setCurrentBrief({ ...b, activeTab: getBriefDefaultTab(b) })} 
           onCreate={() => setCreateModalOpen(true)}
           listOnly={listOnly}
         />
