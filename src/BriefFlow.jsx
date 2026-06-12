@@ -2780,6 +2780,7 @@ function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                       onAddClick={() => {}}
                       hideAddButton={true}
                       readOnly={true}
+                      isDealsheetView={true}
                     />
                   ))}
                 </div>
@@ -2920,6 +2921,7 @@ function ProposalPage({ brief, onUpdateBrief, showToast }) {
                     onAddClick={() => {}}
                     hideAddButton={true}
                     readOnly={true}
+                    isDealsheetView={true}
                   />
                 ))}
               </div>
@@ -4039,7 +4041,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     </motion.div>
   );
 }// --- Sub-components for Tracker ---
-function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, onReplaceClick, hideAddButton = false, readOnly = false, allowStatusEdit = false }) {
+function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddClick, onReplaceClick, hideAddButton = false, readOnly = false, allowStatusEdit = false, isDealsheetView = false }) {
   const influencers = trackerData.influencers || [];
   const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
     ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
@@ -4138,6 +4140,124 @@ function TrackerTable({ groupName, brief, trackerData, onUpdateTracker, onAddCli
   
   const brandSupports = Array.isArray(brief.brandSupport) ? brief.brandSupport : [];
   const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor != "<p><br></p>";
+
+  if (isDealsheetView) {
+    return (
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
+            <p className="text-sm text-slate-500 mt-1">Summary of selected influencers and costs</p>
+          </div>
+        </div>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
+            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3.5 text-center w-[60px]">No.</th>
+                <th className="px-6 py-3.5 min-w-[280px]">Influencer</th>
+                <th className="px-6 py-3.5 min-w-[180px]">Scope of Work</th>
+                <th className="px-6 py-3.5 min-w-[200px]">Service details & Costs</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Raw Cost</th>
+                {brandSupports.length > 0 && <th className="px-6 py-3.5 min-w-[155px]">Brand Support</th>}
+                <th className="px-6 py-3.5 min-w-[200px]">Note</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {influencers.map((inf, idx) => {
+                const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
+                const sowIdx = submittedSows.indexOf(matchingSow);
+                const sowText = matchingSow ? `Scope ${sowIdx + 1}: ${matchingSow.name || matchingSow.contentType}` : "-";
+                
+                const activeServices = [];
+                requiredServices.forEach(srv => {
+                  let srvData = inf.services?.[srv.key];
+                  if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                    const price = typeof srvData === 'object' ? srvData.price : srvData;
+                    activeServices.push({ label: srv.label, price });
+                  }
+                });
+
+                return (
+                  <tr key={inf.id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-4.5 text-slate-500 text-center font-medium">
+                      {idx + 1}
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center gap-3">
+                        <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-10 w-10 rounded-full object-cover bg-slate-100" />
+                        <div>
+                          <div className="font-semibold text-slate-900 text-sm">
+                            {inf.accountName || "New Influencer"}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            {inf.follower && (
+                              <span className="text-xs text-slate-500">
+                                {inf.follower} Followers
+                              </span>
+                            )}
+                            {inf.channel && (
+                              <span className="text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">
+                                {inf.channel}
+                              </span>
+                            )}
+                          </div>
+                          {inf.accountLink && (
+                            <a href={inf.accountLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline block mt-1 max-w-[200px] truncate">
+                              {inf.accountLink}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4.5 text-slate-700 text-xs font-medium">
+                      {sowText}
+                    </td>
+                    <td className="px-6 py-4.5 text-xs text-slate-700">
+                      {activeServices.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {activeServices.map((as, asIdx) => (
+                            <div key={asIdx} className="flex items-center justify-between gap-4">
+                              <span className="text-slate-500">• {as.label}:</span>
+                              <span className="font-semibold text-slate-800">฿{Number(as.price || 0).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-slate-900 text-sm">
+                      {inf.rawCost ? inf.rawCost : "-"}
+                    </td>
+                    {brandSupports.length > 0 && (
+                      <td className="px-6 py-4.5 text-slate-700 text-xs">
+                        <div className="space-y-1 text-left">
+                          {brandSupports.map(bs => {
+                            const val = inf.brandSupports?.[bs];
+                            if (!val) return null;
+                            return (
+                              <div key={bs} className="flex gap-1.5 items-center">
+                                <span className="text-slate-400">{bs}:</span>
+                                <span className="font-semibold">{val}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    )}
+                    <td className="px-6 py-4.5 text-slate-500 text-xs min-w-[200px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
+                      {inf.note || inf.detail || "-"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
