@@ -55,7 +55,7 @@ export default function BriefStepProgress({ activeTab, onTabChange, onBack, stat
     return 3; // Unlock both Dealsheet (2) and Proposal (3)
   };
   
-  const progressIdx = getProgressIdx();
+  const progressIdx = Math.min(getProgressIdx(), steps.length - 1);
   
   return (
     <div className="mb-12">

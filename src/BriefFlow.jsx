@@ -580,51 +580,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           )}
                         </div>
                         
-                        <div className="rounded-xl bg-[#6D5DF6]/5 p-4 border border-[#6D5DF6]/10 mt-4">
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Buddy Boost Required?</label>
-                          <div className="flex items-center gap-6 mb-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === true} onChange={() => setIsBuddyBoostRequired(true)} className="h-4 w-4 text-[#6D5DF6]" />
-                              <span className="text-sm text-slate-700">Yes</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === false} onChange={() => {
-                                setIsBuddyBoostRequired(false);
-                                setTargetBoost([]);
-                                setBuddyBoostDetail("");
-                                setBudgetBoostSpending("");
-                              }} className="h-4 w-4 text-[#6D5DF6]" />
-                              <span className="text-sm text-slate-700">No</span>
-                            </label>
-                          </div>
-
-                          {isBuddyBoostRequired && (
-                            <div className="space-y-4 pt-4 border-t border-[#6D5DF6]/10">
-                              <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">Target Boost</label>
-                                <div className="flex flex-wrap items-center gap-4">
-                                  {["Awareness", "Engagement", "View", "Follower", "Drive sale", "Traffic"].map(target => (
-                                    <label key={target} className="flex items-center gap-2 cursor-pointer">
-                                      <input type="checkbox" checked={targetBoost.includes(target)} onChange={e => {
-                                        if (e.target.checked) setTargetBoost([...targetBoost, target]);
-                                        else setTargetBoost(targetBoost.filter(t => t !== target));
-                                      }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
-                                      <span className="text-sm text-slate-700">{target}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <label className="mb-1 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
-                                <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                              </div>
-                              <div>
-                                <label className="mb-1 block text-sm font-medium text-slate-700">Detail</label>
-                                <textarea rows={2} value={buddyBoostDetail} onChange={e => setBuddyBoostDetail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        {/* Buddy Boost section moved to Step 2 */}
                       </div>
                       
 
@@ -755,6 +711,52 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       </div>
                     </div>
                   </div>
+
+                  <div className="rounded-xl bg-[#6D5DF6]/5 p-4 border border-[#6D5DF6]/10 mt-6 mb-6">
+                    <label className="mb-2 block text-sm font-semibold text-slate-800">Buddy Boost Required?</label>
+                    <div className="flex items-center gap-6 mb-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === true} onChange={() => setIsBuddyBoostRequired(true)} className="h-4 w-4 text-[#6D5DF6]" />
+                        <span className="text-sm text-slate-700">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="buddyBoost" checked={isBuddyBoostRequired === false} onChange={() => {
+                          setIsBuddyBoostRequired(false);
+                          setTargetBoost([]);
+                          setBuddyBoostDetail("");
+                          setBudgetBoostSpending("");
+                        }} className="h-4 w-4 text-[#6D5DF6]" />
+                        <span className="text-sm text-slate-700">No</span>
+                      </label>
+                    </div>
+
+                    {isBuddyBoostRequired && (
+                      <div className="space-y-4 pt-4 border-t border-[#6D5DF6]/10">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Target Boost</label>
+                          <div className="flex flex-wrap items-center gap-4">
+                            {["Awareness", "Engagement", "View", "Follower", "Drive sale", "Traffic"].map(target => (
+                              <label key={target} className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={targetBoost.includes(target)} onChange={e => {
+                                  if (e.target.checked) setTargetBoost([...targetBoost, target]);
+                                  else setTargetBoost(targetBoost.filter(t => t !== target));
+                                }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                <span className="text-sm text-slate-700">{target}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
+                          <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Detail</label>
+                          <textarea rows={2} value={buddyBoostDetail} onChange={e => setBuddyBoostDetail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 
                   {/* SOW list nested under option */}
                   <div className="mt-8 space-y-4 border-t border-slate-200 pt-6">
@@ -883,7 +885,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       </div>
 
                       {/* Service Scope under SOW */}
-                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Service Scope</h5>
+                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Boost by Page</h5>
                       <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-4">
                           <label className="flex items-center gap-3 cursor-pointer">
@@ -1012,9 +1014,9 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     );
                   })}
                 </div>
-                  </div>
-</div>
-              </section>
+              </div>
+            </div>
+          </section>
               )}
 
               {/* Section 4 */}
