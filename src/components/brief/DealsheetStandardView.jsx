@@ -36,6 +36,10 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
   const optionContingency = brief.customContingencyPercent?.[activeOptId];
   const [contingencyPercent, setContingencyPercent] = useState(5);
 
+  const optionDivisor = brief.customDivisor?.[activeOptId];
+  const defaultDivisor = brief.customerType === "Non-Key Account" ? 2.3 : 2.1;
+  const [divisor, setDivisor] = useState(defaultDivisor);
+
   const optionChannelCosts = brief.customChannelCosts?.[activeOptId] || {};
   const [channelCostsOverrides, setChannelCostsOverrides] = useState({});
 
@@ -73,8 +77,9 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
 
   useEffect(() => {
     setContingencyPercent(optionContingency !== undefined ? optionContingency : 5);
+    setDivisor(optionDivisor !== undefined ? optionDivisor : defaultDivisor);
     setChannelCostsOverrides(brief.customChannelCosts?.[activeOptId] || {});
-  }, [activeOptId, optionContingency, serializedChannelCosts]);
+  }, [activeOptId, optionContingency, optionDivisor, defaultDivisor, serializedChannelCosts]);
 
   // Buddy Boost overrides
   const optionBuddyboostAds = brief.customBuddyboostAds?.[activeOptId];
@@ -117,7 +122,7 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
   const availableBudget = useBuddyBoostFormula 
     ? calc.totalBudget - buddyboostAds - buddyboostFee - totalOtherServicesVal
     : calc.availableBudget;
-  const rawCostForInfluencer = availableBudget / 2.1;
+  const rawCostForInfluencer = divisor > 0 ? (availableBudget / divisor) : 0;
   const contingencies = rawCostForInfluencer * (contingencyPercent / 100);
   const rawCostForCampaign = rawCostForInfluencer - contingencies;
 
@@ -208,6 +213,23 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
           ...brief, 
           customAvgCost: {
             ...(brief.customAvgCost || {}),
+            [activeOptId]: numVal
+          }
+        });
+      }
+    }
+  };
+
+  const handleDivisorChange = (e) => {
+    const val = e.target.value;
+    if (!isNaN(val)) {
+      const numVal = Number(val);
+      setDivisor(numVal);
+      if (onUpdateBrief) {
+        onUpdateBrief({
+          ...brief,
+          customDivisor: {
+            ...(brief.customDivisor || {}),
             [activeOptId]: numVal
           }
         });
@@ -585,9 +607,22 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
               </>
             )}
             
-            <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-100">
-              <span className="text-slate-600 font-medium">Available Budget</span>
-              <span className="font-semibold text-slate-800">{formatCurrency(availableBudget)} บาท</span>
+            <div className="flex justify-between items-center bg-blue-50/60 border border-blue-100 p-3.5 px-4 rounded-xl mt-3 shadow-xs">
+              <span className="text-blue-700 font-semibold text-sm">Available Budget</span>
+              <span className="text-blue-700 font-bold text-base">{formatCurrency(availableBudget)} บาท</span>
+            </div>
+            
+            <div className="flex justify-between items-center text-sm pt-4">
+              <span className="text-slate-600 font-medium">Divisor ({brief.customerType || "Key Account"})</span>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={divisor !== undefined && divisor !== null ? divisor : ""} 
+                  onChange={handleDivisorChange}
+                  className="w-28 text-right border-b border-slate-200 focus:border-blue-500 outline-none p-0 bg-transparent font-semibold text-slate-800 text-sm"
+                />
+                <span className="font-semibold text-slate-800 invisible select-none">บาท</span>
+              </div>
             </div>
             <div className="flex justify-between items-center text-sm pt-4">
               <span className="text-slate-600 font-medium">Raw Cost for Influencer</span>
