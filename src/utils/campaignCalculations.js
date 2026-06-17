@@ -122,7 +122,7 @@ export function getCampaignCalculations(brief, activeOptId) {
     numInfs = Math.max(0, numInfs);
     const reserveInfs = Math.floor(numInfs / 20);
     
-    const influencerCost = (c.social + c.support + c.special + c.via + c.other) * numInfs;
+    const influencerCost = c.channelCost * numInfs;
     
     return {
       ...c,
@@ -136,7 +136,7 @@ export function getCampaignCalculations(brief, activeOptId) {
   const sumReserveInfluencers = channelBreakdown.reduce((acc, c) => acc + c.reserveInfs, 0);
   
   const totalInfluencerCost = channelBreakdown.reduce((acc, c) => acc + c.influencerCost, 0);
-  const totalLogisticCost = channelBreakdown.reduce((acc, c) => acc + (c.numInfs + c.reserveInfs) * (c.logistics + c.product + c.travel), 0);
+  const totalLogisticCost = channelBreakdown.reduce((acc, c) => acc + c.reserveInfs * (c.logistics + c.product + c.travel), 0);
   const totalInfluencerRawCost = totalInfluencerCost + totalLogisticCost;
   const remainingRaw = rawCostForCampaign - totalInfluencerRawCost;
 

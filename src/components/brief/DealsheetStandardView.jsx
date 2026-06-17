@@ -4,11 +4,7 @@ import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
 import Button from "../common/Button";
 
-export default function DealsheetStandardView({ brief, onUpdateBrief, showToast }) {
-  const [activeOptId, setActiveOptId] = useState(() => {
-    if (brief.budgetOptions && brief.budgetOptions.length > 0) return brief.budgetOptions[0].id;
-    return "legacy";
-  });
+export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId }) {
 
   const calc = getCampaignCalculations(brief, activeOptId);
 
@@ -71,7 +67,7 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
       feeVal = Number(s.fee) || 0;
     }
 
-    const calculatedFeeAmt = feeType === "percent" ? Math.round(price * feeVal / 100) : feeVal;
+    const calculatedFeeAmt = feeType === "percent" ? Math.round(calc.totalBudget * feeVal / 100) : feeVal;
     return sum + price + calculatedFeeAmt;
   }, 0);
 
@@ -355,6 +351,36 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
     }
   };
 
+  const getCostItemNote = (key) => {
+    if (key === "logistics") {
+      let notes = [];
+      if (brief.productReceiveMethod) notes.push(brief.productReceiveMethod);
+      if (brief.logisticsPerInfluencer) notes.push(`฿${brief.logisticsPerInfluencer}`);
+      return notes.join(" • ");
+    }
+    if (key === "product") {
+      let notes = [];
+      if (brief.brandSupportType) notes.push(brief.brandSupportType);
+      if (brief.productValue) notes.push(`฿${brief.productValue}`);
+      return notes.join(" • ");
+    }
+    if (key === "travel") {
+      let notes = [];
+      if (brief.reviewerTravelExpense) {
+        if (brief.reviewerTravelExpense.includes(" Case by Case") && brief.customTravelExpense) {
+          notes.push(`ค่าเดินทาง: นอกกรุงเทพฯ (฿${brief.customTravelExpense})`);
+        } else {
+          notes.push(`ค่าเดินทาง: ${brief.reviewerTravelExpense}`);
+        }
+      }
+      if (brief.locationDetails) {
+        notes.push(`สถานที่: ${brief.locationDetails}`);
+      }
+      return notes.join(" | ");
+    }
+    return null;
+  };
+
   const avgCostToUse = customAvgCost !== undefined ? customAvgCost : calculatedAvgCost;
   const totalInfluencers = avgCostToUse > 0 ? Math.floor(rawCostForCampaign / avgCostToUse) : 0;
 
@@ -369,7 +395,7 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
     }
     numInfs = Math.max(0, numInfs);
     const reserveInfs = Math.floor(numInfs / 20);
-    const influencerCost = (c.social + c.support + c.special + c.via + c.other) * numInfs;
+    const influencerCost = c.channelCost * numInfs;
 
     return {
       ...c,
@@ -568,11 +594,11 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast 
                                 {service.feeType === "percent" ? "%" : "บาท"}
                               </button>
                             </div>
-                            <div className="text-xs text-slate-400 self-center whitespace-nowrap min-w-[70px] text-right">
+                            <div className="text-xs self-center whitespace-nowrap min-w-[80px] text-right font-semibold">
                               {service.feeType === "percent" ? (
-                                <>({formatCurrency(Math.round((Number(service.price) || 0) * (Number(service.feeValue) || 0) / 100))} บ.)</>
+                                <span className="text-slate-750">{formatCurrency(Math.round((Number(calc.totalBudget) || 0) * (Number(service.feeValue) || 0) / 100))}</span>
                               ) : (
-                                <>{(Number(service.price) || 0) > 0 ? Math.round((Number(service.feeValue) || 0) / (Number(service.price) || 1) * 100) : 0}%</>
+                                <span className="text-slate-400">{(Number(calc.totalBudget) || 0) > 0 ? Math.round((Number(service.feeValue) || 0) / (Number(calc.totalBudget) || 1) * 100) : 0}%</span>
                               )}
                             </div>
                             <button 
