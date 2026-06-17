@@ -5,6 +5,7 @@ import CustomerFlow from "./CustomerFlow";
 import StandardCostFlow from "./StandardCostFlow";
 import FinalDealsheetFlow from "./FinalDealsheetFlow";
 import { customersSeed, briefsSeed } from "./data/mockData";
+import RateCardListPage from "./components/brief/RateCardListPage";
 import {
   Search,
   Plus,
@@ -26,7 +27,8 @@ import {
   Loader2,
   Menu,
   FileText,
-  DollarSign
+  DollarSign,
+  CreditCard
 } from "lucide-react";
 
 const primary = "#6D5DF6";
@@ -280,13 +282,42 @@ function Toast({ toast, onClose }) {
 }
 
 function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
-  const items = [
+  const kolDiscoveryItems = [
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
+    { label: "Rate Card List", id: "rateCardList", icon: CreditCard, active: activeTab === "rateCardList" },
+  ];
+
+  const briefManagementItems = [
     { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
     { label: "Final Dealsheet", id: "finalDealsheet", icon: ClipboardList, active: activeTab === "finalDealsheet" },
     { label: "Standard Cost", id: "standardCost", icon: DollarSign, active: activeTab === "standardCost" },
   ];
+
+  const renderItem = (item) => (
+    <a
+      key={item.label}
+      href={item.href || "#"}
+      target={item.href ? "_blank" : undefined}
+      rel={item.href ? "noopener noreferrer" : undefined}
+      onClick={() => {
+        if (item.id) {
+          setActiveTab(item.id);
+          setMobileOpen(false);
+        }
+      }}
+      className={cn(
+        "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition cursor-pointer",
+        item.active
+          ? "bg-violet-50 text-[#6D5DF6] ring-1 ring-violet-100"
+          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+      )}
+    >
+      <item.icon className="h-4 w-4 shrink-0" />
+      <span className="truncate">{item.label}</span>
+      {item.href && <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-60" />}
+    </a>
+  );
 
   return (
     <>
@@ -306,32 +337,28 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
             <div className="mt-1 text-[10px] leading-tight text-slate-500">KOL Management</div>
           </div>
         </div>
-        <nav className="space-y-2">
-          {items.map((item) => (
-            <a
-              key={item.label}
-              href={item.href || "#"}
-              target={item.href ? "_blank" : undefined}
-              rel={item.href ? "noopener noreferrer" : undefined}
-              onClick={() => {
-                if (item.id) {
-                  setActiveTab(item.id);
-                  setMobileOpen(false);
-                }
-              }}
-              className={cn(
-                "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition cursor-pointer",
-                item.active
-                  ? "bg-violet-50 text-[#6D5DF6] ring-1 ring-violet-100"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
-              {item.href && <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-60" />}
-            </a>
-          ))}
+        
+        <nav className="space-y-4">
+          {/* KOL Discovery Section */}
+          <div className="space-y-1.5">
+            <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">KOL Discovery</div>
+            <div className="space-y-1">
+              {kolDiscoveryItems.map(renderItem)}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-[1px] bg-slate-100 my-2" />
+
+          {/* Brief Management Section */}
+          <div className="space-y-1.5">
+            <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Brief Management</div>
+            <div className="space-y-1">
+              {briefManagementItems.map(renderItem)}
+            </div>
+          </div>
         </nav>
+
         <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-slate-50 p-3">
           <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Role</div>
           <div className="mt-2 flex flex-col gap-2">
@@ -1209,6 +1236,10 @@ export default function App() {
       
       {activeTab === "standardCost" && (
         <StandardCostFlow showToast={showToast} />
+      )}
+
+      {activeTab === "rateCardList" && (
+        <RateCardListPage />
       )}
 
       {activeTab === "exampleList" && (
