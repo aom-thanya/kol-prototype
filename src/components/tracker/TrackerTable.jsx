@@ -314,34 +314,36 @@ export default function TrackerTable({
             <thead className="bg-slate-50">
               <tr>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Contact</th>
-                <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Cost</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Boost by Page</th>}
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW & Condition</th>
                 {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Questions</th>}
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Competitor</th>}
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment Details</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Condition</th>
                 <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Note</th>
               </tr>
               <tr className="border-b border-slate-200 bg-[#F8FAFC] text-[11px] text-slate-600 font-bold uppercase tracking-wider">
                 <th className="px-3 py-3 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-[#F8FAFC]">No.</th>
                 <th className="px-5 py-3 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-[#F8FAFC] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[80px] text-center">Lot</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
-                <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
-                <th className="px-3 py-2 border-r border-slate-200">Credit Term (Days)</th>
-                <th className="px-3 py-2 border-r border-slate-200">ชำระเงินในนาม</th>
-                {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[400px]">Condition</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Raw Cost</th>
+                {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 {(group.questions || []).map((q, idx) => (
                   <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{q}</th>
                 ))}
                 {brandSupports.map(bs => <th key={bs} className="px-3 py-2 border-r border-slate-200">{bs}</th>)}
                 {hasCompetitor && <th className="px-3 py-2 border-r border-slate-200">Competitor Note</th>}
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Detail</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Credit Term (Days)</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[150px]">ชำระเงินในนาม</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[400px]">Condition</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[150px]">Demographic</th>
                 <th className="px-3 py-2 min-w-[200px]">Additional Note</th>
               </tr>
             </thead>
@@ -521,36 +523,6 @@ export default function TrackerTable({
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
-                      <select 
-                        value={inf.contactStatus || ""} 
-                        disabled={readOnly && !allowStatusEdit} 
-                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
-                        className={cn(
-                          "w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none",
-                          getStatusColor(inf.contactStatus)
-                        )}
-                      >
-                        {STATUS_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
-                        ))}
-                      </select>
-                      {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
-                        <button 
-                          onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
-                          className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
-                        >
-                          Replace
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
-                      {inf.lot ? (
-                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold tracking-wider">{inf.lot}</span>
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[280px] align-top">
                       {readOnly ? (
                         <div className="flex flex-col gap-1.5">
@@ -650,29 +622,50 @@ export default function TrackerTable({
                         </div>
                       )}
                     </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
+                      <select 
+                        value={inf.contactStatus || ""} 
+                        disabled={readOnly && !allowStatusEdit} 
+                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
+                        className={cn(
+                          "w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none",
+                          getStatusColor(inf.contactStatus)
+                        )}
+                      >
+                        {STATUS_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
+                        ))}
+                      </select>
+                      {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
+                        <button 
+                          onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
+                          className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
+                        >
+                          Replace
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
+                      {inf.lot ? (
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold tracking-wider">{inf.lot}</span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] max-w-[280px] whitespace-normal">
+                      <div className="text-slate-600 font-medium leading-relaxed">
+                        {(() => {
+                          const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
+                          const idx = submittedSows.indexOf(matchingSow);
+                          return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
+                        })()}
+                      </div>
+                    </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
                       {readOnly ? (
                         <span>{inf.rawCost || "-"}</span>
                       ) : (
                         <input type="text" value={inf.rawCost || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" />
-                      )}
-                    </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
-                      {readOnly ? (
-                        <span>{inf.creditTerm ? `${inf.creditTerm} วัน` : "-"}</span>
-                      ) : (
-                        <input type="text" value={inf.creditTerm || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
-                      )}
-                    </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
-                      {readOnly ? (
-                        <span>{inf.paymentType || "-"}</span>
-                      ) : (
-                        <select value={inf.paymentType || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
-                          <option value="">Select...</option>
-                          <option value="บุคคล">บุคคล</option>
-                          <option value="บริษัท">บริษัท</option>
-                        </select>
                       )}
                     </td>
                     {requiredServices.map(srv => {
@@ -746,22 +739,6 @@ export default function TrackerTable({
                         </td>
                       );
                     })}
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] max-w-[280px] whitespace-normal">
-                      <div className="text-slate-600 font-medium leading-relaxed">
-                        {(() => {
-                          const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
-                          const idx = submittedSows.indexOf(matchingSow);
-                          return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
-                        })()}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[400px] max-w-[600px] whitespace-pre-wrap leading-relaxed">
-                      {readOnly ? (
-                        inf.condition || "-"
-                      ) : (
-                        <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[400px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
-                      )}
-                    </td>
                     {(group.questions || []).map((q, idx) => (
                       <td key={idx} className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] whitespace-pre-wrap leading-relaxed">
                         {readOnly ? (
@@ -789,11 +766,62 @@ export default function TrackerTable({
                         )}
                       </td>
                     )}
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[180px] whitespace-pre-wrap">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
                       {readOnly ? (
-                        inf.detail || "-"
+                        <span>{inf.creditTerm ? `${inf.creditTerm} วัน` : "-"}</span>
                       ) : (
-                        <textarea rows={3} value={inf.detail || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "detail", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                        <input type="text" value={inf.creditTerm || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "creditTerm", e.target.value)} className="w-20 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" placeholder="วัน" />
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                      {readOnly ? (
+                        <span>{inf.paymentType || "-"}</span>
+                      ) : (
+                        <select value={inf.paymentType || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "paymentType", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white">
+                          <option value="">Select...</option>
+                          <option value="บุคคล">บุคคล</option>
+                          <option value="บริษัท">บริษัท</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[400px] max-w-[600px] whitespace-pre-wrap leading-relaxed">
+                      {readOnly ? (
+                        inf.condition || "-"
+                      ) : (
+                        <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[400px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[150px] align-top">
+                      {readOnly ? (
+                        inf.demographicFileName ? (
+                          <a href="#" className="text-indigo-600 underline flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                            {inf.demographicFileName}
+                          </a>
+                        ) : "-"
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          {inf.demographicFileName ? (
+                            <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded px-2 py-1">
+                              <span className="truncate max-w-[100px] text-[10px] text-slate-600" title={inf.demographicFileName}>{inf.demographicFileName}</span>
+                              <button type="button" onClick={() => updateInf(inf.id, "demographicFileName", "")} className="text-rose-500 hover:text-rose-700 shrink-0">✕</button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-12 border-2 border-slate-200 border-dashed rounded cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                              <div className="flex flex-col items-center justify-center pt-1 pb-1">
+                                <svg className="w-4 h-4 text-slate-400 mb-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p className="text-[9px] text-slate-500 font-semibold">Upload file</p>
+                              </div>
+                              <input type="file" className="hidden" onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  updateInf(inf.id, "demographicFileName", e.target.files[0].name);
+                                }
+                              }} />
+                            </label>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-3 py-2 border-slate-100 text-slate-700 text-xs min-w-[180px] whitespace-pre-wrap">

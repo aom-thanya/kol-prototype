@@ -325,15 +325,18 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                           <div className="grid gap-6 md:grid-cols-2 mb-8">
                             <div className="md:col-span-2">
                               <label className="mb-2 block text-sm font-medium text-slate-700">Platform</label>
-                              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-4">
                                 {["TikTok", "Instagram", "Facebook", "Facebook Page", "YouTube", "X"].map(plat => (
                                   <label key={plat} className="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" checked={(sow.platforms || []).includes(plat)} onChange={e => {
-                                      let newPlats = [...(sow.platforms || [])];
-                                      if (e.target.checked) newPlats.push(plat);
-                                      else newPlats = newPlats.filter(p => p !== plat);
-                                      handleUpdateSow(group.id, sow.id, { platforms: newPlats });
-                                    }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                                    <input 
+                                      type="radio" 
+                                      name={`platform-${group.id}-${sow.id}`}
+                                      checked={Array.isArray(sow.platforms) && sow.platforms.includes(plat)} 
+                                      onChange={() => {
+                                        handleUpdateSow(group.id, sow.id, { platforms: [plat] });
+                                      }} 
+                                      className="h-4 w-4 border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" 
+                                    />
                                     <span className="text-sm text-slate-700">{plat}</span>
                                   </label>
                                 ))}
@@ -351,6 +354,15 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                             <div className="md:col-span-2">
                               <h5 className="mb-3 text-sm font-semibold text-slate-900 pt-2 border-t border-slate-200">Service Scope</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <div className="md:col-span-2 lg:col-span-3 mb-2">
+                                  <label className="mb-1 block text-sm font-medium text-slate-700">Via</label>
+                                  <MultiSelect 
+                                    value={sow.via || []} 
+                                    onChange={val => handleUpdateSow(group.id, sow.id, { via: val })} 
+                                    options={["TikTok", "Instagram", "Facebook", "Facebook Page", "YouTube", "X"]} 
+                                    placeholder="Select Platforms"
+                                  />
+                                </div>
                                 <div>
                                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                                     <input type="checkbox" checked={sow.serviceScope?.buyoutRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'buyoutRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -362,7 +374,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     </div>
                                   )}
                                 </div>
-                                {(sow.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.boostPostRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'boostPostRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -375,7 +387,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     )}
                                   </div>
                                 )}
-                                {(sow.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"].includes(p)) && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"].includes(p)) && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.addAdsRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'addAdsRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -388,7 +400,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     )}
                                   </div>
                                 )}
-                                {(sow.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.paidPartnershipRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'paidPartnershipRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -401,7 +413,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     )}
                                   </div>
                                 )}
-                                {(sow.platforms || []).includes("YouTube") && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).includes("YouTube") && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.discoveryRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'discoveryRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -414,7 +426,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     )}
                                   </div>
                                 )}
-                                {(sow.platforms || []).includes("TikTok") && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).includes("TikTok") && (
                                   <>
                                     <div>
                                       <label className="flex items-center gap-2 cursor-pointer mb-2">
@@ -435,7 +447,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     </div>
                                   </>
                                 )}
-                                {(sow.platforms || []).some(p => ["Facebook", "Facebook Page"].includes(p)) && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).some(p => ["Facebook", "Facebook Page"].includes(p)) && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.brandedContentRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'brandedContentRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
@@ -448,7 +460,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                     )}
                                   </div>
                                 )}
-                                {(sow.platforms || []).includes("X") && (
+                                {(Array.isArray(sow.platforms) ? sow.platforms : (sow.platforms ? [sow.platforms] : [])).includes("X") && (
                                   <div>
                                     <label className="flex items-center gap-2 cursor-pointer mb-2">
                                       <input type="checkbox" checked={sow.serviceScope?.whitelistingRequired || false} onChange={e => handleUpdateServiceScope(group.id, sow.id, 'whitelistingRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
