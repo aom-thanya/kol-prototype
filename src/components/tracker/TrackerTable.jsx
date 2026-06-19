@@ -310,7 +310,7 @@ export default function TrackerTable({
                 <th className="px-3 py-2 border-r border-slate-200">ชำระเงินในนาม</th>
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[250px]">Condition</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[400px]">Condition</th>
                 {(group.questions || []).map((q, idx) => (
                   <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{q}</th>
                 ))}
@@ -700,11 +700,11 @@ export default function TrackerTable({
                         })()}
                       </div>
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[220px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[400px] max-w-[600px] whitespace-pre-wrap leading-relaxed">
                       {readOnly ? (
                         inf.condition || "-"
                       ) : (
-                        <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                        <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[400px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
                       )}
                     </td>
                     {(group.questions || []).map((q, idx) => (
