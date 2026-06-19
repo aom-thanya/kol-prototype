@@ -112,10 +112,20 @@ export default function TrackerTable({
     if (isRequired) {
       if (durations.size > 0) {
         Array.from(durations).forEach(d => {
-          requiredServices.push({ key: `${reqKey}_${d}`, label: `${labelPrefix} (${d})` });
+          requiredServices.push({ 
+            key: `${reqKey}_${d}`, 
+            label: `${labelPrefix} (${d})`,
+            baseReqKey: reqKey,
+            durationKey: durationKey,
+            durationVal: d
+          });
         });
       } else {
-        requiredServices.push({ key: reqKey, label: labelPrefix });
+        requiredServices.push({ 
+          key: reqKey, 
+          label: labelPrefix,
+          baseReqKey: reqKey
+        });
       }
     }
   };
@@ -598,6 +608,32 @@ export default function TrackerTable({
                       )}
                     </td>
                     {requiredServices.map(srv => {
+                      let isIrrelevant = false;
+                      if (inf.scopeOfWork) {
+                        const mySow = submittedSows.find(s => s.id === inf.scopeOfWork);
+                        if (mySow && mySow.serviceScope) {
+                          const isReq = !!mySow.serviceScope[srv.baseReqKey];
+                          if (srv.durationVal) {
+                            const sowDurations = Array.isArray(mySow.serviceScope[srv.durationKey]) 
+                              ? mySow.serviceScope[srv.durationKey] 
+                              : (mySow.serviceScope[srv.durationKey] ? [mySow.serviceScope[srv.durationKey]] : []);
+                            
+                            if (!isReq || !sowDurations.includes(srv.durationVal)) {
+                              isIrrelevant = true;
+                            }
+                          } else {
+                            if (!isReq) isIrrelevant = true;
+                          }
+                        }
+                      }
+
+                      if (isIrrelevant) {
+                        return (
+                          <td key={srv.key} className="border-r border-slate-700 min-w-[150px] bg-[#111111]">
+                          </td>
+                        );
+                      }
+
                       let srvData = inf.services?.[srv.key];
                       if (typeof srvData === 'string' || !srvData) {
                         srvData = { 
