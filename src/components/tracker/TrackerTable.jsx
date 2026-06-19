@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import Button from "../common/Button";
 import { cn } from "../../utils/cn";
 
@@ -19,6 +19,7 @@ export default function TrackerTable({
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(true);
   const canReorder = allowReorder !== null ? allowReorder : !readOnly;
   const influencers = trackerData.influencers || [];
   const allSOWs = group?.sows?.length > 0
@@ -276,33 +277,56 @@ export default function TrackerTable({
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
+            {group?.pillar && typeof group.pillar === "string" && (
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                {group.pillar}
+              </span>
+            )}
+            {group?.pillars && Object.values(group.pillars).some(arr => arr && arr.length > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {Object.values(group.pillars).flat().filter(Boolean).map((val, i) => (
+                  <span key={i} className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                    {val}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           <p className="text-sm text-slate-500 mt-1">Influencers in this group</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
           {!hideAddButton && (
             <Button onClick={() => onAddClick(groupName)}><Plus className="h-4 w-4" /> Add Influencer</Button>
           )}
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-1.5 hover:bg-slate-200/50 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-slate-700 transition-colors shrink-0 shadow-sm"
+          >
+            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
       </div>
-      <div className="w-full overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
+      {isExpanded && (
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
             <thead className="bg-slate-50">
               <tr>
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
-                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-emerald-50/50">Status</th>
-                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50/50">Contact</th>
-                <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-blue-50/50">Payment</th>
-                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Boost by Page</th>}
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-indigo-50/50">SOW & Condition</th>
-                {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-cyan-50/50">Questions</th>}
-                {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-rose-50/50">Brand Support</th>}
-                {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-orange-50/50">Competitor</th>}
-                <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-slate-100/50">Note</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status</th>
+                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Contact</th>
+                <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment</th>
+                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Boost by Page</th>}
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW & Condition</th>
+                {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Questions</th>}
+                {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Brand Support</th>}
+                {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Competitor</th>}
+                <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Note</th>
               </tr>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 uppercase tracking-wider">
-                <th className="px-3 py-2 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-slate-50">No.</th>
-                <th className="px-5 py-4 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
+              <tr className="border-b border-slate-200 bg-[#F8FAFC] text-[11px] text-slate-600 font-bold uppercase tracking-wider">
+                <th className="px-3 py-3 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-[#F8FAFC]">No.</th>
+                <th className="px-5 py-3 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-[#F8FAFC] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
@@ -399,76 +423,99 @@ export default function TrackerTable({
                     )}>
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
-                        <div className="flex-1 min-w-0 flex flex-col gap-1.5 justify-center">
+                        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
                           {readOnly ? (
-                            <span className={cn(
-                              "font-semibold text-[13px] px-1.5 py-0.5",
-                              inf.contactStatus === "Rejected" && "line-through text-rose-700 decoration-rose-500 decoration-1",
-                              inf.contactStatus === "ถูกแทนที่" && "line-through text-slate-500",
-                              inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "text-slate-900"
-                            )}>
-                              {inf.accountName || "New Influencer"}
-                            </span>
-                          ) : (
-                            <input 
-                              type="text" 
-                              value={inf.accountName || ""} 
-                              disabled={readOnly} 
-                              onChange={e => updateInf(inf.id, "accountName", e.target.value)} 
-                              placeholder="Account Name (@handle)" 
-                              className={cn(
-                                "w-full font-semibold text-[13px] bg-transparent px-1.5 py-1 rounded outline-none border border-transparent placeholder:text-slate-300",
-                                inf.contactStatus === "Rejected" && "line-through text-rose-700 decoration-rose-500 decoration-1",
-                                inf.contactStatus === "ถูกแทนที่" && "line-through text-slate-500",
-                                inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "text-slate-900 hover:text-[#6D5DF6]"
-                              )} 
-                            />
-                          )}
-                          {inf.replacedFor && (
-                            <div className="text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded w-fit border border-rose-100 mt-1 mb-0.5">
-                              แทนที่: {inf.replacedFor}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 w-full">
-                            {readOnly ? (
-                              <span className={cn(
-                                "text-xs text-slate-500 px-1.5 py-0.5",
-                                inf.contactStatus === "Rejected" && "line-through"
-                              )}>
-                                {inf.follower ? `${Number(inf.follower.replace(/[^0-9]/g, '') || inf.follower).toLocaleString()} Followers` : "-"}
-                              </span>
-                            ) : (
-                              <input type="text" value={inf.follower || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "follower", e.target.value)} placeholder="Followers" className={cn("w-20 text-xs text-slate-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300", inf.contactStatus === "Rejected" && "line-through")} />
-                            )}
-                            {readOnly ? (
-                              inf.channel && (
+                            <>
+                              <div className="flex items-center gap-2">
                                 <span className={cn(
-                                  "text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5",
+                                  "font-semibold text-[13px] truncate",
+                                  inf.contactStatus === "Rejected" && "line-through text-rose-700 decoration-rose-500 decoration-1",
+                                  inf.contactStatus === "ถูกแทนที่" && "line-through text-slate-500",
+                                  inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "text-slate-900"
+                                )}>
+                                  {inf.accountName || "New Influencer"}
+                                </span>
+                                {inf.accountLink && (
+                                  <a href={inf.accountLink} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#6D5DF6] transition-colors shrink-0">
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {inf.channel && (
+                                  <span className={cn(
+                                    "text-[10px] font-bold tracking-wider text-slate-700 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 uppercase shrink-0",
+                                    inf.contactStatus === "Rejected" && "line-through text-rose-400 border-rose-200 bg-rose-50"
+                                  )}>
+                                    {inf.channel === "Instagram" ? "IG" : inf.channel === "TikTok" ? "TT" : inf.channel === "Facebook" ? "FB" : inf.channel === "YouTube" ? "YT" : inf.channel === "Lemon8" ? "L8" : inf.channel}
+                                  </span>
+                                )}
+                                <span className={cn(
+                                  "text-xs text-slate-500 truncate",
                                   inf.contactStatus === "Rejected" && "line-through"
                                 )}>
-                                  {inf.channel}
+                                  {inf.follower ? `${isNaN(inf.follower) ? inf.follower : Number(inf.follower).toLocaleString()}${String(inf.follower).toLowerCase().includes('follower') ? '' : ' Followers'}` : "-"}
                                 </span>
-                              )
-                            ) : (
-                              <select value={inf.channel || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "channel", e.target.value)} className={cn("text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-1 outline-none cursor-pointer focus:border-[#6D5DF6]", inf.contactStatus === "Rejected" && "line-through")}>
-                                <option value="">Platform</option>
-                                <option value="Instagram">IG</option>
-                                <option value="TikTok">TT</option>
-                                <option value="Facebook">FB</option>
-                                <option value="YouTube">YT</option>
-                                <option value="X">X</option>
-                                <option value="Other">Other</option>
-                              </select>
-                            )}
-                          </div>
-                          {readOnly ? (
-                            inf.accountLink && (
-                              <a href={inf.accountLink} target="_blank" rel="noopener noreferrer" className={cn("w-full text-[10px] text-blue-500 hover:underline px-1.5 py-0.5 block truncate max-w-[200px]", inf.contactStatus === "Rejected" && "line-through")}>
-                                {inf.accountLink}
-                              </a>
-                            )
+                              </div>
+                              {inf.replacedFor && (
+                                <div className="text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded w-fit border border-rose-100 mt-0.5">
+                                  แทนที่: {inf.replacedFor}
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <input type="text" value={inf.accountLink || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "accountLink", e.target.value)} placeholder="Link URL" className={cn("w-full text-[10px] text-blue-500 bg-white px-1.5 py-1 rounded outline-none border border-slate-200 focus:border-[#6D5DF6] placeholder:text-slate-300", inf.contactStatus === "Rejected" && "line-through")} />
+                            <div className="flex flex-col gap-1.5 w-full pr-1">
+                              <input 
+                                type="text" 
+                                value={inf.accountName || ""} 
+                                onChange={e => updateInf(inf.id, "accountName", e.target.value)} 
+                                placeholder="@username" 
+                                className={cn(
+                                  "w-full font-semibold text-[13px] bg-slate-50 hover:bg-white px-2 py-1 rounded outline-none border border-transparent focus:border-[#6D5DF6] placeholder:text-slate-400 transition-colors",
+                                  inf.contactStatus === "Rejected" && "line-through text-rose-700 decoration-rose-500 decoration-1",
+                                  inf.contactStatus === "ถูกแทนที่" && "line-through text-slate-500",
+                                  inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "text-slate-900"
+                                )} 
+                              />
+                              <div className="flex items-center gap-1.5 w-full">
+                                <select 
+                                  value={inf.channel || ""} 
+                                  onChange={e => updateInf(inf.id, "channel", e.target.value)} 
+                                  className={cn("w-[64px] shrink-0 text-[10px] font-bold tracking-wider text-slate-700 bg-slate-50 hover:bg-white border border-transparent focus:border-[#6D5DF6] rounded px-1 py-1 outline-none cursor-pointer uppercase transition-colors", inf.contactStatus === "Rejected" && "line-through")}
+                                >
+                                  <option value="">Plat</option>
+                                  <option value="Instagram">IG</option>
+                                  <option value="TikTok">TT</option>
+                                  <option value="Facebook">FB</option>
+                                  <option value="YouTube">YT</option>
+                                  <option value="X">X</option>
+                                  <option value="Lemon8">Lemon8</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                                <input 
+                                  type="text" 
+                                  value={inf.follower || ""} 
+                                  onChange={e => updateInf(inf.id, "follower", e.target.value)} 
+                                  placeholder="Followers" 
+                                  className={cn("w-full flex-1 min-w-0 text-xs text-slate-600 bg-slate-50 hover:bg-white px-2 py-1 rounded outline-none border border-transparent focus:border-[#6D5DF6] placeholder:text-slate-400 transition-colors", inf.contactStatus === "Rejected" && "line-through")} 
+                                />
+                              </div>
+                              <div className="flex items-center gap-1.5 w-full">
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <input 
+                                  type="text" 
+                                  value={inf.accountLink || ""} 
+                                  onChange={e => updateInf(inf.id, "accountLink", e.target.value)} 
+                                  placeholder="Profile URL" 
+                                  className={cn("w-full flex-1 min-w-0 text-[11px] text-blue-500 bg-slate-50 hover:bg-white px-2 py-1 rounded outline-none border border-transparent focus:border-[#6D5DF6] placeholder:text-slate-400 transition-colors", inf.contactStatus === "Rejected" && "line-through")} 
+                                />
+                              </div>
+                              {inf.replacedFor && (
+                                <div className="text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded w-fit border border-rose-100">
+                                  แทนที่: {inf.replacedFor}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -753,7 +800,8 @@ export default function TrackerTable({
               )}
             </tbody>
           </table>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
