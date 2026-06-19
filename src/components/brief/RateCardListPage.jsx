@@ -10,6 +10,7 @@ import { formatCurrency } from "../../utils/formatHelpers";
 import { influencerSeed } from "../../data/influencerSeed";
 import InfluencerSelectModal from "../tracker/InfluencerSelectModal";
 import PlannerTrackerPage from "../tracker/PlannerTrackerPage";
+import RecapSetup from "./RecapSetup";
 
 const getAvailableServices = (platforms = []) => {
   const list = [];
@@ -18,7 +19,7 @@ const getAvailableServices = (platforms = []) => {
   const hasPlatform = (plats) => platforms.some(p => plats.includes(p));
   
   if (hasPlatform(["Facebook", "Facebook Page", "Instagram", "TikTok"])) {
-    list.push({ label: "Boost Post", key: "boostPostRequired" });
+    list.push({ label: "Boost by Page", key: "boostPostRequired" });
   }
   
   if (hasPlatform(["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"])) {
@@ -641,14 +642,6 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
             {/* Actions Panel */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
-              
-              {/* Internal Status Badge */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                <span className="text-xs text-slate-400 font-bold block uppercase">Current Phase</span>
-                <span className="font-bold text-slate-850 text-base mt-1 block">
-                  Brief Info
-                </span>
-              </div>
 
               <div className="flex flex-col gap-3">
                 <button 
@@ -682,7 +675,15 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
 }
 
 export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) {
+  const [activeTab, setActiveTab] = useState("SOW & Rate Card");
   const [currentListId, setCurrentListId] = useState(null);
+  
+  const renderList = (items) => {
+    if (!items || items.length === 0) return "-";
+    if (typeof items === "string") return items;
+    if (Array.isArray(items)) return items.join(", ");
+    return String(items);
+  };
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [briefIdInput, setBriefIdInput] = useState("");
   const [selectedBriefToLink, setSelectedBriefToLink] = useState("");
@@ -709,11 +710,9 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
   const [activeModalSowId, setActiveModalSowId] = useState(null);
 
   const currentList = briefs.find(b => b.id === currentListId);
-  const status = currentList?.internalStatus === "Group" || currentList?.internalStatus === "Pillar & Group"
-    ? "Group"
-    : (currentList?.internalStatus === "Example List"
-      ? "Example List"
-      : (currentList?.internalStatus === "Rate Card List" ? "Rate Card List" : (currentList?.internalStatus === "Recap" ? "Recap" : "Brief Info")));
+  const status = currentList?.internalStatus === "Example List" || currentList?.internalStatus === "Group" || currentList?.internalStatus === "Pillar & Group"
+    ? "Example List"
+    : (currentList?.internalStatus === "Rate Card List" ? "Rate Card List" : (currentList?.internalStatus === "Recap" ? "Recap" : "Brief Info"));
 
   const budgetOptions = currentList?.budgetOptions && currentList.budgetOptions.length > 0
     ? currentList.budgetOptions
@@ -852,18 +851,14 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
     onUpdateBriefs(updated);
   };
   // Update SOW example creators
-  const handleUpdateSowExampleCreators = (sowId, creators) => {
+  const handleUpdateSowExampleCreators = (groupId, sowId, creators) => {
     const updated = briefs.map(b => {
       if (b.id !== currentListId) return b;
       
-      const updatedBudgetOptions = (b.budgetOptions && b.budgetOptions.length > 0 ? b.budgetOptions : [{
-        id: "default-opt",
-        name: "Option A",
-        scopeOfWorks: b.scopeOfWorks || []
-      }]).map(opt => {
-        if (opt.id !== activeOptId) return opt;
+      const updatedGroups = (b.groups || []).map(g => {
+        if (g.id !== groupId) return g;
         
-        const updatedSows = (opt.scopeOfWorks || []).map(s => {
+        const updatedSows = (g.sows || []).map(s => {
           if (s.id !== sowId) return s;
           return {
             ...s,
@@ -872,81 +867,64 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
         });
         
         return {
-          ...opt,
-          scopeOfWorks: updatedSows
+          ...g,
+          sows: updatedSows
         };
       });
-
-      const activeOpt = updatedBudgetOptions.find(o => o.id === activeOptId);
-      const activeSows = activeOpt ? activeOpt.scopeOfWorks : b.scopeOfWorks;
 
       // Sync to groupTrackers
       const updatedTrackers = { ...b.groupTrackers };
-      activeSows.forEach(sow => {
-        const groupName = sow.name || sow.contentType;
-        const selectedList = (sow.exampleCreators || []).filter(c => c.selected !== false);
-        
-        const influencers = selectedList.map(creator => {
-          return {
-            id: creator.id,
-            accountName: creator.username,
-            accountLink: `https://${creator.platform.toLowerCase()}.com/${creator.username.replace("@", "")}`,
-            follower: creator.followers.toLocaleString(),
-            channel: creator.platform,
-            contact: "Line: @contact",
-            rawCost: creator.rawCost ? creator.rawCost.replace(/[^0-9]/g, "") : "15000",
-            contactStatus: "Selected",
-            services: {}
+      const activeGroup = updatedGroups.find(g => g.id === groupId);
+      if (activeGroup) {
+        activeGroup.sows.forEach(sow => {
+          const groupName = sow.name || sow.contentType;
+          const selectedList = (sow.exampleCreators || []).filter(c => c.selected !== false);
+          
+          const influencers = selectedList.map(creator => {
+            return {
+              id: creator.id,
+              accountName: creator.username,
+              accountLink: `https://${creator.platform.toLowerCase()}.com/${creator.username.replace("@", "")}`,
+              follower: creator.followers.toLocaleString(),
+              channel: creator.platform,
+              contact: "Line: @contact",
+              rawCost: creator.rawCost ? creator.rawCost.replace(/[^0-9]/g, "") : "15000",
+              contactStatus: "Selected",
+              services: {}
+            };
+          });
+
+          updatedTrackers[groupName] = {
+            influencers: influencers
           };
         });
-
-        updatedTrackers[groupName] = {
-          influencers: influencers
-        };
-      });
+      }
       
       return {
         ...b,
-        budgetOptions: updatedBudgetOptions,
-        scopeOfWorks: activeSows,
+        groups: updatedGroups,
         groupTrackers: updatedTrackers
       };
     });
     onUpdateBriefs(updated);
   };
-  // Update SOW questions
-  const handleUpdateSowQuestions = (sowId, questions) => {
+  // Update Group questions
+  const handleUpdateGroupQuestions = (groupId, questions) => {
     const updated = briefs.map(b => {
       if (b.id !== currentListId) return b;
       
-      const updatedBudgetOptions = (b.budgetOptions && b.budgetOptions.length > 0 ? b.budgetOptions : [{
-        id: "default-opt",
-        name: "Option A",
-        scopeOfWorks: b.scopeOfWorks || []
-      }]).map(opt => {
-        if (opt.id !== activeOptId) return opt;
-        
-        const updatedSows = (opt.scopeOfWorks || []).map(s => {
-          if (s.id !== sowId) return s;
-          return {
-            ...s,
-            questions: questions,
-            notes: questions[0] || ""
-          };
-        });
+      const updatedGroups = (b.groups || []).map(g => {
+        if (g.id !== groupId) return g;
         
         return {
-          ...opt,
-          scopeOfWorks: updatedSows
+          ...g,
+          questions: questions
         };
       });
-
-      const activeOpt = updatedBudgetOptions.find(o => o.id === activeOptId);
       
       return {
         ...b,
-        budgetOptions: updatedBudgetOptions,
-        scopeOfWorks: activeOpt ? activeOpt.scopeOfWorks : b.scopeOfWorks
+        groups: updatedGroups
       };
     });
     onUpdateBriefs(updated);
@@ -1287,7 +1265,7 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
             
             {
               (() => {
-                const stepsOrder = ["Brief Info", "Recap", "Group", "Example List", "Rate Card List"];
+                const stepsOrder = ["Brief Info", "Recap", "Example List", "Rate Card List"];
                 const currentStepIdx = stepsOrder.indexOf(status);
                 return (
                   <>
@@ -1358,9 +1336,9 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   </span>
                 </button>
 
-                {/* Step 3: Group */}
+                {/* Step 3: Example List */}
                 <button 
-                  onClick={() => handleUpdateStatus("Group")}
+                  onClick={() => handleUpdateStatus("Example List")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
@@ -1375,45 +1353,24 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
                   }`}>
-                    Group
-                  </span>
-                </button>
-
-                {/* Step 4: Example List */}
-                <button 
-                  onClick={() => handleUpdateStatus("Example List")}
-                  className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
-                >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
-                    currentStepIdx >= 3
-                      ? "bg-white border-[#6D5DF6] text-[#6D5DF6] shadow-sm shadow-violet-100 scale-105 font-bold"
-                      : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350"
-                  }`}>
-                    {currentStepIdx > 3 ? "✓" : "4"}
-                  </div>
-                  <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
-                    currentStepIdx >= 3
-                      ? "text-[#6D5DF6]"
-                      : "text-slate-400 group-hover:text-slate-650"
-                  }`}>
                     Example List
                   </span>
                 </button>
 
-                {/* Step 5: Rate Card List */}
+                {/* Step 4: Rate Card List */}
                 <button 
                   onClick={() => handleUpdateStatus("Rate Card List")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
-                    currentStepIdx >= 4
+                    currentStepIdx >= 3
                       ? "bg-[#6D5DF6] border-[#6D5DF6] text-white shadow-sm shadow-violet-250 scale-105"
                       : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350"
                   }`}>
-                    5
+                    4
                   </div>
                   <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
-                    currentStepIdx >= 4
+                    currentStepIdx >= 3
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
                   }`}>
@@ -1438,8 +1395,6 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                       ? "bg-purple-50 text-purple-750 border-purple-100" 
                       : status === "Example List"
                       ? "bg-emerald-50 text-emerald-755 border-emerald-100"
-                      : status === "Group"
-                      ? "bg-blue-50 text-blue-755 border-blue-100"
                       : status === "Recap"
                       ? "bg-amber-50 text-amber-750 border-amber-100"
                       : "bg-indigo-50 text-indigo-750 border-indigo-100"
@@ -1460,539 +1415,248 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
             {/* Recap Table display for Step 2 */}
             {status === "Recap" && (
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">Campaign Recap & SOW Options</h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Select a budget option to review and configure scope of work details.</p>
-                  </div>
-                  {/* Budget Options Tabs */}
-                  <div className="flex flex-wrap gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                    {budgetOptions.map(opt => (
-                      <button
-                        key={opt.id}
-                        onClick={() => setActiveRecapOptionId(opt.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          activeOptId === opt.id
-                            ? "bg-[#6D5DF6] text-white shadow-xs"
-                            : "text-slate-500 hover:text-slate-800"
-                        }`}
-                      >
-                        {opt.name || `Option ${opt.id}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
-                  <table className="w-full text-left text-xs border-collapse table-fixed min-w-[700px]">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
-                        <th className="p-4 w-[220px] border-r border-slate-200">Budget Option Details</th>
-                        {optionSows.map((sow, idx) => (
-                          <th key={sow.id || idx} className="p-4 w-[300px] border-r border-slate-200 last:border-r-0">
-                            Scope of Work Option {idx + 1}
-                          </th>
-                        ))}
-                        {optionSows.length === 0 && (
-                          <th className="p-4 text-slate-400 italic font-normal">No SOW configured for this option</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {/* Scope of Work row */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Scope of Work</td>
-                        {optionSows.map((sow, idx) => (
-                          <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-2">
-                            <span className="font-bold text-slate-800 text-[13px] block">{sow.name || sow.contentType || `SOW ${idx+1}`}</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {sow.platforms && (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]).map((p, pIdx) => (
-                                <span key={pIdx} className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md font-bold uppercase text-[9px]">
-                                  {p}
-                                </span>
-                              ))}
-                              {sow.contentType && (Array.isArray(sow.contentType) ? sow.contentType : [sow.contentType]).map((c, cIdx) => (
-                                <span key={cIdx} className="bg-slate-100 text-slate-650 px-2 py-0.5 rounded-md font-medium text-[9px]">
-                                  {c}
-                                </span>
-                              ))}
-                            </div>
-                            <p className="text-[11px] text-slate-550 mt-2 leading-relaxed whitespace-pre-line">{sow.details || "No details provided"}</p>
-                          </td>
-                        ))}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-
-                      {/* Platform row */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Platform</td>
-                        {optionSows.map((sow, idx) => {
-                          const platforms = sow.platforms ? (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]) : [];
-                          return (
-                            <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-slate-650 font-bold uppercase text-[10px] space-x-1">
-                              {platforms.map((p, pIdx) => (
-                                <span key={pIdx} className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md">
-                                  {p}
-                                </span>
-                              ))}
-                              {platforms.length === 0 && <span className="text-slate-400 italic font-normal">Not specified</span>}
-                            </td>
-                          );
-                        })}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-
-                      {/* Follower row */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Follower</td>
-                        {optionSows.map((sow, idx) => (
-                          <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-slate-650 font-semibold">
-                            {sow.followerReqFrom || sow.followerReqTo ? (
-                              <span>
-                                {sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - {sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}
-                              </span>
-                            ) : (
-                              sow.followerReq || "Not specified"
-                            )}
-                          </td>
-                        ))}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-
-                      {/* จำนวน Influ ที่ต้องการ */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">จำนวน Influ ที่ต้องการ</td>
-                        {optionSows.map((sow, idx) => (
-                          <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-slate-700 font-bold text-sm">
-                            <span className="text-[#6D5DF6]">{sow.numInfluencers || "0"}</span> <span className="text-xs text-slate-450 font-medium">คน</span>
-                          </td>
-                        ))}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-
-                      {/* 6 Pillars row */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">6 Pillars</td>
-                        {optionSows.map((sow, idx) => (
-                          <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-3">
-                            <div className="space-y-3">
-                              {["Demographic", "Location", "Occupation", "Persona", "ContentCategory", "StoryTelling"].map((pillarKey) => {
-                                const labelMap = {
-                                  Demographic: "Demographic",
-                                  Location: "Location",
-                                  Occupation: "Occupation",
-                                  Persona: "Persona",
-                                  ContentCategory: "Content Category",
-                                  StoryTelling: "Story Telling"
-                                };
-                                const stateKey = `${sow.id}-${pillarKey}`;
-                                const isChecked = selectedPillars.includes(stateKey) || (pillarValues[stateKey] && pillarValues[stateKey].length > 0);
-                                
-                                let icon = <Clock className="h-4 w-4" />;
-                                if (pillarKey === "Location") icon = <MapPin className="h-4 w-4" />;
-                                if (pillarKey === "Occupation") icon = <Briefcase className="h-4 w-4" />;
-                                if (pillarKey === "Persona") icon = <User className="h-4 w-4" />;
-                                if (pillarKey === "ContentCategory") icon = <Tag className="h-4 w-4" />;
-                                if (pillarKey === "StoryTelling") icon = <MessageSquare className="h-4 w-4" />;
-
-                                const optionsMap = {
-                                  Demographic: ["18-24 Female", "25-34 Female", "18-35 Unisex", "Gen Z", "Gen Y", "Gen Alpha"],
-                                  Location: ["Bangkok & Vicinity", "Upcountry", "Major Cities", "Nationwide"],
-                                  Occupation: ["Office Workers", "Students / University", "Freelancers", "Business Owners", "First Jobbers"],
-                                  Persona: ["Beauty Enthusiasts", "Tech Geeks", "Modern Moms", "Pet Lovers", "Foodies", "Lifestyle Travellers"],
-                                  ContentCategory: ["Beauty & Cosmetics", "Fashion & Lifestyle", "Food & Dining", "Travel & Vlogs", "IT & Gadgets", "Finance & Investment"],
-                                  StoryTelling: ["Review / Unboxing", "How-to / Tutorial", "Daily Vlog", "ASMR", "Comedy / Entertain", "Storytelling"]
-                                };
-
-                                const personaKeyMap = {
-                                  Demographic: "demographic",
-                                  Location: "location",
-                                  Occupation: "occupation",
-                                  Persona: "persona",
-                                  ContentCategory: "contentCategory",
-                                  StoryTelling: "storyTelling"
-                                };
-                                const briefValueRaw = sow.persona?.[personaKeyMap[pillarKey]];
-                                const briefValue = briefValueRaw ? (Array.isArray(briefValueRaw) ? briefValueRaw.join(", ") : String(briefValueRaw)) : "";
-
-                                return (
-                                  <div key={pillarKey} className={`p-2 border rounded-xl transition-all ${
-                                    isChecked ? "bg-blue-50/10 border-blue-200" : "bg-slate-50/30 border-slate-200"
-                                  }`}>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (isChecked) {
-                                          setPillarValues(prev => ({ ...prev, [stateKey]: [] }));
-                                          setSelectedPillars(prev => prev.filter(k => k !== stateKey));
-                                        } else {
-                                          setPillarValues(prev => ({ ...prev, [stateKey]: [] }));
-                                          setSelectedPillars(prev => [...prev, stateKey]);
-                                        }
-                                      }}
-                                      className="w-full flex items-center justify-between text-left text-xs font-bold text-slate-750 hover:text-[#6D5DF6]"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className={`flex h-3.5 w-3.5 items-center justify-center rounded border ${
-                                          isChecked ? "bg-blue-600 border-blue-600 text-white text-[10px]" : "border-slate-300"
-                                        }`}>
-                                          {isChecked && "✓"}
-                                        </span>
-                                        <span className="text-[11px]">{labelMap[pillarKey]}</span>
-                                      </div>
-                                    </button>
-
-                                    {briefValue && (
-                                      <div className="mt-1.5 px-2 py-1 bg-slate-100/50 rounded-lg text-[9px] text-slate-500 border border-slate-200/40">
-                                        <span className="font-semibold text-slate-450 block text-[8px] uppercase tracking-wider">Brief Requirement</span>
-                                        <span className="text-slate-700 font-bold block mt-0.5 whitespace-pre-line">{briefValue}</span>
-                                      </div>
-                                    )}
-
-                                    {isChecked && (
-                                      <div className="mt-2 bg-white p-2 rounded-lg border border-slate-100 shadow-xs">
-                                        {renderMultiSelect(pillarKey, icon, `Choose Options`, optionsMap[pillarKey], sow.id)}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </td>
-                        ))}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-
-                      {/* Requirement row */}
-                      <tr>
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Requirement</td>
-                        {optionSows.map((sow, idx) => {
-                          const scopePlatforms = sow.platforms ? (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]) : [];
-                          const services = getAvailableServices(scopePlatforms);
-                          return (
-                            <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-2">
-                              <div className="grid grid-cols-1 gap-2.5 text-[11px] text-slate-700">
-                                {services.map((service, sIdx) => {
-                                  const durationKey = service.key.replace("Required", "Duration");
-                                  
-                                  // 1. Check scope-level duration list
-                                  let durationVal = sow.serviceScope?.[durationKey];
-                                  if (!durationVal && service.key === "boostPostRequired") {
-                                    durationVal = sow.serviceScope?.boostPostDuration || sow.serviceScope?.boostDuration;
-                                  }
-                                  
-                                  // 2. Fall back to global brief-level duration list if empty
-                                  if (!durationVal || (Array.isArray(durationVal) && durationVal.length === 0)) {
-                                    durationVal = currentList?.[durationKey];
-                                    if (!durationVal && service.key === "boostPostRequired") {
-                                      durationVal = currentList?.boostDuration || currentList?.boostPostDuration;
-                                    }
-                                    if (!durationVal && service.key === "whitelistingRequired") {
-                                      durationVal = currentList?.xWhitelistingDuration || currentList?.whitelistingDuration;
-                                    }
-                                    if (!durationVal && service.key === "brandedContentRequired") {
-                                      durationVal = currentList?.fbBrandedContentDuration || currentList?.brandedContentDuration;
-                                    }
-                                    if (!durationVal && service.key === "discoveryRequired") {
-                                      durationVal = currentList?.youtubeDiscoveryDuration || currentList?.discoveryDuration;
-                                    }
-                                  }
-                                  
-                                  const durationList = Array.isArray(durationVal) 
-                                    ? durationVal 
-                                    : (durationVal ? [durationVal] : []);
-                                  
-                                  if (durationList.length > 0) {
-                                    return durationList.map((dur, dIdx) => {
-                                      const combinedKey = `${service.key}_${dur}`;
-                                      const checked = sow.serviceScope?.[combinedKey] !== undefined 
-                                        ? sow.serviceScope?.[combinedKey] === true 
-                                        : sow.serviceScope?.[service.key] === true;
-                                      
-                                      return (
-                                        <div key={`${sIdx}-${dIdx}`} className="flex flex-col gap-1 border-b border-slate-100/50 pb-1.5 last:border-0 last:pb-0">
-                                          <label className="flex items-start gap-2 cursor-pointer select-none py-0.5 hover:bg-slate-50 rounded px-1">
-                                            <input 
-                                              type="checkbox" 
-                                              checked={checked}
-                                              onChange={(e) => handleUpdateSowServiceScope(sow.id, combinedKey, e.target.checked)}
-                                              className="rounded border-slate-350 text-[#6D5DF6] focus:ring-[#6D5DF6] h-3 w-3 cursor-pointer mt-0.5" 
-                                            />
-                                            <div className="flex flex-col">
-                                              <span className={checked ? "text-[#6D5DF6] font-bold" : "text-slate-550 font-semibold"}>
-                                                {service.label} {dur}
-                                              </span>
-                                            </div>
-                                          </label>
-                                        </div>
-                                      );
-                                    });
-                                  }
-                                  
-                                  // Fallback when no duration is specified
-                                  const checked = sow.serviceScope?.[service.key] === true;
-                                  return (
-                                    <div key={sIdx} className="flex flex-col gap-1 border-b border-slate-100/50 pb-1.5 last:border-0 last:pb-0">
-                                      <label className="flex items-start gap-2 cursor-pointer select-none py-0.5 hover:bg-slate-50 rounded px-1">
-                                        <input 
-                                          type="checkbox" 
-                                          checked={checked}
-                                          onChange={(e) => handleUpdateSowServiceScope(sow.id, service.key, e.target.checked)}
-                                          className="rounded border-slate-350 text-[#6D5DF6] focus:ring-[#6D5DF6] h-3 w-3 cursor-pointer mt-0.5" 
-                                        />
-                                        <div className="flex flex-col">
-                                          <span className={checked ? "text-[#6D5DF6] font-bold" : "text-slate-550 font-semibold"}>
-                                            {service.label}
-                                          </span>
-                                        </div>
-                                      </label>
-                                    </div>
-                                  );
-                                })}
-                                {services.length === 0 && (
-                                  <span className="text-slate-400 italic text-[10px]">No special services for this platform</span>
-                                )}
-                              </div>
-                            </td>
-                          );
-                        })}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => handleUpdateStatus("Group")}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#6D5DF6] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
-                  >
-                    Next to Groups Setup
-                  </button>
-                </div>
+                <RecapSetup
+                  brief={currentList}
+                  onUpdateBrief={(updatedBrief) => {
+                    const updated = briefs.map(b => b.id === currentListId ? updatedBrief : b);
+                    onUpdateBriefs(updated);
+                  }}
+                  onNext={() => handleUpdateStatus("Example List")}
+                />
               </div>
             )}
 
-            {/* SOW and Influencer Groups listing */}
-            {status === "Group" && (
-              <div className="space-y-6">
-                {((currentList.scopeOfWorks || []).length === 0) ? (
-                  /* Empty state when no groups exist */
-                  <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center space-y-4 shadow-sm py-16">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-violet-55/60 text-[#6D5DF6]">
-                      <Plus className="h-6 w-6" />
-                    </div>
-                    <div className="space-y-1 max-w-sm mx-auto">
-                      <h3 className="text-sm font-bold text-slate-850">No Groups Configured</h3>
-                      <p className="text-xs text-slate-450 leading-relaxed">Start by setting up your first Group & Pillar combination to organize and view influencers.</p>
-                    </div>
-                    <button
-                      onClick={() => setIsSowModalOpen(true)}
-                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#6D5DF6] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
-                    >
-                      <Plus className="h-4 w-4" /> Add Group & Pillar
-                    </button>
-                  </div>
-                ) : (
-                  /* Standard Groups list display */
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Groups Setup</h3>
-                      <button 
-                        onClick={() => setIsSowModalOpen(true)}
-                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Add Group & Pillar
-                      </button>
-                    </div>
-
-                    {(currentList.scopeOfWorks || []).map((sow) => {
-                      const groupName = sow.name || sow.contentType;
-                      const tracker = currentList.groupTrackers?.[groupName] || { influencers: [] };
-                      const groupInfluencers = tracker.influencers || [];
-
-                      return (
-                        <div key={sow.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                          <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                            <div>
-                              <h3 className="text-sm font-bold text-slate-800">{groupName}</h3>
-                              <div className="flex items-center gap-1.5 text-[10px] text-slate-550 mt-0.5">
-                                <span>Platforms: </span>
-                                {(sow.platforms ? (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]) : []).map((p, pIdx) => (
-                                   <span key={pIdx} className="bg-blue-50 text-blue-700 px-1 py-0.1 rounded font-bold uppercase text-[9px]">{p}</span>
-                                 ))}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleAddInfluencer(groupName)}
-                              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            >
-                              <Plus className="h-3 w-3" /> Add Influencer
-                            </button>
-                          </div>
-
-                          <div className="p-4">
-                            {groupInfluencers.length === 0 ? (
-                              <div className="text-center py-8 text-xs text-slate-400 italic">No influencers in this group.</div>
-                            ) : (
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                  <thead className="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
-                                    <tr>
-                                      <th className="px-4 py-2">Influencer</th>
-                                      <th className="px-4 py-2 text-right">Followers</th>
-                                      <th className="px-4 py-2 text-right">Rate</th>
-                                      <th className="px-4 py-2 text-center">Action</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-100">
-                                    {groupInfluencers.map((inf) => (
-                                      <tr key={inf.id} className="hover:bg-slate-50/30">
-                                        <td className="px-4 py-3">
-                                          <div className="font-semibold text-slate-800">{inf.accountName || inf.username}</div>
-                                          <div className="text-[10px] text-slate-400">{inf.channel || "TikTok"}</div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-slate-600 font-semibold">{inf.follower}</td>
-                                        <td className="px-4 py-3 text-right text-slate-800 font-bold">
-                                          {formatCurrency(Number(String(inf.rawCost).replace(/,/g, '')) || 0)}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                          <button 
-                                            onClick={() => handleRemoveInfluencer(groupName, inf.id)}
-                                            className="text-rose-500 hover:text-rose-700"
-                                          >
-                                            ✕
-                                          </button>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Step transition button at the bottom of the group list */}
-                    {status === "Group" && (
-                      <div className="flex justify-end pt-4">
-                        <button 
-                          onClick={() => handleUpdateStatus("Example List")}
-                          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#6D5DF6] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
-                        >
-                          Next to Example List
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-            </div>
-            )}
-
-            {/* Step 4: Example List */}
+            {/* Step 3: Example List */}
             {status === "Example List" && (
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">Example List & Questions</h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Choose example influencers and write questions for each SOW option.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Choose example influencers and write questions for each group.</p>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-xs">
-                  <table className="w-full text-left border-collapse table-layout-fixed" style={{ minWidth: "800px" }}>
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50/50">
-                        <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200" style={{ width: "220px" }}>Detail</th>
-                        {optionSows.map((sow, idx) => (
-                          <th key={sow.id || idx} className="p-4 text-xs font-bold text-slate-700 uppercase tracking-wider border-r border-slate-200 last:border-r-0" style={{ width: "300px" }}>
-                            <div className="flex flex-col gap-1">
-                              <span className="text-slate-900 font-bold text-xs">{sow.name || sow.contentType}</span>
-                              <div className="flex items-center gap-1.5 mt-1">
-                                {(sow.platforms || []).map((plat) => (
-                                  <span key={plat} className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold text-[#6D5DF6] border border-violet-100">
-                                    {plat}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </th>
-                        ))}
-                        {optionSows.length === 0 && <th className="p-4 text-slate-400 italic">N/A</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Example List row */}
-                      <tr className="border-b border-slate-100">
-                        <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Example list</td>
-                        {optionSows.map((sow, idx) => {
-                          const selectedCreators = sow.exampleCreators || [];
-                          return (
-                            <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-3">
-                              {/* Selected creators list */}
-                              <div className="flex flex-col gap-1.5">
-                                {selectedCreators.map((creator) => (
-                                  <div key={creator.id} className={`flex items-center justify-between border rounded-lg p-1.5 pr-2 transition-all ${
-                                    creator.selected !== false 
-                                      ? "bg-white border-slate-200/60 shadow-xs" 
-                                      : "bg-slate-50/50 border-slate-100/60 opacity-60"
-                                  }`}>
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <input 
-                                        type="checkbox"
-                                        checked={creator.selected !== false}
-                                        onChange={(e) => {
-                                          const updated = selectedCreators.map((c) => 
-                                            c.id === creator.id ? { ...c, selected: e.target.checked } : c
-                                          );
-                                          handleUpdateSowExampleCreators(sow.id, updated);
-                                        }}
-                                        className="rounded border-slate-350 text-[#6D5DF6] focus:ring-[#6D5DF6] h-3.5 w-3.5 cursor-pointer flex-shrink-0"
-                                      />
-                                      <img 
-                                        src={creator.avatar || "https://i.pravatar.cc/160"} 
-                                        alt={creator.name} 
-                                        className="w-6 h-6 rounded-full object-cover bg-slate-100 flex-shrink-0" 
-                                      />
-                                      <div className="flex flex-col min-w-0">
-                                        <span className={`text-[11px] font-semibold truncate leading-tight ${
-                                          creator.selected !== false ? "text-slate-800" : "text-slate-450"
-                                        }`}>
-                                          {creator.name}
-                                        </span>
-                                        <span className="text-[9px] text-slate-450 leading-tight truncate">
-                                          {creator.username}
-                                        </span>
-                                      </div>
-                                    </div>
+                {(currentList.groups && currentList.groups.length > 0 ? currentList.groups : []).map((group, groupIndex) => (
+                  <div key={group.id || groupIndex} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                      <h4 className="text-sm font-bold text-slate-800">{group.name || `Group ${groupIndex + 1}`}</h4>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse table-layout-fixed" style={{ minWidth: "800px" }}>
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-white">
+                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200 bg-slate-50/50" style={{ width: "220px" }}>Detail</th>
+                            {group.sows?.map((sow, idx) => (
+                              <th key={sow.id || idx} className="p-4 text-xs font-bold text-slate-700 uppercase tracking-wider border-r border-slate-200 last:border-r-0 bg-white" style={{ width: "300px" }}>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-slate-900 font-bold text-xs">{sow.name || sow.contentType}</span>
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    {(sow.platforms || []).map((plat) => (
+                                      <span key={plat} className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold text-[#6D5DF6] border border-violet-100">
+                                        {plat}
+                                      </span>
+                                    ))}
                                   </div>
-                                ))}
-                                {selectedCreators.length === 0 && (
-                                  <span className="text-slate-400 italic text-[10px]">ยังไม่ได้เพิ่มรายชื่อ</span>
-                                )}
-                              </div>
+                                </div>
+                              </th>
+                            ))}
+                            {(!group.sows || group.sows.length === 0) && <th className="p-4 text-slate-400 italic bg-white">N/A</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Follower */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Follower Requirement</td>
+                            {group.sows?.map((sow, idx) => (
+                              <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
+                                {sow.followerReqFrom && sow.followerReqTo ? `${Number(sow.followerReqFrom).toLocaleString()} - ${Number(sow.followerReqTo).toLocaleString()}` : (sow.followerReqFrom || sow.followerReqTo || "-")}
+                              </td>
+                            ))}
+                            {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                          </tr>
+                          
+                          {/* Num Influencers */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Number of Influencers</td>
+                            {group.sows?.map((sow, idx) => (
+                              <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
+                                {sow.numInfluencers || "-"}
+                              </td>
+                            ))}
+                            {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                          </tr>
 
-                              {/* Add Creator button */}
-                              <div>
-                                <button
-                                  type="button"
-                                  onClick={() => setActiveModalSowId(sow.id)}
-                                  className="w-full flex items-center justify-center gap-1 py-1.5 px-3 border border-dashed border-slate-300 rounded-lg text-[11px] font-bold text-[#6D5DF6] hover:bg-violet-50/50 hover:border-[#6D5DF6] transition"
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                  <span>เพิ่มคน</span>
-                                </button>
+                          {/* 6 Pillars - Merged Cell */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">6 Pillars</td>
+                            <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Demographic</span><div className="font-medium">{renderList(group.pillars?.demographic)}</div></div>
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Location</span><div className="font-medium">{renderList(group.pillars?.location)}</div></div>
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Occupation</span><div className="font-medium">{renderList(group.pillars?.occupation)}</div></div>
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Persona</span><div className="font-medium">{renderList(group.pillars?.persona)}</div></div>
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Content Category</span><div className="font-medium">{renderList(group.pillars?.contentCategory)}</div></div>
+                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Story Telling</span><div className="font-medium">{renderList(group.pillars?.storyTelling)}</div></div>
                               </div>
                             </td>
-                          );
-                        })}
-                        {optionSows.length === 0 && <td className="p-4 text-slate-400 italic">N/A</td>}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                          </tr>
+
+                          {/* Requirement */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Requirement</td>
+                            {group.sows?.map((sow, idx) => {
+                              const reqs = [];
+                              
+                              const addReq = (label, durations) => {
+                                if (!durations || durations.length === 0) {
+                                  reqs.push(label);
+                                } else {
+                                  durations.forEach(d => {
+                                    reqs.push(`${label} (${d})`);
+                                  });
+                                }
+                              };
+
+                              if (sow.serviceScope?.buyoutRequired) addReq("Buyout", sow.serviceScope.buyoutDuration);
+                              if (sow.serviceScope?.boostPostRequired) addReq("Boost by Page", sow.serviceScope.boostPostDuration);
+                              if (sow.serviceScope?.addAdsRequired) addReq("Add Ads", sow.serviceScope.addAdsDuration);
+                              if (sow.serviceScope?.paidPartnershipRequired) addReq("Paid Partnership", sow.serviceScope.paidPartnershipDuration);
+                              if (sow.serviceScope?.discoveryRequired) addReq("YouTube Discovery", sow.serviceScope.discoveryDuration);
+                              if (sow.serviceScope?.genCodeRequired) addReq("Gen Code", sow.serviceScope.genCodeDuration);
+                              if (sow.serviceScope?.tiktokShopRequired) addReq("TikTok Shop", null);
+                              if (sow.serviceScope?.brandedContentRequired) addReq("FB Branded Content", sow.serviceScope.brandedContentDuration);
+                              if (sow.serviceScope?.whitelistingRequired) addReq("X Whitelisting", sow.serviceScope.whitelistingDuration);
+                              
+                              return (
+                                <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
+                                  {reqs.length > 0 ? (
+                                    <div className="flex flex-col gap-1.5">
+                                      {reqs.map((r, rIdx) => <span key={rIdx} className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#6D5DF6]" />{r}</span>)}
+                                    </div>
+                                  ) : <span className="text-slate-400">-</span>}
+                                </td>
+                              );
+                            })}
+                            {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                          </tr>
+
+                          {/* Question - Merged Cell */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Questions</td>
+                            <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm bg-white">
+                              <div className="space-y-3 max-w-3xl">
+                                {(group.questions || []).map((q, qIdx) => (
+                                  <div key={qIdx} className="flex gap-2 items-start">
+                                    <span className="mt-2 text-xs font-bold text-slate-400 w-4 text-right">{qIdx + 1}.</span>
+                                    <input 
+                                      type="text" 
+                                      value={q}
+                                      onChange={(e) => {
+                                        const newQs = [...(group.questions || [])];
+                                        newQs[qIdx] = e.target.value;
+                                        handleUpdateGroupQuestions(group.id, newQs);
+                                      }}
+                                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]"
+                                      placeholder="Enter question..."
+                                    />
+                                    <button 
+                                      onClick={() => {
+                                        const newQs = [...(group.questions || [])];
+                                        newQs.splice(qIdx, 1);
+                                        handleUpdateGroupQuestions(group.id, newQs);
+                                      }}
+                                      className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors mt-0.5"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <div className="pl-6">
+                                  <button 
+                                    onClick={() => {
+                                      const newQs = [...(group.questions || []), ""];
+                                      handleUpdateGroupQuestions(group.id, newQs);
+                                    }}
+                                    className="flex items-center gap-1.5 text-xs font-bold text-[#6D5DF6] hover:bg-violet-50 px-3 py-1.5 rounded-lg transition-colors border border-dashed border-[#6D5DF6]"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" /> Add Question
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Example List row */}
+                          <tr className="border-b border-slate-100">
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Example list</td>
+                            {group.sows?.map((sow, idx) => {
+                              const selectedCreators = sow.exampleCreators || [];
+                              return (
+                                <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-3 bg-white">
+                                  {/* Selected creators list */}
+                                  <div className="flex flex-col gap-1.5">
+                                    {selectedCreators.map((creator) => (
+                                      <div key={creator.id} className={`flex items-center justify-between border rounded-lg p-1.5 pr-2 transition-all ${
+                                        creator.selected !== false 
+                                          ? "bg-white border-slate-200/60 shadow-xs" 
+                                          : "bg-slate-50/50 border-slate-100/60 opacity-60"
+                                      }`}>
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <input 
+                                            type="checkbox"
+                                            checked={creator.selected !== false}
+                                            onChange={(e) => {
+                                              const updated = selectedCreators.map((c) => 
+                                                c.id === creator.id ? { ...c, selected: e.target.checked } : c
+                                              );
+                                              handleUpdateSowExampleCreators(group.id, sow.id, updated);
+                                            }}
+                                            className="rounded border-slate-350 text-[#6D5DF6] focus:ring-[#6D5DF6] h-3.5 w-3.5 cursor-pointer flex-shrink-0"
+                                          />
+                                          <img 
+                                            src={creator.avatar || "https://i.pravatar.cc/160"} 
+                                            alt={creator.name} 
+                                            className="w-6 h-6 rounded-full object-cover bg-slate-100 flex-shrink-0" 
+                                          />
+                                          <div className="flex flex-col min-w-0">
+                                            <span className={`text-[11px] font-semibold truncate leading-tight ${
+                                              creator.selected !== false ? "text-slate-800" : "text-slate-450"
+                                            }`}>
+                                              {creator.name}
+                                            </span>
+                                            <span className="text-[9px] text-slate-450 leading-tight truncate">
+                                              {creator.username}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {selectedCreators.length === 0 && (
+                                      <span className="text-slate-400 italic text-[10px]">ยังไม่ได้เพิ่มรายชื่อ</span>
+                                    )}
+                                  </div>
+
+                                  {/* Add Creator button */}
+                                  <div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveModalSowId({ groupId: group.id, sowId: sow.id })}
+                                      className="w-full flex items-center justify-center gap-1 py-1.5 px-3 border border-dashed border-slate-300 rounded-lg text-[11px] font-bold text-[#6D5DF6] hover:bg-violet-50/50 hover:border-[#6D5DF6] transition"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span>เพิ่มคน</span>
+                                    </button>
+                                  </div>
+                                </td>
+                              );
+                            })}
+                            {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
 
                 <div className="flex justify-end pt-2">
                   <button 
@@ -2298,12 +1962,16 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
         open={activeModalSowId !== null}
         onClose={() => setActiveModalSowId(null)}
         onSelect={(creator) => {
-          if (creator) {
-            const sow = optionSows.find(s => s.id === activeModalSowId);
-            if (sow) {
-              const selectedCreators = sow.exampleCreators || [];
-              if (!selectedCreators.some(c => c.id === creator.id)) {
-                handleUpdateSowExampleCreators(activeModalSowId, [...selectedCreators, creator]);
+          if (creator && activeModalSowId) {
+            const { groupId, sowId } = activeModalSowId;
+            const group = currentList?.groups?.find(g => g.id === groupId);
+            if (group) {
+              const sow = group.sows?.find(s => s.id === sowId);
+              if (sow) {
+                const selectedCreators = sow.exampleCreators || [];
+                if (!selectedCreators.some(c => c.id === creator.id)) {
+                  handleUpdateSowExampleCreators(groupId, sowId, [...selectedCreators, creator]);
+                }
               }
             }
           }

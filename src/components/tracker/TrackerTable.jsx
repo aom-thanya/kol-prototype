@@ -4,6 +4,7 @@ import Button from "../common/Button";
 import { cn } from "../../utils/cn";
 
 export default function TrackerTable({
+  group,
   groupName,
   brief,
   trackerData,
@@ -20,9 +21,11 @@ export default function TrackerTable({
   const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
   const canReorder = allowReorder !== null ? allowReorder : !readOnly;
   const influencers = trackerData.influencers || [];
-  const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
-    ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
-    : (brief.scopeOfWorks || []);
+  const allSOWs = group?.sows?.length > 0
+    ? group.sows
+    : (brief.budgetOptions && brief.budgetOptions.length > 0 
+      ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
+      : (brief.scopeOfWorks || []));
   const submittedSows = brief.internalStatus === "Submitted to Traffic" && brief.submittedSows 
     ? allSOWs.filter(s => brief.submittedSows.includes(s.id))
     : allSOWs;
@@ -92,10 +95,23 @@ export default function TrackerTable({
 
   const requiredServices = [];
   const addServiceColumns = (reqKey, durationKey, labelPrefix) => {
-    if (brief[reqKey]) {
-      const durations = Array.isArray(brief[durationKey]) ? brief[durationKey] : (brief[durationKey] ? [brief[durationKey]] : []);
-      if (durations.length > 0) {
-        durations.forEach(d => {
+    const durations = new Set();
+    let isRequired = false;
+
+    if (group && group.sows) {
+      group.sows.forEach(sow => {
+        const sc = sow.serviceScope || {};
+        if (sc[reqKey]) {
+          isRequired = true;
+          const d = Array.isArray(sc[durationKey]) ? sc[durationKey] : (sc[durationKey] ? [sc[durationKey]] : []);
+          d.forEach(val => durations.add(val));
+        }
+      });
+    }
+
+    if (isRequired) {
+      if (durations.size > 0) {
+        Array.from(durations).forEach(d => {
           requiredServices.push({ key: `${reqKey}_${d}`, label: `${labelPrefix} (${d})` });
         });
       } else {
@@ -105,16 +121,20 @@ export default function TrackerTable({
   };
 
   addServiceColumns("buyoutRequired", "buyoutDuration", "Buyout");
-  addServiceColumns("boostRequired", "boostDuration", "Boost Post");
-  addServiceColumns("genCodeRequired", "genCodeDuration", "Gen Code");
-  addServiceColumns("crossPostingRequired", "crossPostingDuration", "Cross Posting");
-  addServiceColumns("paidPartnershipRequired", "paidPartnershipDuration", "Paid Partnership");
+  addServiceColumns("boostPostRequired", "boostPostDuration", "Boost by Page");
   addServiceColumns("addAdsRequired", "addAdsDuration", "Add Ads");
-  addServiceColumns("youtubeDiscoveryRequired", "youtubeDiscoveryDuration", "Youtube Discovery");
-  addServiceColumns("fbBrandedContentRequired", "fbBrandedContentDuration", "FB Branded Content");
-  addServiceColumns("xWhitelistingRequired", "xWhitelistingDuration", "X/Twitter Whitelisting");
-  requiredServices.push({ key: "Affiliate", label: "Affiliate" });
+  addServiceColumns("paidPartnershipRequired", "paidPartnershipDuration", "Paid Partnership");
+  addServiceColumns("discoveryRequired", "discoveryDuration", "Youtube Discovery");
+  addServiceColumns("genCodeRequired", "genCodeDuration", "Gen Code");
+  addServiceColumns("tiktokShopRequired", "tiktokShopDuration", "TikTok Shop");
+  addServiceColumns("brandedContentRequired", "brandedContentDuration", "FB Branded Content");
+  addServiceColumns("whitelistingRequired", "whitelistingDuration", "X/Twitter Whitelisting");
   
+  // Note: For custom SOW scopes like crossPostingRequired, you could also check brief.
+  // We keep affiliate as a default if it was part of standard, but wait, the plan just said dynamic.
+  // Actually, we can keep Affiliate statically or dynamically based on if it's there. 
+  // We'll leave Affiliate off unless it's specifically needed, or we can just append it:
+  // requiredServices.push({ key: "Affiliate", label: "Affiliate" }); // Not in serviceScope list currently.  
   const brandSupports = Array.isArray(brief.brandSupport) ? brief.brandSupport : [];
   const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor !== "<p><br></p>";
 
@@ -257,7 +277,7 @@ export default function TrackerTable({
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-emerald-50/50">Status</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-violet-50/50">Contact</th>
                 <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-blue-50/50">Payment</th>
-                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Service (Price or "ไม่รับ")</th>}
+                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Boost by Page</th>}
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-indigo-50/50">SOW & Condition</th>
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-rose-50/50">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-orange-50/50">Competitor</th>}
@@ -352,7 +372,7 @@ export default function TrackerTable({
                       inf.contactStatus === "Selected" && "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]",
                       inf.contactStatus === "Rejected" && "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1",
                       inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 opacity-70",
-                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "hover:bg-slate-50"
+                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "bg-white hover:bg-slate-50"
                     )}>
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
@@ -630,7 +650,7 @@ export default function TrackerTable({
                           return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
                         })()
                       ) : (
-                        <select value={inf.scopeOfWork || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] text-xs bg-white">
+                        <select value={inf.scopeOfWork || ""} disabled={true} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none text-xs bg-slate-50 text-slate-500 cursor-not-allowed">
                           <option value="">Select SOW</option>
                           {submittedSows.map(sow => (
                             <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>

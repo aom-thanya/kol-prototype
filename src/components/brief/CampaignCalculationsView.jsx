@@ -80,7 +80,7 @@ export default function CampaignCalculationsView({ brief, activeOptId, setActive
               <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBudget)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Boost Post Budget:</span>
+              <span>Boost by Page Budget:</span>
               <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBoostAds)}</span>
             </div>
             <div className="flex justify-between">

@@ -44,61 +44,12 @@ import AssignRolePage from "./components/brief/AssignRolePage";
 import DealsheetPage from "./components/brief/DealsheetPage";
 import ProposalPage from "./components/brief/ProposalPage";
 import PlannerTrackerPage from "./components/tracker/PlannerTrackerPage";
-import { getBriefProgressStatus, getBriefDefaultTab } from "./utils/briefHelpers";
+import { getBriefProgressStatus, getBriefDefaultTab, generateScopeName } from "./utils/briefHelpers";
+import SimpleHtmlEditor from "./components/common/SimpleHtmlEditor";
 
 // Helper utilities
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
-}
-
-function SimpleHtmlEditor({ value, onChange }) {
-  const editorRef = useRef(null);
-
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || "";
-    }
-  }, [value]);
-
-  const handleInput = () => {
-    onChange(editorRef.current.innerHTML);
-  };
-
-  const exec = (cmd, arg = null) => {
-    document.execCommand(cmd, false, arg);
-    editorRef.current.focus();
-  };
-
-  const addLink = () => {
-    const url = prompt("Enter the link URL:");
-    if (url) exec("createLink", url);
-  };
-
-  const addImage = () => {
-    const url = prompt("Enter the image URL:");
-    if (url) exec("insertImage", url);
-  };
-
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
-      <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-slate-50 p-2">
-        <button type="button" onClick={() => exec('bold')} className="rounded p-1 text-slate-600 hover:bg-slate-200 font-bold w-7 h-7 flex items-center justify-center">B</button>
-        <button type="button" onClick={() => exec('italic')} className="rounded p-1 text-slate-600 hover:bg-slate-200 italic w-7 h-7 flex items-center justify-center">I</button>
-        <button type="button" onClick={() => exec('underline')} className="rounded p-1 text-slate-600 hover:bg-slate-200 underline w-7 h-7 flex items-center justify-center">U</button>
-        <div className="w-px h-4 bg-slate-300 mx-1"></div>
-        <button type="button" onClick={() => exec('insertUnorderedList')} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-200 text-xs font-medium">Bullet List</button>
-        <div className="w-px h-4 bg-slate-300 mx-1"></div>
-        <button type="button" onClick={addLink} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-200 text-xs font-medium">Link</button>
-        <button type="button" onClick={addImage} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-200 text-xs font-medium">Image</button>
-      </div>
-      <div 
-        ref={editorRef}
-        contentEditable 
-        onInput={handleInput}
-        className="min-h-[120px] max-h-[300px] overflow-y-auto p-4 text-sm outline-none"
-      />
-    </div>
-  );
 }
 
 // Mock seed data
@@ -241,6 +192,18 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
     }));
   };
 
+  const handleDuplicateScope = (scope) => {
+    setBudgetOptions(prev => prev.map(opt => {
+      if (opt.id === activeOptionId) {
+        return {
+          ...opt,
+          scopeOfWorks: [...(opt.scopeOfWorks || []), { ...scope, id: Date.now() }]
+        };
+      }
+      return opt;
+    }));
+  };
+
   const handleRemoveScope = (sowId) => {
     setBudgetOptions(prev => prev.map(opt => {
       if (opt.id === activeOptionId) {
@@ -258,7 +221,18 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       if (opt.id === activeOptionId) {
         return {
           ...opt,
-          scopeOfWorks: (opt.scopeOfWorks || []).map(s => s.id === sowId ? { ...s, [field]: value } : s)
+          scopeOfWorks: (opt.scopeOfWorks || []).map(s => {
+            if (s.id === sowId) {
+              const updated = { ...s, [field]: value };
+              if (field === 'name') updated.isCustomName = true;
+              
+              if (!updated.isCustomName) {
+                updated.name = generateScopeName(updated.platforms || [], updated.contentType || [], updated.serviceScope || {});
+              }
+              return updated;
+            }
+            return s;
+          })
         };
       }
       return opt;
@@ -282,7 +256,17 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
       if (opt.id === activeOptionId) {
         return {
           ...opt,
-          scopeOfWorks: (opt.scopeOfWorks || []).map(s => s.id === sowId ? { ...s, serviceScope: { ...s.serviceScope, [field]: value } } : s)
+          scopeOfWorks: (opt.scopeOfWorks || []).map(s => {
+            if (s.id === sowId) {
+              const updatedServiceScope = { ...(s.serviceScope || {}), [field]: value };
+              const updated = { ...s, serviceScope: updatedServiceScope };
+              if (!updated.isCustomName) {
+                updated.name = generateScopeName(updated.platforms || [], updated.contentType || [], updated.serviceScope || {});
+              }
+              return updated;
+            }
+            return s;
+          })
         };
       }
       return opt;
@@ -800,15 +784,6 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       
                       <div className="grid gap-6 md:grid-cols-2 mb-8">
                         <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Scope Name</label>
-                          <input 
-                            type="text" 
-                            value={scope.name} 
-                            onChange={e => handleUpdateScope(scope.id, 'name', e.target.value)} 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div className="md:col-span-2">
                           <label className="mb-2 block text-sm font-medium text-slate-700">Platform</label>
                           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             {platform.length > 0 ? platform.map(plat => (
@@ -826,6 +801,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             )}
                           </div>
                         </div>
+
                         <div className="md:col-span-2">
                           <label className="mb-1 block text-sm font-medium text-slate-700">Content Type</label>
                           <MultiSelect 
@@ -835,14 +811,141 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             placeholder={availableContentTypes.length ? "Select content types" : "Select platform first"}
                           />
                         </div>
+
                         <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Notes</label>
-                          <textarea rows={2} value={scope.notes || ""} onChange={e => handleUpdateScope(scope.id, 'notes', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
+                          <h5 className="mb-3 text-sm font-semibold text-slate-900 pt-2 border-t border-slate-200">Service Scope</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div>
+                              <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                <input type="checkbox" checked={scope.serviceScope?.buyoutRequired} onChange={e => handleUpdateServiceScope(scope.id, 'buyoutRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                <span className="text-sm font-medium text-slate-700">Buyout</span>
+                              </label>
+                              {scope.serviceScope?.buyoutRequired && (
+                                <div className="pl-6">
+                                  <MultiSelect value={scope.serviceScope?.buyoutDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'buyoutDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                </div>
+                              )}
+                            </div>
+
+                            {(scope.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.boostPostRequired} onChange={e => handleUpdateServiceScope(scope.id, 'boostPostRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">Boost by Page</span>
+                                </label>
+                                {scope.serviceScope?.boostPostRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.boostPostDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'boostPostDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {(scope.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"].includes(p)) && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.addAdsRequired} onChange={e => handleUpdateServiceScope(scope.id, 'addAdsRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">Add Ads</span>
+                                </label>
+                                {scope.serviceScope?.addAdsRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.addAdsDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'addAdsDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {(scope.platforms || []).some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.paidPartnershipRequired} onChange={e => handleUpdateServiceScope(scope.id, 'paidPartnershipRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">Paid Partnership</span>
+                                </label>
+                                {scope.serviceScope?.paidPartnershipRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.paidPartnershipDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'paidPartnershipDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {(scope.platforms || []).includes("YouTube") && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.discoveryRequired} onChange={e => handleUpdateServiceScope(scope.id, 'discoveryRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">Youtube Discovery</span>
+                                </label>
+                                {scope.serviceScope?.discoveryRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.discoveryDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'discoveryDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {(scope.platforms || []).includes("TikTok") && (
+                              <>
+                                <div>
+                                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                    <input type="checkbox" checked={scope.serviceScope?.genCodeRequired} onChange={e => handleUpdateServiceScope(scope.id, 'genCodeRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                    <span className="text-sm font-medium text-slate-700">Gen Code</span>
+                                  </label>
+                                  {scope.serviceScope?.genCodeRequired && (
+                                    <div className="pl-6">
+                                      <MultiSelect value={scope.serviceScope?.genCodeDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'genCodeDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={scope.serviceScope?.tiktokShopRequired} onChange={e => handleUpdateServiceScope(scope.id, 'tiktokShopRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                    <span className="text-sm font-medium text-slate-700">TikTok Shop</span>
+                                  </label>
+                                </div>
+                              </>
+                            )}
+
+                            {(scope.platforms || []).some(p => ["Facebook", "Facebook Page"].includes(p)) && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.brandedContentRequired} onChange={e => handleUpdateServiceScope(scope.id, 'brandedContentRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">FB Branded Content</span>
+                                </label>
+                                {scope.serviceScope?.brandedContentRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.brandedContentDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'brandedContentDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {(scope.platforms || []).includes("X") && (
+                              <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                  <input type="checkbox" checked={scope.serviceScope?.whitelistingRequired} onChange={e => handleUpdateServiceScope(scope.id, 'whitelistingRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
+                                  <span className="text-sm font-medium text-slate-700">X Whitelisting</span>
+                                </label>
+                                {scope.serviceScope?.whitelistingRequired && (
+                                  <div className="pl-6">
+                                    <MultiSelect value={scope.serviceScope?.whitelistingDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'whitelistingDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Influencer Allocation (%)</label>
-                          <input type="number" value={scope.allocation || ""} onChange={e => handleUpdateScope(scope.id, 'allocation', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" placeholder="e.g. 100" />
+
+                        <div className="md:col-span-2 pt-2">
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Scope Name</label>
+                          <input 
+                            type="text" 
+                            value={scope.name || ""} 
+                            onChange={e => handleUpdateScope(scope.id, 'name', e.target.value)} 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            placeholder="e.g. TikTok Video (Boost by Page 30 วัน)"
+                          />
                         </div>
+
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
                           <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
@@ -936,131 +1039,10 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                       </div>
-
-                      {/* Service Scope under SOW */}
-                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Boost by Page</h5>
-                      <div className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-4">
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked={scope.serviceScope?.buyoutRequired} onChange={e => handleUpdateServiceScope(scope.id, 'buyoutRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                            <span className="text-sm font-medium text-slate-700">Buyout</span>
-                          </label>
-                          {scope.serviceScope?.buyoutRequired && (
-                            <div className="pl-7 mt-2">
-                              <MultiSelect value={scope.serviceScope?.buyoutDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'buyoutDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                            </div>
-                          )}
-
-                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.boostPostRequired} onChange={e => handleUpdateServiceScope(scope.id, 'boostPostRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">Boost Post</span>
-                              </label>
-                              {scope.serviceScope?.boostPostRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.boostPostDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'boostPostDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "X"].includes(p)) && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.addAdsRequired} onChange={e => handleUpdateServiceScope(scope.id, 'addAdsRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">Add Ads</span>
-                              </label>
-                              {scope.serviceScope?.addAdsRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.addAdsDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'addAdsDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          {scope.platforms?.some(p => ["Facebook", "Facebook Page", "Instagram", "TikTok"].includes(p)) && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.paidPartnershipRequired} onChange={e => handleUpdateServiceScope(scope.id, 'paidPartnershipRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">Paid Partnership</span>
-                              </label>
-                              {scope.serviceScope?.paidPartnershipRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.paidPartnershipDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'paidPartnershipDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          {scope.platforms?.includes("YouTube") && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.discoveryRequired} onChange={e => handleUpdateServiceScope(scope.id, 'discoveryRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">Youtube Discovery</span>
-                              </label>
-                              {scope.serviceScope?.discoveryRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.discoveryDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'discoveryDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-4">
-                          {scope.platforms?.includes("TikTok") && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" checked={scope.serviceScope?.genCodeRequired} onChange={e => handleUpdateServiceScope(scope.id, 'genCodeRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">Gen Code</span>
-                              </label>
-                              {scope.serviceScope?.genCodeRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.genCodeDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'genCodeDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.tiktokShopRequired} onChange={e => handleUpdateServiceScope(scope.id, 'tiktokShopRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">TikTok Shop</span>
-                              </label>
-                              {scope.serviceScope?.tiktokShopRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.tiktokShopDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'tiktokShopDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          {scope.platforms?.some(p => ["Facebook", "Facebook Page"].includes(p)) && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.brandedContentRequired} onChange={e => handleUpdateServiceScope(scope.id, 'brandedContentRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">FB Branded Content</span>
-                              </label>
-                              {scope.serviceScope?.brandedContentRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.brandedContentDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'brandedContentDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          {scope.platforms?.includes("X") && (
-                            <>
-                              <label className="flex items-center gap-3 cursor-pointer pt-2">
-                                <input type="checkbox" checked={scope.serviceScope?.whitelistingRequired} onChange={e => handleUpdateServiceScope(scope.id, 'whitelistingRequired', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" />
-                                <span className="text-sm font-medium text-slate-700">X/Twitter Whitelisting</span>
-                              </label>
-                              {scope.serviceScope?.whitelistingRequired && (
-                                <div className="pl-7 mt-2">
-                                  <MultiSelect value={scope.serviceScope?.whitelistingDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'whitelistingDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
+                      <div className="flex justify-end">
+                        <button type="button" onClick={() => handleDuplicateScope(scope)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
+                          <Copy className="h-3 w-3" /> Duplicate Scope
+                        </button>
                       </div>
 
                     </div>
@@ -1399,7 +1381,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       occupation: "อาชีพ", campaignStartDate: "วันที่เริ่มแคมเปญ", campaignEndDate: "วันที่สิ้นสุดแคมเปญ",
       platform: "แพลตฟอร์ม", platformOther: "แพลตฟอร์มอื่นๆ", previousCampaign: "แคมเปญที่ผ่านมา",
       competitor: "คู่แข่ง", additionalInfo: "ข้อมูลเพิ่มเติม", budgetSpending: "งบประมาณใช้จ่าย",
-      budgetBoostSpending: "งบประมาณ Boost Post", isBuddyBoostRequired: "ต้องการ Buddy Boost", 
+      budgetBoostSpending: "งบประมาณ Boost by Page", isBuddyBoostRequired: "ต้องการ Buddy Boost", 
       targetBoost: "Target Boost", buddyBoostDetail: "รายละเอียด Buddy Boost", vat: "ภาษี (VAT)", budgetCondition: "เงื่อนไขงบประมาณ",
       estimatedBrandSpending: "ประเมินค่าใช้จ่ายแบรนด์", budgetPerInfluencer: "งบประมาณต่อ Influencer",
       expectedNumInfluencers: "จำนวน Influencer ที่คาดหวัง", expectedReach: "Reach ที่คาดหวัง",
@@ -2296,14 +2278,6 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             {/* Actions Panel */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
-              
-              {/* Internal Status Badge */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                <span className="text-xs text-slate-400 font-bold block uppercase">Current Phase</span>
-                <span className="font-bold text-slate-800 text-base mt-1 block">
-                  {brief.internalStatus || "Draft"}
-                </span>
-              </div>
 
               <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
