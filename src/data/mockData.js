@@ -45,7 +45,7 @@ export const briefsSeed = [
     gender: ["Female"],
     country: "Thailand",
     province: "Bangkok",
-    ageRange: "25 ++ ขึ้นไป",
+    ageRange: ["25-34", "35-44", "45-64"],
     infContent: "General, Lifestyle",
     infPersona: "สนุกสนาน, เป็นกันเอง",
     infOccupation: "พนักงานออฟฟิศ, ฟรีแลนซ์",
@@ -61,58 +61,249 @@ export const briefsSeed = [
     addAdsBudget: "",
     pickUpFee: "",
     buyingValue: "",
+    productValue: 390,
+    logisticsPerInfluencer: 100,
+    travelExpense: 500,
+
+    budgetOptions: [
+      {
+        id: "opt-1",
+        name: "Option A (All Channels)",
+        budgetSpending: "300000",
+        budgetBoostSpending: "30000",
+        estimatedBrandSpending: "15000",
+        scopeOfWorks: [
+          {
+            id: "1",
+            contentType: "VDO content (Short Clip)",
+            followerReq: "5K - 50K",
+            followerReqFrom: "5000",
+            followerReqTo: "50000",
+            numInfluencers: "15",
+            platforms: ["Tiktok"],
+            name: "Tiktok Review",
+            allocationPercent: 50,
+            details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate",
+            persona: {
+              demographic: "18-24 Female, Gen Z Skincare users",
+              location: "Bangkok & Metropolitan cities",
+              occupation: "University Students, Beauty Bloggers",
+              persona: "Energetic, Authentic, Fun storytelling",
+              contentCategory: "Skincare, Makeup tutorials",
+              storyTelling: "Genuine unboxing and 7-day challenge results"
+            },
+            serviceScope: {
+              buyoutRequired: true, buyoutDuration: ["180 วัน"],
+              boostPostRequired: true, boostPostDuration: ["30 วัน"],
+              genCodeRequired: true, genCodeDuration: ["30 วัน"],
+              tiktokShopRequired: true, tiktokShopDuration: [], // No duration
+              addAdsRequired: true, addAdsDuration: [] // No duration
+            }
+          },
+          {
+            id: "2",
+            contentType: "VDO content (Short Clip)",
+            followerReq: "5K - 50K",
+            followerReqFrom: "5000",
+            followerReqTo: "50000",
+            numInfluencers: "10",
+            platforms: ["Instagram"],
+            name: "IG Reel Review",
+            allocationPercent: 30,
+            details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
+            persona: {
+              demographic: "25-34 Female, Modern Working Women",
+              location: "Bangkok and major cities (Chiang Mai, Phuket)",
+              occupation: "Office workers, Professionals, Freelancers",
+              persona: "Elegant, Minimalist, Trustworthy, Aspirational",
+              contentCategory: "Premium beauty products, Self-care",
+              storyTelling: "Aesthetic morning routine and texture close-ups"
+            },
+            serviceScope: {
+              buyoutRequired: true, buyoutDuration: ["180 วัน"],
+              paidPartnershipRequired: true, paidPartnershipDuration: ["30 วัน"],
+              boostPostRequired: true, boostPostDuration: [] // No duration
+            }
+          },
+          {
+            id: "3",
+            contentType: "Photo Album",
+            followerReq: "5K - 10K",
+            followerReqFrom: "5000",
+            followerReqTo: "10000",
+            numInfluencers: "5",
+            platforms: ["Facebook"],
+            name: "Facebook Album Review",
+            allocationPercent: 20,
+            details: "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
+            persona: {
+              demographic: "30-45 Female, Moms & Families",
+              location: "Nationwide Thailand",
+              occupation: "Housewives, Full-time moms, Salary workers",
+              persona: "Informative, Sincere, Detailed reviewer",
+              contentCategory: "Skincare science, Safe ingredients",
+              storyTelling: "Detailed step-by-step review with explanation of active ingredients"
+            },
+            serviceScope: {
+              boostPostRequired: true, boostPostDuration: ["30 วัน"]
+            }
+          }
+        ]
+      },
+      {
+        id: "opt-2",
+        name: "Option B (TikTok Focus)",
+        budgetSpending: "200000",
+        budgetBoostSpending: "15000",
+        estimatedBrandSpending: "10000",
+        scopeOfWorks: [
+          {
+            id: "1",
+            contentType: "VDO content (Short Clip)",
+            followerReq: "10K - 50K",
+            followerReqFrom: "10000",
+            followerReqTo: "50000",
+            numInfluencers: "20",
+            platforms: ["Tiktok"],
+            name: "Tiktok Review",
+            allocationPercent: 80,
+            details: "เน้นการรีวิวทาง TikTok เป็นหลักเพื่อกระตุ้นยอดขายผ่าน Affiliate และ TikTok Shop",
+            persona: {
+              demographic: "18-24 Female, Gen Z Skincare users",
+              location: "Bangkok & Metropolitan cities",
+              occupation: "University Students, Beauty Bloggers",
+              persona: "Energetic, Authentic, Fun storytelling",
+              contentCategory: "Skincare, Makeup tutorials",
+              storyTelling: "Genuine unboxing and 7-day challenge results"
+            }
+          },
+          {
+            id: "2",
+            contentType: "VDO content (Short Clip)",
+            followerReq: "5K - 10K",
+            followerReqFrom: "5000",
+            followerReqTo: "10000",
+            numInfluencers: "5",
+            platforms: ["Instagram"],
+            name: "IG Reel Review",
+            allocationPercent: 20,
+            details: "ลง IG Reels เสริมเล็กน้อยเพื่อกระตุ้นภาพลักษณ์ของแบรนด์",
+            persona: {
+              demographic: "25-34 Female, Modern Working Women",
+              location: "Bangkok and major cities (Chiang Mai, Phuket)",
+              occupation: "Office workers, Professionals, Freelancers",
+              persona: "Elegant, Minimalist, Trustworthy, Aspirational",
+              contentCategory: "Premium beauty products, Self-care",
+              storyTelling: "Aesthetic morning routine and texture close-ups"
+            }
+          }
+        ]
+      }
+    ],
     
     // SOW
     scopeOfWorks: [
       {
         id: "1",
         contentType: "VDO content (Short Clip)",
-        followerReq: "5K or above (10 คน), 10K or above (5 คน)",
+        followerReq: "5K - 50K",
+        followerReqFrom: "5000",
+        followerReqTo: "50000",
         numInfluencers: "15",
         platforms: ["Tiktok"],
         name: "Tiktok Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate"
+        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ of อินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate",
+        persona: {
+          demographic: "18-24 Female, Gen Z Skincare users",
+          location: "Bangkok & Metropolitan cities",
+          occupation: "University Students, Beauty Bloggers",
+          persona: "Energetic, Authentic, Fun storytelling",
+          contentCategory: "Skincare, Makeup tutorials",
+          storyTelling: "Genuine unboxing and 7-day challenge results"
+        },
+        serviceScope: {
+          buyoutRequired: true, buyoutDuration: ["180 วัน"],
+          boostPostRequired: true, boostPostDuration: ["30 วัน"],
+          genCodeRequired: true, genCodeDuration: ["30 วัน"],
+          tiktokShopRequired: true, tiktokShopDuration: [], // No duration
+          addAdsRequired: true, addAdsDuration: [] // No duration
+        }
       },
       {
         id: "2",
         contentType: "VDO content (Short Clip)",
-        followerReq: "5K or above (7 คน), 10K or above (3 คน)",
+        followerReq: "5K - 50K",
+        followerReqFrom: "5000",
+        followerReqTo: "50000",
         numInfluencers: "10",
         platforms: ["Instagram"],
         name: "IG Reel Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate"
+        details: "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
+        persona: {
+          demographic: "25-34 Female, Modern Working Women",
+          location: "Bangkok and major cities (Chiang Mai, Phuket)",
+          occupation: "Office workers, Professionals, Freelancers",
+          persona: "Elegant, Minimalist, Trustworthy, Aspirational",
+          contentCategory: "Premium beauty products, Self-care",
+          storyTelling: "Aesthetic morning routine and texture close-ups"
+        },
+        serviceScope: {
+          buyoutRequired: true, buyoutDuration: ["180 วัน"],
+          paidPartnershipRequired: true, paidPartnershipDuration: ["30 วัน"],
+          boostPostRequired: true, boostPostDuration: [] // No duration
+        }
       },
       {
         id: "3",
         contentType: "Photo Album",
-        followerReq: "5K or above (5 คน)",
+        followerReq: "5K - 10K",
+        followerReqFrom: "5000",
+        followerReqTo: "10000",
         numInfluencers: "5",
         platforms: ["Facebook"],
         name: "Facebook Album Review",
-        details: "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate"
+        details: "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
+        persona: {
+          demographic: "30-45 Female, Moms & Families",
+          location: "Nationwide Thailand",
+          occupation: "Housewives, Full-time moms, Salary workers",
+          persona: "Informative, Sincere, Detailed reviewer",
+          contentCategory: "Skincare science, Safe ingredients",
+          storyTelling: "Detailed step-by-step review with explanation of active ingredients"
+        },
+        serviceScope: {
+          boostPostRequired: true, boostPostDuration: ["30 วัน"]
+        }
       }
     ],
 
     // Service Scope
     buyoutRequired: true,
-    buyoutDuration: ["6 เดือน", "12 เดือน", "ถาวร"],
+    buyoutDuration: ["180 วัน", "365 วัน", "Permanent"],
     boostRequired: true,
-    boostDuration: ["30 days"],
+    boostDuration: ["30 วัน"],
     addAdsRequired: false,
     addAdsDuration: [],
     paidPartnershipRequired: false,
     paidPartnershipDuration: [],
     genCodeRequired: true,
-    genCodeDuration: ["30 days"],
+    genCodeDuration: ["30 วัน"],
     tiktokShopRequired: false,
     tiktokShopDuration: [],
     crossPostingRequired: false,
     crossPostingDuration: [],
 
     // Brand Support & Condition
-    brandSupport: ["Sponsor สินค้า"],
-    influencerBuyValue: "",
-    influencerPickupLocation: "",
+    brandSupportType: "Brand Sponsor",
+    brandSupportTypeOther: "",
+    productReceiveMethod: "Sponsor สินค้า (Buddy Review จัดส่ง)",
+    reimbursement: "",
+    requireTravel: "ไม่ต้อง",
+    reviewerTravelExpense: "",
+    onSiteType: "",
+    eventDuration: "",
+    locationDetails: "",
+    buddyReviewSupport: "",
     condition: `แบรนด์ สามารถเลือก Influencer ได้ 1 ครั้ง
 แบรนด์ เป็นผู้ตรวจ Draft Content  โดยสามารถตรวจได้ 2 ครั้ง
 แบรนด์ ต้อง Sponsor Product

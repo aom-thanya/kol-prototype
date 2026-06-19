@@ -1239,7 +1239,7 @@ export default function App() {
       )}
 
       {activeTab === "rateCardList" && (
-        <RateCardListPage />
+        <RateCardListPage briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />
       )}
 
       {activeTab === "exampleList" && (

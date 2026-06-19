@@ -153,6 +153,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
     allocation: "",
     numInfluencers: "",
     followerReq: "",
+    followerReqFrom: "",
+    followerReqTo: "",
     details: "",
     persona: {
       demographic: "",
@@ -847,7 +849,22 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
-                          <input type="text" value={scope.followerReq} onChange={e => handleUpdateScope(scope.id, 'followerReq', e.target.value)} placeholder="e.g. 5K or above" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input 
+                              type="number" 
+                              value={scope.followerReqFrom || ""} 
+                              onChange={e => handleUpdateScope(scope.id, 'followerReqFrom', e.target.value)} 
+                              placeholder="From" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                            <input 
+                              type="number" 
+                              value={scope.followerReqTo || ""} 
+                              onChange={e => handleUpdateScope(scope.id, 'followerReqTo', e.target.value)} 
+                              placeholder="To" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
@@ -860,27 +877,63 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       <div className="grid gap-4 md:grid-cols-2 mb-8">
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Demographic</label>
-                          <Select value={scope.persona?.demographic} onChange={val => handleUpdatePersona(scope.id, 'demographic', val)} options={["Lifestyle", "Foodie", "Beauty", "Tech"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.demographic || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'demographic', e.target.value)} 
+                            placeholder="e.g. 18-24 Female, Gen Z" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
-                          <Select value={scope.persona?.location} onChange={val => handleUpdatePersona(scope.id, 'location', val)} options={["Bangkok", "Chiang Mai", "Phuket", "Other"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.location || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'location', e.target.value)} 
+                            placeholder="e.g. Bangkok, Upcountry" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Occupation</label>
-                          <Select value={scope.persona?.occupation} onChange={val => handleUpdatePersona(scope.id, 'occupation', val)} options={["พนักงานออฟฟิศ", "นักศึกษา", "ฟรีแลนซ์"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.occupation || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'occupation', e.target.value)} 
+                            placeholder="e.g. Office worker, Student" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Persona</label>
-                          <Select value={scope.persona?.persona} onChange={val => handleUpdatePersona(scope.id, 'persona', val)} options={["สนุกสนาน", "เป็นกันเอง", "ทางการ"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.persona || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'persona', e.target.value)} 
+                            placeholder="e.g. Friendly, Informative" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Content Category</label>
-                          <Select value={scope.persona?.contentCategory} onChange={val => handleUpdatePersona(scope.id, 'contentCategory', val)} options={["Vlog", "Review", "Educational"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.contentCategory || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'contentCategory', e.target.value)} 
+                            placeholder="e.g. Beauty, Lifestyle, Tech" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Story Telling</label>
-                          <Select value={scope.persona?.storyTelling} onChange={val => handleUpdatePersona(scope.id, 'storyTelling', val)} options={["Soft-sell", "Hard-sell", "Inspirational"]} />
+                          <input 
+                            type="text" 
+                            value={scope.persona?.storyTelling || ""} 
+                            onChange={e => handleUpdatePersona(scope.id, 'storyTelling', e.target.value)} 
+                            placeholder="e.g. Soft-sell, Daily vlog" 
+                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                          />
                         </div>
                       </div>
 
@@ -1951,7 +2004,15 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           </div>
                           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-slate-400 font-bold block mb-1">Followers Required</span>
-                            <span className="font-bold text-slate-800 text-base">{sow.followerReq || "-"}</span>
+                            <span className="font-bold text-slate-800 text-base">
+                              {sow.followerReqFrom || sow.followerReqTo ? (
+                                <>
+                                  {sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - {sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}
+                                </>
+                              ) : (
+                                sow.followerReq || "-"
+                              )}
+                            </span>
                           </div>
                           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-slate-400 font-bold block mb-1">KOL Qty</span>

@@ -30,9 +30,21 @@ export function getCampaignCalculations(brief, activeOptId) {
   const travelExpense = parseFloat(String(brief.reviewerTravelExpense || 500).replace(/,/g, '')) || 500;
   const logisticsFee = parseFloat(String(brief.logisticsPerInfluencer || 0).replace(/,/g, '')) || 0;
 
-  const getFollowerTier = (str) => {
+  const getFollowerTier = (sowOrStr) => {
+    if (sowOrStr && typeof sowOrStr === "object") {
+      if (sowOrStr.followerReqFrom !== undefined && sowOrStr.followerReqFrom !== "") {
+        const fromVal = Number(sowOrStr.followerReqFrom);
+        if (fromVal >= 100000) return 4;
+        if (fromVal >= 50000) return 3;
+        if (fromVal >= 10000) return 2;
+        if (fromVal >= 5000) return 1;
+        return 0;
+      }
+      return getFollowerTier(sowOrStr.followerReq);
+    }
+    const str = sowOrStr;
     if (!str) return 2; // Default to 10K-50K (index 2)
-    const normalized = str.toLowerCase().replace(/,/g, '');
+    const normalized = String(str).toLowerCase().replace(/,/g, '');
     if (normalized.includes('100k') || normalized.includes('100000')) return 4;
     if (normalized.includes('50k') || normalized.includes('50000')) return 3;
     if (normalized.includes('10k') || normalized.includes('10000')) return 2;
@@ -78,7 +90,7 @@ export function getCampaignCalculations(brief, activeOptId) {
 
   const parsedChannels = sowItems.map(sow => {
     const platform = sow.platforms?.[0] || "TikTok";
-    const tierIdx = getFollowerTier(sow.followerReq);
+    const tierIdx = getFollowerTier(sow);
     const rates = getPlatformRates(platform, tierIdx);
     
     const social = rates.social;
@@ -90,11 +102,15 @@ export function getCampaignCalculations(brief, activeOptId) {
     const channelCost = social + support + product + travel + logistics;
     const allocationPercent = parseFloat(String(sow.allocationPercent || sow.allocation || 100).replace(/%/g, '')) || 100;
     
+    const displayFollower = sow.followerReqFrom || sow.followerReqTo 
+      ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}`
+      : sow.followerReq || "10,000 - 50,000";
+
     return {
       id: sow.id,
-      name: sow.name || `All in ${platform} ${sow.followerReq || "10,000 - 50,000"}`,
+      name: sow.name || `All in ${platform} ${displayFollower}`,
       platform,
-      followerReq: sow.followerReq || "10,000 - 50,000",
+      followerReq: displayFollower,
       allocationPercent,
       channelCost,
       social,

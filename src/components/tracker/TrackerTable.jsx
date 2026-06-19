@@ -1,5 +1,5 @@
-import React from "react";
-import { Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, GripVertical } from "lucide-react";
 import Button from "../common/Button";
 import { cn } from "../../utils/cn";
 
@@ -13,8 +13,12 @@ export default function TrackerTable({
   hideAddButton = false,
   readOnly = false,
   allowStatusEdit = false,
-  isDealsheetView = false
+  isDealsheetView = false,
+  allowReorder = null
 }) {
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
+  const canReorder = allowReorder !== null ? allowReorder : !readOnly;
   const influencers = trackerData.influencers || [];
   const allSOWs = brief.budgetOptions && brief.budgetOptions.length > 0 
     ? brief.budgetOptions.flatMap(opt => opt.scopeOfWorks || []) 
@@ -263,7 +267,7 @@ export default function TrackerTable({
                 <th className="px-3 py-2 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-slate-50">No.</th>
                 <th className="px-5 py-4 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-slate-50 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
-                <th className="px-3 py-2 border-r border-slate-200">Contact</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
                 <th className="px-3 py-2 border-r border-slate-200">Credit Term (Days)</th>
                 <th className="px-3 py-2 border-r border-slate-200">ชำระเงินในนาม</th>
@@ -285,13 +289,46 @@ export default function TrackerTable({
                 </tr>
               ) : (
                 influencers.map((inf, idx) => (
-                  <tr key={inf.id} className={cn(
-                    "group transition",
-                    inf.contactStatus === "Selected" && "bg-[#ECFDF5] hover:bg-[#D1FAE5]",
-                    inf.contactStatus === "Rejected" && "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1",
-                    inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 opacity-70",
-                    inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "hover:bg-slate-50"
-                  )}>
+                  <tr 
+                    key={inf.id} 
+                    draggable={canReorder && dragAllowedIndex === idx}
+                    onDragStart={(e) => {
+                      setDraggedIndex(idx);
+                      e.currentTarget.style.opacity = "0.4";
+                    }}
+                    onDragEnd={(e) => {
+                      setDraggedIndex(null);
+                      setDragAllowedIndex(null);
+                      e.currentTarget.style.opacity = "";
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDragEnter={(e) => {
+                      if (draggedIndex !== null && draggedIndex !== idx) {
+                        e.currentTarget.classList.add("bg-violet-50/50");
+                      }
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.classList.remove("bg-violet-50/50");
+                    }}
+                    onDrop={(e) => {
+                      e.currentTarget.classList.remove("bg-violet-50/50");
+                      if (draggedIndex === null || draggedIndex === idx) return;
+                      const reordered = [...influencers];
+                      const [draggedItem] = reordered.splice(draggedIndex, 1);
+                      reordered.splice(idx, 0, draggedItem);
+                      onUpdateTracker({ ...trackerData, influencers: reordered });
+                    }}
+                    className={cn(
+                      "group transition",
+                      canReorder && "cursor-move",
+                      inf.contactStatus === "Selected" && "bg-[#ECFDF5] hover:bg-[#D1FAE5]",
+                      inf.contactStatus === "Rejected" && "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1",
+                      inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 opacity-70",
+                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "hover:bg-slate-50"
+                    )}
+                  >
                     <td className={cn(
                       "px-3 py-2 border-r border-slate-100 text-slate-500 text-center sticky left-0 z-10 w-[50px] min-w-[50px] transition",
                       inf.contactStatus === "Selected" && "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]",
@@ -299,7 +336,16 @@ export default function TrackerTable({
                       inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 group-hover:bg-slate-200",
                       inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "bg-white group-hover:bg-slate-50"
                     )}>
-                      {idx + 1}
+                      <div className="flex items-center justify-center gap-0.5">
+                        {canReorder && (
+                          <GripVertical 
+                            className="h-3 w-3 text-slate-400 cursor-grab active:cursor-grabbing flex-shrink-0"
+                            onMouseDown={() => setDragAllowedIndex(idx)}
+                            onMouseUp={() => setDragAllowedIndex(null)}
+                          />
+                        )}
+                        <span>{idx + 1}</span>
+                      </div>
                     </td>
                     <td className={cn(
                       "px-5 py-3 border-r border-slate-100 min-w-[280px] w-[280px] sticky left-[50px] z-10 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] transition",
@@ -407,13 +453,103 @@ export default function TrackerTable({
                         </button>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[280px] align-top">
                       {readOnly ? (
-                        <span className={cn(inf.contactStatus === "Rejected" && "line-through text-rose-700")}>
-                          {inf.contact || "-"}
-                        </span>
+                        <div className="flex flex-col gap-1.5">
+                          {(inf.contacts || []).map((c, cIdx) => (
+                            <div key={cIdx} className="flex items-center gap-1.5 text-[11px] text-slate-700">
+                              <span className="font-semibold text-slate-500 bg-slate-100 px-1 rounded text-[10px]">
+                                {c.type === "Tel" ? "เบอร์" : c.type === "Line" ? "Line" : "Email"}
+                              </span>
+                              <span className="font-medium">{c.value}</span>
+                              {c.name && <span className="text-slate-400">({c.name})</span>}
+                            </div>
+                          ))}
+                          {(!inf.contacts || inf.contacts.length === 0) && (
+                            <span className={cn(inf.contactStatus === "Rejected" && "line-through text-rose-700")}>
+                              {inf.contact || "-"}
+                            </span>
+                          )}
+                        </div>
                       ) : (
-                        <input type="text" value={inf.contact || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "contact", e.target.value)} className={cn("w-32 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white", inf.contactStatus === "Rejected" && "line-through text-rose-700")} placeholder="Email, Line, Tel" />
+                        <div className="flex flex-col gap-2">
+                          {(() => {
+                            const currentContacts = inf.contacts || (inf.contact ? [{ type: "Tel", value: inf.contact, name: "" }] : []);
+                            return (
+                              <>
+                                <div className="space-y-1.5">
+                                  {currentContacts.map((c, cIdx) => (
+                                    <div key={cIdx} className="flex items-center gap-1">
+                                      <select
+                                        value={c.type}
+                                        onChange={(e) => {
+                                          const next = [...currentContacts];
+                                          next[cIdx] = { ...c, type: e.target.value };
+                                          updateInf(inf.id, "contacts", next);
+                                          const summary = next.filter(x => x.value.trim()).map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ");
+                                          updateInf(inf.id, "contact", summary);
+                                        }}
+                                        className="rounded border border-slate-200 px-1.5 py-1 text-[11px] outline-none focus:border-[#6D5DF6] bg-white w-[65px]"
+                                      >
+                                        <option value="Tel">เบอร์</option>
+                                        <option value="Line">Line</option>
+                                        <option value="Email">Email</option>
+                                      </select>
+                                      <input
+                                        type="text"
+                                        value={c.value}
+                                        placeholder="ข้อมูลติดต่อ"
+                                        onChange={(e) => {
+                                          const next = [...currentContacts];
+                                          next[cIdx] = { ...c, value: e.target.value };
+                                          updateInf(inf.id, "contacts", next);
+                                          const summary = next.filter(x => x.value.trim()).map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ");
+                                          updateInf(inf.id, "contact", summary);
+                                        }}
+                                        className="rounded border border-slate-200 px-1.5 py-1 text-[11px] outline-none focus:border-[#6D5DF6] bg-white w-[90px]"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={c.name}
+                                        placeholder="ติดต่อใคร"
+                                        onChange={(e) => {
+                                          const next = [...currentContacts];
+                                          next[cIdx] = { ...c, name: e.target.value };
+                                          updateInf(inf.id, "contacts", next);
+                                          const summary = next.filter(x => x.value.trim()).map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ");
+                                          updateInf(inf.id, "contact", summary);
+                                        }}
+                                        className="rounded border border-slate-200 px-1.5 py-1 text-[11px] outline-none focus:border-[#6D5DF6] bg-white w-[90px]"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = currentContacts.filter((_, i) => i !== cIdx);
+                                          updateInf(inf.id, "contacts", next);
+                                          const summary = next.filter(x => x.value.trim()).map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ");
+                                          updateInf(inf.id, "contact", summary);
+                                        }}
+                                        className="text-slate-400 hover:text-rose-500 hover:bg-slate-100 rounded p-1 transition"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = [...currentContacts, { type: "Tel", value: "", name: "" }];
+                                    updateInf(inf.id, "contacts", next);
+                                  }}
+                                  className="w-fit flex items-center justify-center gap-1 py-1 px-2 border border-dashed border-slate-300 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50 hover:text-[#6D5DF6] hover:border-[#6D5DF6] transition"
+                                >
+                                  + เพิ่มช่องทางติดต่อ
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
                       )}
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">

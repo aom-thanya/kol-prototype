@@ -30,15 +30,15 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
     setSelectGroupModalOpen(false);
   };
 
-  const handleConfirmPillar = () => {
+  const handleConfirmRateCardList = () => {
     const log = {
       date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      action: "Sales confirmed Pillar",
-      details: "Pillar structure confirmed by Sales."
+      action: "Sales confirmed Rate Card List",
+      details: "Rate Card List confirmed by Sales."
     };
     onUpdateBrief({
       ...brief,
-      internalStatus: "Pillar Confirmed",
+      internalStatus: "Rate Card List Confirmed",
       activityLog: [...(brief.activityLog || []), log]
     });
   };
@@ -171,6 +171,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
                     readOnly={true}
                     allowStatusEdit={true}
                     hideAddButton={true}
+                    allowReorder={true}
                   />
                 ))}
               </div>
@@ -187,8 +188,8 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
                   <Button className="w-full" onClick={() => setSelectGroupModalOpen(true)}>Select Group</Button>
                 ) : (
                   <>
-                    {brief.internalStatus !== "Pillar Confirmed" && (
-                      <Button className="w-full" onClick={handleConfirmPillar}>Confirm Pillar</Button>
+                    {brief.internalStatus !== "Rate Card List Confirmed" && (
+                      <Button className="w-full" onClick={handleConfirmRateCardList}>Confirm Rate Card List</Button>
                     )}
                     <Button variant="secondary" className="w-full" onClick={() => setSelectGroupModalOpen(true)}>Edit Groups</Button>
                   </>
