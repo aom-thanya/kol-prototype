@@ -66,6 +66,18 @@ export default function TrackerTable({
     onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
+  const updateInfQuestionAnswer = (id, idx, value) => {
+    const updated = influencers.map(inf => {
+      if (inf.id === id) {
+        const answers = [...(inf.questionAnswers || [])];
+        answers[idx] = value;
+        return { ...inf, questionAnswers: answers };
+      }
+      return inf;
+    });
+    onUpdateTracker({ ...trackerData, influencers: updated });
+  };
+
   const STATUS_OPTIONS = allowStatusEdit ? [
     { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
     { value: "Selected", label: "Selected", bg: "bg-emerald-55 text-[#047857] border-[#A7F3D0]", text: "text-[#047857] font-medium" },
@@ -289,6 +301,7 @@ export default function TrackerTable({
                 <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-blue-50/50">Payment</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-amber-50/50">Boost by Page</th>}
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-indigo-50/50">SOW & Condition</th>
+                {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-cyan-50/50">Questions</th>}
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-rose-50/50">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-orange-50/50">Competitor</th>}
                 <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-800 text-center bg-slate-100/50">Note</th>
@@ -304,6 +317,9 @@ export default function TrackerTable({
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[250px]">Condition</th>
+                {(group.questions || []).map((q, idx) => (
+                  <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{q}</th>
+                ))}
                 {brandSupports.map(bs => <th key={bs} className="px-3 py-2 border-r border-slate-200">{bs}</th>)}
                 {hasCompetitor && <th className="px-3 py-2 border-r border-slate-200">Competitor Note</th>}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Detail</th>
@@ -679,20 +695,13 @@ export default function TrackerTable({
                       );
                     })}
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
-                      {readOnly ? (
-                        (() => {
+                      <div className="w-full min-w-[180px] px-2 py-1 text-xs text-slate-500 bg-slate-50/50 rounded border border-slate-200 font-medium">
+                        {(() => {
                           const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
                           const idx = submittedSows.indexOf(matchingSow);
                           return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
-                        })()
-                      ) : (
-                        <select value={inf.scopeOfWork || ""} disabled={true} onChange={e => updateInf(inf.id, "scopeOfWork", e.target.value)} className="w-full min-w-[180px] rounded border border-slate-200 px-2 py-1 outline-none text-xs bg-slate-50 text-slate-500 cursor-not-allowed">
-                          <option value="">Select SOW</option>
-                          {submittedSows.map(sow => (
-                            <option key={sow.id} value={sow.id}>Scope {submittedSows.indexOf(sow) + 1}: {sow.name}</option>
-                          ))}
-                        </select>
-                      )}
+                        })()}
+                      </div>
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[220px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
                       {readOnly ? (
@@ -701,6 +710,15 @@ export default function TrackerTable({
                         <textarea rows={6} value={inf.condition || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "condition", e.target.value)} className="w-full min-w-[220px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
                       )}
                     </td>
+                    {(group.questions || []).map((q, idx) => (
+                      <td key={idx} className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] whitespace-pre-wrap leading-relaxed">
+                        {readOnly ? (
+                          inf.questionAnswers?.[idx] || "-"
+                        ) : (
+                          <textarea rows={3} value={inf.questionAnswers?.[idx] || ""} disabled={readOnly} onChange={e => updateInfQuestionAnswer(inf.id, idx, e.target.value)} className="w-full min-w-[200px] rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white"></textarea>
+                        )}
+                      </td>
+                    ))}
                     {brandSupports.map(bs => (
                       <td key={bs} className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs text-center">
                         {readOnly ? (

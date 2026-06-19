@@ -653,18 +653,6 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
               </div>
             </div>
 
-            {/* General Info Card */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-3.5 text-sm">
-              <h3 className="font-bold text-slate-400 uppercase tracking-wider">System Metadata</h3>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">ID:</span>
-                <span className="font-semibold text-slate-800">{brief.id}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Created At:</span>
-                <span className="font-semibold text-slate-800">{brief.createdAt || "-"}</span>
-              </div>
-            </div>
 
           </div>
         </div>
