@@ -314,7 +314,7 @@ export default function TrackerTable({
             <thead className="bg-slate-50">
               <tr>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
-                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Contact</th>
                 <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Boost by Page</th>}
@@ -328,6 +328,7 @@ export default function TrackerTable({
                 <th className="px-3 py-3 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-[#F8FAFC]">No.</th>
                 <th className="px-5 py-3 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-[#F8FAFC] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[80px] text-center">Lot</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
                 <th className="px-3 py-2 border-r border-slate-200">Raw Cost</th>
                 <th className="px-3 py-2 border-r border-slate-200">Credit Term (Days)</th>
@@ -541,6 +542,13 @@ export default function TrackerTable({
                         >
                           Replace
                         </button>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
+                      {inf.lot ? (
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold tracking-wider">{inf.lot}</span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[280px] align-top">

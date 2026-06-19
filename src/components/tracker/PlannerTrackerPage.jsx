@@ -152,7 +152,55 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
   });
   const [copiedTab, setCopiedTab] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSubmitLotModalOpen, setIsSubmitLotModalOpen] = useState(false);
 
+  // Compute eligible influencers for Lot
+  const eligibleForLot = [];
+  let maxLot = 0;
+  let allDoneOrRejected = true;
+  let hasAnyInfluencer = false;
+
+  Object.values(groupTrackers).forEach(tracker => {
+    if (tracker.influencers && tracker.influencers.length > 0) {
+      hasAnyInfluencer = true;
+      tracker.influencers.forEach(inf => {
+        if (inf.contactStatus === "Done" && !inf.lot) {
+          eligibleForLot.push(inf);
+        }
+        if (inf.lot) {
+          const match = inf.lot.match(/Lot (\d+)/i);
+          if (match) maxLot = Math.max(maxLot, parseInt(match[1]));
+        }
+        if (inf.contactStatus !== "Done" && inf.contactStatus !== "ไม่รับงาน") {
+          allDoneOrRejected = false;
+        }
+      });
+    }
+  });
+
+  const nextLotNumber = maxLot + 1;
+  const isFinishWorkEnabled = hasAnyInfluencer && allDoneOrRejected;
+
+  const handleSubmitLot = () => {
+    const newGroupTrackers = { ...groupTrackers };
+    Object.keys(newGroupTrackers).forEach(groupId => {
+      const tracker = newGroupTrackers[groupId];
+      if (tracker.influencers) {
+        newGroupTrackers[groupId] = {
+          ...tracker,
+          influencers: tracker.influencers.map(inf => {
+            if (inf.contactStatus === "Done" && !inf.lot) {
+              return { ...inf, lot: `Lot ${nextLotNumber}` };
+            }
+            return inf;
+          })
+        };
+      }
+    });
+    setGroupTrackers(newGroupTrackers);
+    onUpdateBrief({ ...brief, groupTrackers: newGroupTrackers });
+    setIsSubmitLotModalOpen(false);
+  };
 
   const handleConfirmRateCardList = () => {
     const log = {
@@ -322,8 +370,22 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
               <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
               <div className="flex flex-col gap-3">
+                <Button 
+                  variant="outline" 
+                  disabled={eligibleForLot.length === 0}
+                  onClick={() => setIsSubmitLotModalOpen(true)}
+                  className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                >
+                  Submit Lot to Planner {eligibleForLot.length > 0 && `(${eligibleForLot.length})`}
+                </Button>
                 {activeGroups.length > 0 && brief.internalStatus !== "Rate Card List Confirmed" && (
-                  <Button className="w-full" onClick={handleConfirmRateCardList}>Confirm Rate Card List</Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={handleConfirmRateCardList}
+                    disabled={!isFinishWorkEnabled}
+                  >
+                    Finish work
+                  </Button>
                 )}
               </div>
             </div>
@@ -396,6 +458,38 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
           />
         )}
       </AnimatePresence>
+
+      {isSubmitLotModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Confirm Submit Lot to Planner</h3>
+              <p className="text-sm text-slate-500 mt-1">You are about to assign <span className="font-bold text-indigo-600">Lot {nextLotNumber}</span> to {eligibleForLot.length} influencer{eligibleForLot.length > 1 && 's'} across all groups.</p>
+            </div>
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-3">
+                {eligibleForLot.map((inf, idx) => (
+                  <div key={inf.id || idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200" />
+                    <div className="font-semibold text-sm text-slate-900">{inf.accountName || "New Influencer"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
+              <button 
+                onClick={() => setIsSubmitLotModalOpen(false)}
+                className="px-5 py-2.5 font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <Button onClick={handleSubmitLot}>
+                Confirm Submit Lot {nextLotNumber}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

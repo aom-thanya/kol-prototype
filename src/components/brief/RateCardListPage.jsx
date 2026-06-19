@@ -1058,7 +1058,7 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
     const assignedPillarStrings = groupPillars.map(key => `${key}: ${(pillarValues[key] || []).join(", ")}`);
 
     const newSow = {
-      id: `sow-${Date.now()}`,
+      id: `sow-${crypto.randomUUID()}`,
       name: newGroupName.trim(),
       platforms: assignedPillarStrings,
       followerReq: "10K - 50K",
