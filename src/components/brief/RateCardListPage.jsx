@@ -1491,7 +1491,7 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
 
                           {/* Requirement */}
                           <tr className="border-b border-slate-100">
-                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Requirement</td>
+                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Boost by Page</td>
                             {group.sows?.map((sow, idx) => {
                               const reqs = [];
                               

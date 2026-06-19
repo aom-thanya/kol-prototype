@@ -78,20 +78,14 @@ export default function TrackerTable({
     onUpdateTracker({ ...trackerData, influencers: updated });
   };
 
-  const STATUS_OPTIONS = allowStatusEdit ? [
-    { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
-    { value: "Selected", label: "Selected", bg: "bg-emerald-55 text-[#047857] border-[#A7F3D0]", text: "text-[#047857] font-medium" },
-    { value: "Rejected", label: "Rejected", bg: "bg-rose-50 text-rose-700 border-rose-200", text: "text-rose-750 font-medium" }
-  ] : [
+  const STATUS_OPTIONS = [
     { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
     { value: "ทักแล้ว", label: "ทักแล้ว", bg: "bg-[#FDE68A]", text: "text-[#92400E]" },
     { value: "โทรแล้ว", label: "โทรแล้ว", bg: "bg-[#FFDCC8]", text: "text-[#8C3A10]" },
     { value: "ตอบแล้ว", label: "ตอบแล้ว", bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
-    { value: "Selected", label: "Selected", bg: "bg-emerald-55 text-[#047857] border-[#A7F3D0]", text: "text-[#047857] font-bold" },
+    { value: "Done", label: "Done", bg: "bg-[#166534]", text: "text-white" },
     { value: "ข้อมูลไม่ครบ", label: "ข้อมูลไม่ครบ", bg: "bg-[#DBEAFE]", text: "text-[#1E3A8A]" },
-    { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" },
-    { value: "Rejected", label: "Rejected", bg: "bg-rose-50 text-rose-700 border-rose-250", text: "text-rose-700 font-bold" },
-    { value: "ถูกแทนที่", label: "ถูกแทนที่", bg: "bg-rose-100", text: "text-rose-700" },
+    { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" }
   ];
 
   const getStatusColor = (statusValue) => {
@@ -367,12 +361,13 @@ export default function TrackerTable({
                       onUpdateTracker({ ...trackerData, influencers: reordered });
                     }}
                     className={cn(
-                      "group transition",
+                      "group transition relative",
                       canReorder && "cursor-move",
                       inf.contactStatus === "Selected" && "bg-[#ECFDF5] hover:bg-[#D1FAE5]",
                       inf.contactStatus === "Rejected" && "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1",
                       inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 opacity-70",
-                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "hover:bg-slate-50"
+                      inf.contactStatus === "ไม่รับงาน" && "opacity-50 grayscale hover:opacity-60 bg-slate-50",
+                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && inf.contactStatus !== "ไม่รับงาน" && "hover:bg-slate-50"
                     )}
                   >
                     <td className={cn(
@@ -380,7 +375,8 @@ export default function TrackerTable({
                       inf.contactStatus === "Selected" && "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]",
                       inf.contactStatus === "Rejected" && "bg-[#FFF5F5] group-hover:bg-[#FEE2E2] text-rose-700",
                       inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 group-hover:bg-slate-200",
-                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "bg-white group-hover:bg-slate-50"
+                      inf.contactStatus === "ไม่รับงาน" && "bg-slate-50",
+                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && inf.contactStatus !== "ไม่รับงาน" && "bg-white group-hover:bg-slate-50"
                     )}>
                       <div className="flex items-center justify-center gap-0.5">
                         {canReorder && (
@@ -398,7 +394,8 @@ export default function TrackerTable({
                       inf.contactStatus === "Selected" && "bg-[#ECFDF5] group-hover:bg-[#D1FAE5]",
                       inf.contactStatus === "Rejected" && "bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 decoration-rose-450 decoration-1",
                       inf.contactStatus === "ถูกแทนที่" && "bg-slate-100 opacity-70",
-                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && "bg-white hover:bg-slate-50"
+                      inf.contactStatus === "ไม่รับงาน" && "bg-slate-50",
+                      inf.contactStatus !== "Selected" && inf.contactStatus !== "Rejected" && inf.contactStatus !== "ถูกแทนที่" && inf.contactStatus !== "ไม่รับงาน" && "bg-white hover:bg-slate-50"
                     )}>
                       <div className="flex gap-3 text-left w-full">
                         <img src={inf.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inf.accountName || "New")}&background=random`} alt="" className="h-11 w-11 rounded-full object-cover shrink-0" />
@@ -694,8 +691,8 @@ export default function TrackerTable({
                         </td>
                       );
                     })}
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
-                      <div className="w-full min-w-[180px] px-2 py-1 text-xs text-slate-500 bg-slate-50/50 rounded border border-slate-200 font-medium">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] max-w-[280px] whitespace-normal">
+                      <div className="text-slate-600 font-medium leading-relaxed">
                         {(() => {
                           const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
                           const idx = submittedSows.indexOf(matchingSow);
