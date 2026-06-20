@@ -100,7 +100,7 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
     <div className="pb-10 text-base">
 
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-3/4 space-y-6 min-w-0">
+        <div className="w-full space-y-6 min-w-0">
           <div className="flex border-b border-slate-200 bg-white px-2 pt-2 rounded-t-2xl shadow-3xs overflow-x-auto whitespace-nowrap scrollbar-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -635,28 +635,6 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
           )}
         </div>
 
-        {/* Right Column (Actions Sidebar) */}
-        <div className="w-full lg:w-1/4 shrink-0 text-sm">
-          <div className="sticky top-6 space-y-6">
-            
-            {/* Actions Panel */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
-
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => handleUpdateStatus("Recap")}
-                  className="w-full py-3 text-sm font-bold bg-[#6D5DF6] hover:bg-[#5a4add] text-white rounded-xl shadow-xs transition cursor-pointer text-center"
-                >
-                  Next to Recap
-                </button>
-              </div>
-            </div>
-
-
-          </div>
-        </div>
-
       </div>
     </div>
   );
@@ -676,6 +654,7 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
   const [briefIdInput, setBriefIdInput] = useState("");
   const [selectedBriefToLink, setSelectedBriefToLink] = useState("");
   const [activeRecapOptionId, setActiveRecapOptionId] = useState(null);
+  const [headerActions, setHeaderActions] = useState(null);
   
   // Search and Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -1171,7 +1150,8 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                       filteredBriefs.map((b) => {
                         const isRateCardList = b.internalStatus === "Rate Card List";
                         
-                        // SOW Groups and Pillars extraction
+                        // User Groups and Pillars extraction
+                        const userGroups = b.groups || [];
                         const sowGroups = b.scopeOfWorks || [];
 
                         return (
@@ -1183,22 +1163,49 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                               <div className="font-semibold text-slate-900 text-sm">{b.campaignName || "Untitled Campaign"}</div>
                               <div className="text-[11px] text-slate-400 mt-1">{b.brand || "No Brand"}</div>
                               
-                              {/* SOW groups & pillars */}
-                              {sowGroups.length > 0 && (
+                              {/* Groups & platforms */}
+                              {userGroups.length > 0 ? (
                                 <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+                                  {userGroups.map((group, i) => {
+                                    const platforms = new Set();
+                                    (group.sows || []).forEach(sow => {
+                                      const plats = sow.platforms ? (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]) : [];
+                                      plats.forEach(p => platforms.add(p));
+                                    });
+                                    const platformPillars = Array.from(platforms);
+
+                                    return (
+                                      <div key={i} className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                                        <span className="font-semibold text-slate-600">Group:</span>
+                                        <span className="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md font-medium">{group.name}</span>
+                                        {platformPillars.length > 0 && (
+                                          <>
+                                            <span className="text-slate-400">·</span>
+                                            <span className="font-semibold text-slate-600">Platform:</span>
+                                            {platformPillars.map((p, pIdx) => (
+                                              <span key={pIdx} className="bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded-md font-bold text-[10px] uppercase border border-blue-100">{p}</span>
+                                            ))}
+                                          </>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : sowGroups.length > 0 ? (
+                                <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 opacity-70">
                                   {sowGroups.map((sow, i) => (
                                     <div key={i} className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                                      <span className="font-semibold text-slate-600">Group:</span>
+                                      <span className="font-semibold text-slate-600">SOW (Sales):</span>
                                       <span className="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md font-medium">{sow.name || sow.contentType}</span>
                                       <span className="text-slate-400">·</span>
                                       <span className="font-semibold text-slate-600">Pillar:</span>
                                       {(sow.platforms ? (Array.isArray(sow.platforms) ? sow.platforms : [sow.platforms]) : []).map((p, pIdx) => (
-                                        <span key={pIdx} className="bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded-md font-bold text-[10px] uppercase border border-blue-100">{p}</span>
+                                        <span key={pIdx} className="bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-md font-bold text-[10px] uppercase border border-slate-300">{p}</span>
                                       ))}
                                     </div>
                                   ))}
                                 </div>
-                              )}
+                              ) : null}
                             </td>
                             <td className="px-6 py-4 text-slate-700 text-xs font-semibold align-top pt-5">
                               {b.salesOwner || "No Owner"}
@@ -1267,13 +1274,13 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
               </button>
             </div>
 
-            {/* Step Progress Component */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 max-w-2xl mx-auto w-full">
+            {/* Step Progress Component (Compact) */}
+            <div className="py-3 px-6 max-w-xl mx-auto w-full">
               <div className="relative flex items-center justify-between">
                 {/* Background Line */}
-                <div className="absolute top-5 left-10 right-10 h-1 bg-slate-100 -translate-y-1/2 rounded-full z-0"></div>
+                <div className="absolute top-3.5 left-8 right-8 h-[2px] bg-slate-100 -translate-y-1/2 rounded-full z-0"></div>
                 {/* Active Line Container */}
-                <div className="absolute top-5 left-10 right-10 h-1 -translate-y-1/2 z-0">
+                <div className="absolute top-3.5 left-8 right-8 h-[2px] -translate-y-1/2 z-0">
                   <div 
                     className="h-full bg-[#6D5DF6] rounded-full transition-all duration-500"
                     style={{ 
@@ -1287,14 +1294,14 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   onClick={() => handleUpdateStatus("Brief Info")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-[11px] ${
                     currentStepIdx >= 0
                       ? "bg-white border-[#6D5DF6] text-[#6D5DF6] shadow-sm shadow-violet-100 scale-105 font-bold"
                       : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350"
                   }`}>
                     {currentStepIdx > 0 ? "✓" : "1"}
                   </div>
-                  <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
+                  <span className={`mt-1.5 text-[10px] font-bold transition-colors duration-300 ${
                     currentStepIdx >= 0
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
@@ -1308,14 +1315,14 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   onClick={() => handleUpdateStatus("Recap")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-[11px] ${
                     currentStepIdx >= 1
                       ? "bg-white border-[#6D5DF6] text-[#6D5DF6] shadow-sm shadow-violet-100 scale-105 font-bold"
                       : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-300"
                   }`}>
                     {currentStepIdx > 1 ? "✓" : "2"}
                   </div>
-                  <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
+                  <span className={`mt-1.5 text-[10px] font-bold transition-colors duration-300 ${
                     currentStepIdx >= 1
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
@@ -1329,14 +1336,14 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   onClick={() => handleUpdateStatus("Example List")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-[11px] ${
                     currentStepIdx >= 2
                       ? "bg-white border-[#6D5DF6] text-[#6D5DF6] shadow-sm shadow-violet-100 scale-105 font-bold"
                       : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350"
                   }`}>
                     {currentStepIdx > 2 ? "✓" : "3"}
                   </div>
-                  <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
+                  <span className={`mt-1.5 text-[10px] font-bold transition-colors duration-300 ${
                     currentStepIdx >= 2
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
@@ -1350,14 +1357,14 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   onClick={() => handleUpdateStatus("Rate Card List")}
                   className="relative z-10 flex flex-col items-center focus:outline-none group cursor-pointer"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-sm ${
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300 font-bold text-[11px] ${
                     currentStepIdx >= 3
                       ? "bg-[#6D5DF6] border-[#6D5DF6] text-white shadow-sm shadow-violet-250 scale-105"
                       : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350"
                   }`}>
                     4
                   </div>
-                  <span className={`mt-2 text-xs font-bold transition-colors duration-300 ${
+                  <span className={`mt-1.5 text-[10px] font-bold transition-colors duration-300 ${
                     currentStepIdx >= 3
                       ? "text-[#6D5DF6]"
                       : "text-slate-400 group-hover:text-slate-650"
@@ -1378,6 +1385,36 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                 </div>
                 
                 <div className="flex items-center gap-3">
+                  {status === "Brief Info" && (
+                    <button 
+                      onClick={() => handleUpdateStatus("Recap")}
+                      className="inline-flex h-8 items-center justify-center gap-2 rounded-lg bg-[#6D5DF6] px-4 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#5a4add]"
+                    >
+                      Next to Recap
+                    </button>
+                  )}
+                  {status === "Recap" && (
+                    <button 
+                      onClick={() => handleUpdateStatus("Example List")}
+                      disabled={!currentList?.groups || currentList.groups.length === 0 || currentList.groups.some(g => !g.name || g.name.trim() === '' || !g.sows || g.sows.length === 0)}
+                      className={`inline-flex h-8 items-center justify-center gap-2 rounded-lg px-4 text-[11px] font-bold text-white shadow-sm transition ${
+                        (!currentList?.groups || currentList.groups.length === 0 || currentList.groups.some(g => !g.name || g.name.trim() === '' || !g.sows || g.sows.length === 0)) 
+                          ? 'bg-slate-300 cursor-not-allowed' 
+                          : 'bg-[#6D5DF6] hover:bg-[#5a4add]'
+                      }`}
+                    >
+                      Next to Example List
+                    </button>
+                  )}
+                  {status === "Example List" && (
+                    <button 
+                      onClick={() => handleUpdateStatus("Rate Card List")}
+                      className="inline-flex h-8 items-center justify-center gap-2 rounded-lg bg-[#6D5DF6] px-4 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#5a4add]"
+                    >
+                      Next to Rate Card List
+                    </button>
+                  )}
+                  {headerActions}
                   <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
                     status === "Rate Card List" 
                       ? "bg-purple-50 text-purple-750 border-purple-100" 
@@ -1426,8 +1463,22 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
 
                 {(currentList.groups && currentList.groups.length > 0 ? currentList.groups : []).map((group, groupIndex) => (
                   <div key={group.id || groupIndex} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-3">
                       <h4 className="text-sm font-bold text-slate-800">{group.name || `Group ${groupIndex + 1}`}</h4>
+                      {group?.pillar && typeof group.pillar === "string" && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                          {group.pillar}
+                        </span>
+                      )}
+                      {group?.pillars && Object.values(group.pillars).some(arr => arr && arr.length > 0) && (
+                        <div className="flex flex-wrap gap-2">
+                          {Object.values(group.pillars).flat().filter(Boolean).map((val, i) => (
+                            <span key={i} className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                              {val}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse table-layout-fixed" style={{ minWidth: "800px" }}>
@@ -1474,20 +1525,6 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                             {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
                           </tr>
 
-                          {/* 6 Pillars - Merged Cell */}
-                          <tr className="border-b border-slate-100">
-                            <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">6 Pillars</td>
-                            <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Demographic</span><div className="font-medium">{renderList(group.pillars?.demographic)}</div></div>
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Location</span><div className="font-medium">{renderList(group.pillars?.location)}</div></div>
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Occupation</span><div className="font-medium">{renderList(group.pillars?.occupation)}</div></div>
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Persona</span><div className="font-medium">{renderList(group.pillars?.persona)}</div></div>
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Content Category</span><div className="font-medium">{renderList(group.pillars?.contentCategory)}</div></div>
-                                <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block mb-1">Story Telling</span><div className="font-medium">{renderList(group.pillars?.storyTelling)}</div></div>
-                              </div>
-                            </td>
-                          </tr>
 
                           {/* Requirement */}
                           <tr className="border-b border-slate-100">
@@ -1646,14 +1683,6 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                   </div>
                 ))}
 
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => handleUpdateStatus("Rate Card List")}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#6D5DF6] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a4add]"
-                  >
-                    Next to Rate Card List
-                  </button>
-                </div>
               </div>
             )}
 
@@ -1661,6 +1690,7 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
             {status === "Rate Card List" && (
               <PlannerTrackerPage
                 brief={currentList}
+                setHeaderActions={setHeaderActions}
                 onUpdateBrief={(updatedBrief) => {
                   const updated = briefs.map(b => b.id === currentListId ? updatedBrief : b);
                   onUpdateBriefs(updated);

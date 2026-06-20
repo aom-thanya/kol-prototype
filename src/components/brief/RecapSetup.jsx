@@ -539,15 +539,6 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
         </div>
       </div>
 
-      <div className="flex justify-end pt-6 border-t border-slate-200">
-        <button 
-          onClick={onNext}
-          disabled={isNextDisabled()}
-          className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold text-white shadow-sm transition ${isNextDisabled() ? 'bg-slate-300 cursor-not-allowed' : 'bg-[#6D5DF6] hover:bg-[#5a4add]'}`}
-        >
-          Next to Example List
-        </button>
-      </div>
     </div>
   );
 }

@@ -147,12 +147,33 @@ export default function TrackerTable({
   addServiceColumns("brandedContentRequired", "brandedContentDuration", "FB Branded Content");
   addServiceColumns("whitelistingRequired", "whitelistingDuration", "X/Twitter Whitelisting");
   
+  // Add 'via' columns
+  const viaPlatforms = new Set();
+  if (allSOWs && allSOWs.length > 0) {
+    allSOWs.forEach(sow => {
+      if (sow.via && sow.via.length > 0) {
+        sow.via.forEach(v => viaPlatforms.add(v));
+      }
+    });
+  }
+  
+  if (viaPlatforms.size > 0) {
+    Array.from(viaPlatforms).forEach(v => {
+      requiredServices.push({
+        key: `via_${v}`,
+        label: `Via (${v})`,
+        isVia: true,
+        viaVal: v
+      });
+    });
+  }
+
   // Note: For custom SOW scopes like crossPostingRequired, you could also check brief.
   // We keep affiliate as a default if it was part of standard, but wait, the plan just said dynamic.
   // Actually, we can keep Affiliate statically or dynamically based on if it's there. 
   // We'll leave Affiliate off unless it's specifically needed, or we can just append it:
   // requiredServices.push({ key: "Affiliate", label: "Affiliate" }); // Not in serviceScope list currently.  
-  const brandSupports = Array.isArray(brief.brandSupport) ? brief.brandSupport : [];
+  const brandSupports = [];
   const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor !== "<p><br></p>";
 
   if (isDealsheetView) {
@@ -318,7 +339,7 @@ export default function TrackerTable({
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Cost</th>
-                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Boost by Page</th>}
+                {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Service Scope</th>}
                 {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Questions</th>}
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Competitor</th>}
@@ -672,18 +693,24 @@ export default function TrackerTable({
                       let isIrrelevant = false;
                       if (inf.scopeOfWork) {
                         const mySow = submittedSows.find(s => s.id === inf.scopeOfWork);
-                        if (mySow && mySow.serviceScope) {
-                          const isReq = !!mySow.serviceScope[srv.baseReqKey];
-                          if (srv.durationVal) {
-                            const sowDurations = Array.isArray(mySow.serviceScope[srv.durationKey]) 
-                              ? mySow.serviceScope[srv.durationKey] 
-                              : (mySow.serviceScope[srv.durationKey] ? [mySow.serviceScope[srv.durationKey]] : []);
-                            
-                            if (!isReq || !sowDurations.includes(srv.durationVal)) {
+                        if (mySow) {
+                          if (srv.isVia) {
+                            if (!mySow.via || !mySow.via.includes(srv.viaVal)) {
                               isIrrelevant = true;
                             }
-                          } else {
-                            if (!isReq) isIrrelevant = true;
+                          } else if (mySow.serviceScope) {
+                            const isReq = !!mySow.serviceScope[srv.baseReqKey];
+                            if (srv.durationVal) {
+                              const sowDurations = Array.isArray(mySow.serviceScope[srv.durationKey]) 
+                                ? mySow.serviceScope[srv.durationKey] 
+                                : (mySow.serviceScope[srv.durationKey] ? [mySow.serviceScope[srv.durationKey]] : []);
+                              
+                              if (!isReq || !sowDurations.includes(srv.durationVal)) {
+                                isIrrelevant = true;
+                              }
+                            } else {
+                              if (!isReq) isIrrelevant = true;
+                            }
                           }
                         }
                       }

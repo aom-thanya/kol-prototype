@@ -65,7 +65,7 @@ SOW :
 Gen code
 Buy out นำคลิปไปใช้ต่อในช่องทางของแบรนด์ (ระบุ : offline/online)`;
 
-export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
+export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActions }) {
   // Initialize trackers for each group if they don't exist yet
   const initializeTrackers = () => {
     const trackers = { ...(brief.groupTrackers || {}) };
@@ -322,6 +322,34 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
     onUpdateBrief({ ...brief, groupTrackers: newTrackers });
   };
 
+  React.useEffect(() => {
+    if (setHeaderActions) {
+      setHeaderActions(
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            disabled={eligibleForLot.length === 0}
+            onClick={() => setIsSubmitLotModalOpen(true)}
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+          >
+            Submit Lot to Planner {eligibleForLot.length > 0 && `(${eligibleForLot.length})`}
+          </Button>
+          {activeGroups.length > 0 && brief.internalStatus !== "Rate Card List Confirmed" && (
+            <Button 
+              onClick={handleConfirmRateCardList}
+              disabled={!isFinishWorkEnabled}
+            >
+              Finish work
+            </Button>
+          )}
+        </div>
+      );
+      
+      return () => setHeaderActions(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eligibleForLot.length, activeGroups.length, brief.internalStatus, isFinishWorkEnabled, setHeaderActions]);
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -367,28 +395,30 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief }) {
 
         <div className="w-full lg:w-1/4 shrink-0">
           <div className="sticky top-6 space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
-              <div className="flex flex-col gap-3">
-                <Button 
-                  variant="outline" 
-                  disabled={eligibleForLot.length === 0}
-                  onClick={() => setIsSubmitLotModalOpen(true)}
-                  className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
-                >
-                  Submit Lot to Planner {eligibleForLot.length > 0 && `(${eligibleForLot.length})`}
-                </Button>
-                {activeGroups.length > 0 && brief.internalStatus !== "Rate Card List Confirmed" && (
+            {!setHeaderActions && (
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4">Actions</h3>
+                <div className="flex flex-col gap-3">
                   <Button 
-                    className="w-full" 
-                    onClick={handleConfirmRateCardList}
-                    disabled={!isFinishWorkEnabled}
+                    variant="outline" 
+                    disabled={eligibleForLot.length === 0}
+                    onClick={() => setIsSubmitLotModalOpen(true)}
+                    className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
                   >
-                    Finish work
+                    Submit Lot to Planner {eligibleForLot.length > 0 && `(${eligibleForLot.length})`}
                   </Button>
-                )}
+                  {activeGroups.length > 0 && brief.internalStatus !== "Rate Card List Confirmed" && (
+                    <Button 
+                      className="w-full" 
+                      onClick={handleConfirmRateCardList}
+                      disabled={!isFinishWorkEnabled}
+                    >
+                      Finish work
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-200px)]">
               <div className="p-5 border-b border-slate-100 shrink-0">
                 <h3 className="text-sm font-semibold text-slate-800">ชุดคำถาม</h3>
