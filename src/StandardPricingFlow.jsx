@@ -39,7 +39,7 @@ function cn(...classes) {
 export default function StandardPricingFlow() {
   const [records, setRecords] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [role, setRole] = useState("Planner"); // Planner (Admin) or Viewer
+  const [role, setRole] = useState("Dev"); // Dev (Admin) or Viewer
   const [currentUser] = useState("planner.beauty@buddyreview.co");
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -152,7 +152,7 @@ export default function StandardPricingFlow() {
 
   if (!isLoaded) return null;
 
-  const canEdit = role === "Planner";
+  const canEdit = role === "Dev";
 
   return (
     <div className="mx-auto max-w-7xl pb-12">
@@ -179,7 +179,7 @@ export default function StandardPricingFlow() {
               onChange={(e) => setRole(e.target.value)}
               className="bg-transparent text-sm font-semibold outline-none text-[#6D5DF6]"
             >
-              <option value="Planner">Planner (Admin)</option>
+              <option value="Dev">Dev (Admin)</option>
               <option value="Viewer">Viewer (Read Only)</option>
             </select>
           </div>
