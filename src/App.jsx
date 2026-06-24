@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BriefFlow from "./BriefFlow";
 import CustomerFlow from "./CustomerFlow";
 import StandardCostFlow from "./StandardCostFlow";
+import StandardPricingFlow from "./StandardPricingFlow";
 import FinalDealsheetFlow from "./FinalDealsheetFlow";
 import { customersSeed, briefsSeed } from "./data/mockData";
 import RateCardListPage from "./components/brief/RateCardListPage";
@@ -292,6 +293,7 @@ function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
     { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
     { label: "Final Dealsheet", id: "finalDealsheet", icon: ClipboardList, active: activeTab === "finalDealsheet" },
     { label: "Standard Cost", id: "standardCost", icon: DollarSign, active: activeTab === "standardCost" },
+    { label: "Standard Pricing", id: "standardPricing", icon: DollarSign, active: activeTab === "standardPricing" },
   ];
 
   const renderItem = (item) => (
@@ -384,7 +386,7 @@ function AppShell({ children, activeTab, setActiveTab }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "standardCost" ? "Standard Cost" : activeTab === "finalDealsheet" ? "Final Dealsheet" : "Brief Flow"}</div>
+              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "standardCost" ? "Standard Cost" : activeTab === "standardPricing" ? "Standard Pricing" : activeTab === "finalDealsheet" ? "Final Dealsheet" : "Brief Flow"}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1236,6 +1238,10 @@ export default function App() {
       
       {activeTab === "standardCost" && (
         <StandardCostFlow showToast={showToast} />
+      )}
+
+      {activeTab === "standardPricing" && (
+        <StandardPricingFlow />
       )}
 
       {activeTab === "rateCardList" && (

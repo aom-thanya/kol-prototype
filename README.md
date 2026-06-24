@@ -1,26 +1,190 @@
-# KOL & Brief Management Platform (Prototype)
+# เอกสารฟังก์ชันการทำงานระบบ KOL & Brief Management Platform (Prototype)
 
-## Overview
-This platform is a centralized workspace designed to streamline the workflow between Sales, Planners, and Buyers for Influencer Marketing campaigns. It digitizes the end-to-end process—from receiving initial client requirements to tracking and confirming Key Opinion Leaders (KOLs) / Influencers.
+แพลตฟอร์มนี้พัฒนาขึ้นเพื่อจัดการกระบวนการทำงานแคมเปญ Influencer Marketing ตั้งแต่การรับบรีฟจากลูกค้า การจับคู่แคนดิเดต KOL จนถึงการคำนวณต้นทุน/กำไรใน Dealsheet โดยมีรายละเอียดฟังก์ชันยันระบุ Input, Process, Output ดังนี้:
 
-## Business Value
-- **Efficiency & Speed**: Replaces fragmented communication and manual spreadsheets with a unified, digital workflow.
-- **Clear Alignment**: Ensures all teams (Sales, Strategy/Planners, and Buyers) are aligned on Campaign Objectives, Budgets, and Influencer Personas from day one.
-- **Real-Time Visibility**: Provides a centralized Dealsheet to track KOL acquisition status (e.g., Checking Availability, Negotiating, Signed).
-- **Standardized Operations**: Enforces structured inputs for Scope of Work (SOW), commercial terms, and service requirements, significantly reducing human error and missed details.
+---
 
-## Key Features
+## 1. ฟังก์ชันระบบจัดการบรีฟแคมเปญ (Campaign Brief Management)
 
-### 1. Brief Management
-- **Smart Brief Creation**: A comprehensive, step-by-step form to capture Client Details, Campaign Budgets, Target Influencer Personas, Scope of Work (SOW), and specific Service Scopes (e.g., Buyout rights, Boost Post durations).
-- **Centralized Dashboard**: A single view to monitor the progress and status of all campaign briefs across different clients and brands.
+### 1.1 การสร้างและแก้ไขบรีฟ (Smart Step-by-Step Form)
+*   **วัตถุประสงค์**: เพื่อให้ฝ่าย AM/Sales บันทึกข้อกำหนดโครงการของลูกค้าอย่างเป็นระบบ
+*   **ข้อมูลขาเข้า (Input)**:
+    *   *ข้อมูลลูกค้าและแบรนด์*: รหัสลูกค้า (Customer ID), ชื่อแบรนด์/สินค้า, สถานะลูกค้า (New/Existing), ประเภทลูกค้า (Key Account/Non-Key Account), ชื่อผู้ดูแลฝ่ายขาย (Sales Owner)
+    *   *รายละเอียดแคมเปญ*: ชื่อแคมเปญ, ประเภทแพ็กเกจ (Standard, Standard KPI, Rate Card, Rate Card KPI, Combine, Combine KPI, Strategy, Strategy KPI, หรืออื่นๆ), รายละเอียดสินค้า (ป้อนข้อมูลผ่าน HTML Editor), วัตถุประสงค์แคมเปญ (Awareness, Interest, Trust) และคำอธิบายเพิ่มเติม
+    *   *กลุ่มเป้าหมาย*: เพศ (Male/Female), ช่วงอายุ (13-17, 18-24, 25-34, 35-44, 45-64), ประเทศ, จังหวัด
+    *   *การจัดส่งและวันทำงาน*: ช่วงวันที่เริ่มต้น-สิ้นสุดแคมเปญ, แพลตฟอร์มที่ต้องการใช้งาน (TikTok, Instagram, YouTube, Facebook, X, Lemon8 ฯลฯ)
+    *   *ข้อมูลอ้างอิง*: แคมเปญอ้างอิงย้อนหลัง (Reference), ข้อมูลคู่แข่ง, รายละเอียดเพิ่มเติม
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **Cut-off Time Validation**: ระบบจะตรวจเช็คเวลาในการกดบันทึกหรือปรับเปลี่ยนรายละเอียดบรีฟ หากเวลาของระบบเกิน `11:00 น.` จะแสดงผลนับเวลาการวางแผนบรีฟเป็นแบบครึ่งวัน (Half Day) และหากเกิน `16:00 น.` จะปัดการนับผลวันทำงานเป็นวันถัดไป (Next Day)
+    2.  **HTML Parsing**: แปลงข้อมูล Rich Text จาก Text Editor สำหรับช่องข้อมูลสินค้า คู่แข่ง ข้อมูลอ้างอิง ให้เป็น HTML String สำหรับจัดเก็บลงฐานข้อมูลจำลอง
+    3.  **Customer Mapping**: ดึงสิทธิ์ของลูกค้ามาตรวจสอบโดยอัตโนมัติ หากเป็น Key Account ระบบจะปลดล็อคแพ็กเกจการวางแผนพิเศษ
+*   **ข้อมูลขาออก (Output)**:
+    *   Object ข้อมูล Brief ชุดใหม่ในสถานะ `Draft` หรือ `In-Progress`
+    *   รายการแคมเปญบรีฟแสดงในหน้า Brief Listing Page
+    *   การบันทึก Log ลงใน Timeline กิจกรรมย้อนหลัง (Activity Timeline)
 
-### 2. Dealsheet & Proposal Tracking
-- **Influencer Pipeline**: Monitor selected candidates mapped to their respective scopes of work.
-- **Financial Tracking**: Track expected costs, actual costs, boost fees, and margins per influencer against the project's allocated budget.
-- **Status Workflows**: Clear visual indicators of where each KOL stands in the pipeline (e.g., Checking, Accepted, Wait for Sign, Done).
+### 1.2 การออกแบบแผนงบประมาณและขอบเขตงาน (Multi-Option SOW Planner)
+*   **วัตถุประสงค์**: เพื่อให้ทีม Planner วางกลยุทธ์โครงสร้างงบประมาณและขอบเขตงานเปรียบเทียบเสนอให้ลูกค้าพิจารณา
+*   **ข้อมูลขาเข้า (Input)**:
+    *   *งบประมาณ Option*: ชื่อ Option (เช่น Option A: Micro เน้นการรับรู้, Option B: Macro เน้นยอดขาย), งบประมาณรวมที่เสนอ (Budget Spending), เงื่อนไขภาษีมูลค่าเพิ่ม (VAT: Incl/Excl VAT), เงื่อนไขเพิ่มเติมอื่นๆ
+    *   *ระบบการโฆษณา (Buddy Boost)*: เลือกต้องการบูสต์ (Yes/No), วัตถุประสงค์การบูสต์ (Awareness, Engagement, View, Follower, Drive sale, Traffic), งบประมาณค่าโฆษณาบูสต์โพสต์, รายละเอียดชิ้นงาน
+    *   *รายการ Scope of Work (SOW)*:
+        *   แพลตฟอร์มที่ใช้งาน และประเภทงาน (Content Type) เช่น Reels, TikTok Video, YouTube Shorts
+        *   ช่วงจำนวนผู้ติดตามที่คาดหวัง (Follower Requirement From - To)
+        *   จ้างจำนวนกี่คน (Number of Influencers) และการจัดสรรงบประมาณต่อคน (Allocation)
+        *   เป้าหมายแคมเปญและตัวตนของอินฟลูเอนเซอร์ (Persona: Demographic, Location, Occupation, Content Category, Storytelling Style)
+        *   บริการเสริมและเงื่อนไขโฆษณา (Service Scope): การซื้อลิขสิทธิ์ภาพนำไปใช้ต่อ (Buyout) พร้อมจำนวนวัน, บริการบูสต์โพสต์ (Boost Post), บริการยิงแอดตรงบัญชี (Add Ads), โค้ดสินค้าตะกร้า (TikTok Shop Gen Code), วิดีโอสปอนเซอร์ (Branded Content/Whitelisting) พร้อมตั้งค่าจำนวนระยะเวลา
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **Multi-Option Separation**: ระบบสร้าง Array ย่อยแยกตาม Option ID เพื่อเก็บเซ็ตข้อมูลขอบเขตงานไม่ให้ปะปนกัน
+    2.  **Auto Name Generator**: ระบบเรียกใช้ฟังก์ชัน `generateScopeName()` เพื่อสแกนแพลตฟอร์ม ประเภทเนื้อหา และเงื่อนไขบริการเสริมที่ผู้ใช้ติ๊กเลือก จากนั้นประกอบชื่อขอบเขตงานให้อัตโนมัติ เช่น เลือก Instagram + Reels + มี Buyout จะได้ชื่อว่า `Instagram Reels (IG) + Buyout x1`
+    3.  **Follower Validation**: ตรวจสอบเกณฑ์ Followers หากป้อนค่า Min สูงกว่า Max ระบบจะแสดงข้อความแจ้งเตือนข้อผิดพลาด
+*   **ข้อมูลขาออก (Output)**:
+    *   ชุดข้อมูล `budgetOptions` ที่อัปเดตแล้วภายใน Object Brief
+    *   การแสดงตารางเปรียบเทียบงบประมาณย่อยแต่ละ Option ในหน้า Proposal Page
 
-## Target Audience
-- **Sales / Account Managers**: To initiate project briefs accurately based on client requirements.
-- **Planners / Strategists**: To define the target audience, outline the budget allocation, and design the campaign strategy.
-- **Buyers / Influencer Relations**: To execute the brief, source the right influencers, track negotiations, and finalize the dealsheet.
+### 1.3 ระบบบันทึกเงื่อนไขสนับสนุนและสิทธิ์โครงการ (Support & Role Assignment)
+*   **วัตถุประสงค์**: เพื่อมอบหมายผู้รับผิดชอบแคมเปญ และบันทึกข้อตกลงสินค้าสนับสนุน/ค่าใช้จ่ายเสริม
+*   **ข้อมูลขาเข้า (Input)**:
+    *   *การส่งมอบสินค้า*: รูปแบบการสนับสนุน (No Sponsor, Product Sponsor ฯลฯ), มูลค่าแบรนด์สินค้า, วิธีรับของ, ค่าใช้จ่ายจัดส่งต่อหัว (Logistics Cost)
+    *   *การเดินทางออกนอกสถานที่*: เงื่อนไขการเดินทาง (BTS Distance, กรุงเทพ, นอกกรุงเทพ), ค่าพาหนะ/ค่าเดินทางรวมสำรองจ่าย (Reviewer Travel Expense), รายละเอียดสถานที่ (Location Details), ระยะเวลาจัดงาน (Event Duration)
+    *   *บทบาท*: เลือกอีเมลของ Planner และ Buyer ประจำแคมเปญ
+    *   *ข้อตกลง*: ข้อกำหนดท้ายเอกสาร (Terms & Conditions)
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **Travel Expenses Binding**: บันทึกข้อมูลค่าพาหนะ/ค่าเดินทาง และค่าขนส่งสินค้าลงระบบเพื่อนำไปประมวลผลร่วมเป็นต้นทุนอื่นๆ (Other Costs) ของ Dealsheet ในภายหลัง
+    2.  **Access Control Assignment**: ระบบจับคู่ ID บัญชีอีเมลกับสิทธิ์การดูแลโครงการ เพื่ออนุญาตให้แสดงผลและทำรายการในหน้า Tracker และ Dealsheet ของตนเอง
+*   **ข้อมูลขาออก (Output)**:
+    *   ข้อมูลผู้ดูแลระบบและเงื่อนไขจัดส่งผูกติดกับ Brief ID
+    *   เงื่อนไขสัญญามาตรฐานต่อท้ายแสดงผลบนหน้ารายละเอียด Brief
+
+---
+
+## 2. ฟังก์ชันระบบจัดการรายชื่อแคนดิเดต (Example List & Candidates Management)
+
+### 2.1 ค้นหาและคัดกรองรายชื่อ (Candidate Discovery & Filters)
+*   **วัตถุประสงค์**: คัดเลือกและจับคู่รายชื่ออินฟลูเอนเซอร์ที่เหมาะสมเพื่อนำเสนอลูกค้า
+*   **ข้อมูลขาเข้า (Input)**:
+    *   ข้อความสำหรับใช้ค้นหา (Search Query) เช่น ค้นหาตาม Username, ชื่อจริง, ประเภทงาน
+    *   ตัวกรองตามชื่อผู้วางแผน (Planner) และผู้ประสานงาน (Buyer)
+    *   ตัวเลือกแพลตฟอร์มและยอดผู้ติดตาม
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **Filter Logic**: ระบบประมวลผลกรองข้อมูลผ่านฟังก์ชัน `useMemo()` โดยนำข้อมูลใน `influencerSeed` มาจับคู่ข้อความ (Case-insensitive matching) กับ Query String
+    2.  **Follower Formatting**: แปลงตัวเลขผู้ติดตามหลักแสนหลักล้านให้อยู่ในฟอร์แมตกระชับ เช่น 100K หรือ 1.2M อัตโนมัติด้วยฟังก์ชัน `formatNumber()`
+*   **ข้อมูลขาออก (Output)**:
+    *   ตารางรายชื่อแคนดิเดตที่แสดงตรงกับเกณฑ์การค้นหาในหน้า Listing Page
+    *   จำนวนแคนดิเดตที่พบจริงเปรียบเทียบกับจำนวน KOL ทั้งหมด
+
+### 2.2 ระบบเคลื่อนย้ายและยืนยันรายชื่อ (Shortlist Flow Manager)
+*   **วัตถุประสงค์**: เพื่อย้ายรายชื่อ KOL ที่ผ่านการพิจารณาเสนอราคา เข้าสู่ตารางยืนยันการประสานงานจริง
+*   **ข้อมูลขาเข้า (Input)**:
+    *   Checkbox ที่ถูกติ๊กหน้าชื่ออินฟลูเอนเซอร์
+    *   การคลิกปุ่ม "Confirm to Shortlist" หรือ "Move to Example List"
+*   **กระบวนการประมวลผล (Process)**:
+    1.  ระบบดึง IDs ของอินฟลูเอนเซอร์ที่ถูกเลือกจาก State `selectedExample`
+    2.  ทำการลบข้อมูลกลุ่มดังกล่าวออกจาก Example List Array
+    3.  เพิ่มข้อมูลอินฟลูเอนเซอร์กลุ่มดังกล่าวเข้าสู่ตาราง Short List Array
+    4.  ล้างค่า (Reset) รายการเช็คบ็อกซ์ที่เคยถูกเลือกให้เป็นว่างเปล่า
+*   **ข้อมูลขาออก (Output)**:
+    *   การอัปเดตข้อมูลบนหน้า UI สลับแสดงตารางรายชื่อตามแท็บ Example List และ Short List
+    *   ตารางรายชื่อ Shortlist พร้อมปุ่มใช้งานฟังก์ชันส่งออกไฟล์
+
+### 2.3 การคัดลอกข้อมูลแบบคลิปบอร์ดสำหรับ Excel (Excel-Friendly TSV Copy)
+*   **วัตถุประสงค์**: เพื่อความสะดวกในการคัดลอกตารางรายชื่อ KOL นำไปใช้ในโปรแกรมตารางคำนวณภายนอกโดยไม่เสียรูปแบบคอลัมน์
+*   **ข้อมูลขาเข้า (Input)**:
+    *   การทำเครื่องหมายเลือกเช็คบ็อกซ์รายชื่อ KOL ในตาราง
+    *   การกดปุ่ม "Copy to clipboard"
+*   **กระบวนการประมวลผล (Process)**:
+    1.  ระบบดึงข้อมูล KOL ในอาเรย์ที่ระบุ `id`
+    2.  ใช้ฟังก์ชันลบเครื่องหมายพิเศษ `@` ออกจากหน้า Username เพื่อหลีกเลี่ยงข้อผิดพลาดเรื่องฟังก์ชันสูตรของโปรแกรม Excel
+    3.  แปลงแถวข้อมูลทีละบรรทัดให้เป็นสตริง โดยแต่ละคอลัมน์ข้อมูล (ลำดับ, ชื่อ, ลิงก์ช่องทาง, ยอดผู้ติดตาม, ช่องทางติดต่อ, ข้อมูล SOW, เงื่อนไขเพิ่มเติม) จะถูกคั่นด้วยอักขระแท็บ (`\t` - Tab Character)
+    4.  รวมแถวทั้งหมดเข้าด้วยกันโดยแยกบรรทัดใหม่ด้วยอักขระ `\n`
+    5.  เรียกใช้ฟังก์ชัน `navigator.clipboard.writeText(tsvData)` เพื่อจัดเก็บข้อมูลเข้าสู่หน่วยความจำของคลิปบอร์ดระบบปฏิบัติการ
+*   **ข้อมูลขาออก (Output)**:
+    *   ข้อมูลตารางที่คัดลอกลงใน Clipboard
+    *   Toast Message แสดงข้อความการคัดลอกสำเร็จแจ้งเตือนแก่ผู้ใช้
+
+---
+
+## 3. ฟังก์ชันระบบจัดการส่วนคำนวณงบ Dealsheet (Dealsheet & Financial Operations)
+
+### 3.1 การคำนวณต้นทุน กำไร และงบประมาณโครงการ (Cost & Margin Processing)
+*   **วัตถุประสงค์**: ประเมินความคุ้มค่าทางการเงิน คำนวณต้นทุนรวม ราคาเสนอขาย และเป้าหมายกำไรของบริษัทแบบ Real-time
+*   **ข้อมูลขาเข้า (Input)**:
+    *   งบประมาณโครงการโดยรวมที่ได้รับ (Total Budget)
+    *   *ข้อมูลต้นทุนทางการเงินของ KOL แต่ละคน*:
+        *   ค่าตัวสุทธิ (Raw Cost)
+        *   ราคาค่าบริการเสริมของอินฟลูเอนเซอร์ (Add-on Costs): ค่าลิขสิทธิ์โฆษณา (Buyout Fee), ค่าบูสต์โพสต์, ค่าเดินทาง, ค่าใช้จ่ายอื่นๆ
+        *   ราคาเสนอขายลูกค้าของอินฟลูเอนเซอร์ย่อย (Client Price / Selling Price): ราคาเสนอขายเบื้องต้น, ค่าโฆษณาแอดเสนอขายลูกค้า, ค่าลิขสิทธิ์เสนอขายลูกค้า, ค่าโฆษณาบูสต์โพสต์เสนอขายลูกค้า, ค่าเดินทางเสนอขายลูกค้า
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **คำนวณต้นทุนสะสมต่อคน (Net Cost)**:
+        $$\text{Net Cost} = \text{Raw Cost} + \text{Buyout Fee} + \text{Boost Cost} + \text{Travel Cost} + \text{Other Cost}$$
+    2.  **คำนวณราคาเสนอขายสะสมต่อคน (Net Selling Price)**:
+        $$\text{Net Selling Price} = \text{Client Price} + \text{Client Buyout Fee} + \text{Client Boost Budget} + \text{Client Travel Cost} + \text{Client Other Cost}$$
+    3.  **คำนวณจำนวนกำไรขั้นต้น (Margin Amount)**:
+        $$\text{Margin Amount} = \text{Net Selling Price} - \text{Net Cost}$$
+    4.  **คำนวณร้อยละกำไร (Margin %)**:
+        $$\text{Margin (\%)} = \left( \frac{\text{Margin Amount}}{\text{Net Selling Price}} \right) \times 100$$
+    5.  **คำนวณยอดเงินงบประมาณภาพรวม**:
+        $$\text{Total Cost of Campaign} = \sum \text{Net Cost of all KOLs}$$
+        $$\text{Remaining Budget} = \text{Total Budget} - \text{Total Cost of Campaign}$$
+    6.  **Budget Check Alert**: หาก `Remaining Budget` มีค่าน้อยกว่า `0` (งบเกิน) ระบบจะทำการเปลี่ยนคลาส CSS ของแถบแจ้งยอดเงินงบประมาณคงเหลือเป็นสีแดงเตือนและแสดงไอคอนข้อผิดพลาด
+*   **ข้อมูลขาออก (Output)**:
+    *   การปรับปรุงตัวเลขสรุปยอดเงินและกำไรในแผงข้อมูลแสดงผล (Dealsheet Header Panels) แบบเรียลไทม์ทันทีที่มีการเปลี่ยนแปลงยอดตัวเลขในช่องกรอก
+    *   แถบแสดงผลสีและสัญลักษณ์ความเสี่ยงเรื่องงบประมาณเกิน (Budget Overrun Alert)
+
+### 3.2 ขั้นตอนการตรวจสอบและเจรจาจ้างงาน (Negotiation Status Workflows)
+*   **วัตถุประสงค์**: เพื่อให้ผู้ประสานงานอินฟลูเอนเซอร์ (Buyer) บันทึกและระบุสถานะความคืบหน้าของการเจรจาและเซ็นสัญญาว่าจ้างจริง
+*   **ข้อมูลขาเข้า (Input)**:
+    *   การเลือกเปลี่ยนป้ายสถานะผ่านดรอปดาวน์ในแถวของ KOL (Contact Status) เช่น Checking Availability, Negotiating, Accepted, Wait for Sign, Signed, Done
+*   **กระบวนการประมวลผล (Process)**:
+    1.  ระบบดึงค่าสถานะที่ถูกกดเลือกมาเปลี่ยนประวัติสถานะใน State ของอินฟลูเอนเซอร์ในระบบ
+    2.  คำนวณสแกนจำนวนอินฟลูเอนเซอร์ทั้งหมดในแคมเปญที่มีสถานะเป็น `Selected`
+*   **ข้อมูลขาออก (Output)**:
+    *   ป้ายสีแสดงสถานะการดีลงาน (Status Badges) เปลี่ยนรูปแบบในแถวตาราง
+    *   จำนวนยอดรวม KOL ที่ดีลสำเร็จเพิ่มขึ้นในข้อมูลสรุปแคมเปญดีลซีท
+
+---
+
+## 4. ฟังก์ชันการส่งออกไฟล์ข้อมูลโครงการ (File & Document Export Services)
+
+### 4.1 การส่งออกรายงานแคนดิเดตเป็นไฟล์ตาราง (CSV Export)
+*   **วัตถุประสงค์**: บันทึกรายชื่อและรายละเอียดประสิทธิภาพของแคนดิเดตออกเป็นไฟล์ `.csv`
+*   **ข้อมูลขาเข้า (Input)**:
+    *   อาเรย์ข้อมูลอินฟลูเอนเซอร์ทั้งหมดในรายการเลือกแคนดิเดตปัจจุบัน
+    *   การกดปุ่มสั่ง "Export Shortlist (.csv)"
+*   **กระบวนการประมวลผล (Process)**:
+    1.  สร้างหัวตาราง (Header row): `Username,Platform,Followers,ER,Avg Likes,Avg Views,Character`
+    2.  ลูปประมวลผลดึงค่าตัวแปรในคอลัมน์ของ KOL มาจัดเรียงคั่นด้วยเครื่องหมายจุลภาค (Comma `,`) และแยกแถวด้วยอักขระ `\n`
+    3.  จัดทำข้อมูลให้อยู่ในรูปแบบประเภท Binary Object (Blob) ชนิด `"text/csv"`
+    4.  สร้างลิงก์ดาวน์โหลดชั่วคราวแล้วสั่งคลิกอัตโนมัติ จากนั้นทำลายลิงก์ทิ้งทันที
+*   **ข้อมูลขาออก (Output)**:
+    *   ดาวน์โหลดไฟล์ตารางรายงานชื่อ `short-list.csv` หรือ `example-list-selected.csv` เก็บลงเครื่องผู้ใช้ทันที
+
+### 4.2 ระบบเลือกเทมเพลต Proposal นำเสนอผลงาน (Proposal PPTX Export)
+*   **วัตถุประสงค์**: ดึงและส่งมอบลิงก์สไลด์การนำเสนอโครงการตามประเภทแพ็กเกจของบรีฟแคมเปญให้โดยอัตโนมัติ
+*   **ข้อมูลขาเข้า (Input)**:
+    *   ข้อมูลประเภทของแพ็กเกจในโครงการบรีฟ
+    *   การกดปุ่ม "Export Proposal (.pptx)"
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **Package Filtering Check**: สแกนหาคำระบุแพ็กเกจในโครงการ หากเป็นแพ็กเกจที่มีการกำหนดเงื่อนไขผลลัพธ์หรือยอดประเมินผล (มีคำว่า `"KPI"` หรือติ๊กเลือกหัวข้อ Standard KPI)
+    2.  **Routing Link Selector**:
+        *   กรณีเป็นแคมเปญปกติ (Standard): ระบบดึงลิงก์ Proposal งานปกติ: `https://docs.google.com/presentation/d/11CnO6DySSr7OQvtVEJZcAI0LJKBp7n2RCuLH5lQSfMc/edit`
+        *   กรณีมีเงื่อนไข KPI พ่วงอยู่ (KPI package): ระบบจะทำการสับเปลี่ยนไปเรียกลิงก์ Proposal นำเสนอผลลัพธ์: `https://docs.google.com/presentation/d/1toI8ovvmuFr-bH7LdqSo4h-9-wFcSzen/edit`
+    3.  เปิดลิงก์เป้าหมายในหน้าต่างเบราว์เซอร์ใหม่ผ่านฟังก์ชัน `window.open(url, "_blank")`
+*   **ข้อมูลขาออก (Output)**:
+    *   เบราว์เซอร์เปิดแท็บใหม่ไปยังสไลด์เทมเพลตสำหรับเริ่มทำงานนำเสนอผลงานตามเงื่อนไขของลูกค้า
+
+---
+
+## 5. ฟังก์ชันระบบจัดการฐานข้อมูลลูกค้า (Customer Database Management)
+
+### 5.1 การบันทึก เพิ่มลูกค้า และประวัติแคมเปญ (Customer Record & Archiving)
+*   **วัตถุประสงค์**: จัดเก็บรายชื่อลูกค้ารายย่อยและบริษัท พร้อมเก็บบันทึกรวบรวมประวัติโครงการบรีฟสะสม
+*   **ข้อมูลขาเข้า (Input)**:
+    *   *ข้อมูลการเพิ่มลูกค้า*: ชื่อบริษัท/ลูกค้าใหม่, ลิงก์รูปภาพตัวแทน (Image URL), ประเภทลูกค้า (Key Account / Non-Key Account)
+*   **กระบวนการประมวลผล (Process)**:
+    1.  **ID Generator**: สุ่มสร้างค่ารหัสลูกค้าใหม่แบบไม่ซ้ำตามรูปแบบ `CUST-` ตามด้วยตัวเลขสามหลัก
+    2.  **Date Timestamping**: เรียกใช้วันที่ปัจจุบันในการบันทึกข้อมูล วันที่เข้าร่วมระบบ (Created Date)
+    3.  **Brief Relational Mapping**: เมื่อผู้ใช้เข้าสู่หน้ารายละเอียดของลูกค้า ระบบจะนำไอดีลูกค้า (Customer ID) ไปประมวลผลสแกนฐานข้อมูลแคมเปญและดึงบรีฟทั้งหมดที่มีรหัสลูกค้าตรงกันจัดแยกเป็นตารางข้อมูลประวัติลูกค้าคนนั้น ๆ
+*   **ข้อมูลขาออก (Output)**:
+    *   ลูกค้าใหม่ลงทะเบียนพร้อมภาพโปรไฟล์แสดงในหน้าจัดการข้อมูลลูกค้า
+    *   ตารางสรุปประวัติโครงการและข้อมูลแคมเปญทั้งหมดของลูกค้าแต่ละคน
