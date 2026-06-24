@@ -6,30 +6,207 @@ import {
 } from "lucide-react";
 
 // Initial Seed Data (if localStorage is empty)
-const defaultTiers = ["1K - 5K", "5K - 10K", "10K - 50K", "50K - 100K", "100K+"];
-const PLATFORMS = ["Instagram", "Facebook", "X/Twitter", "Application", "E-Commerce App"];
+const PLATFORMS = ["Instagram", "Facebook", "X/Twitter", "Application", "E-Commerce App", "TikTok", "Lemon8"];
 
-const defaultCategories = [
+const standardTiers = ["1K - 5K", "5K - 10K", "10K - 50K", "50K - 100K", "100K+"];
+const tiktokTiers = [
+  "1K-5K (Review)", "1K-5K (Dance)", 
+  "5K-10K (Review)", "5K-10K (Dance)", 
+  "10K-50K (Review)", "10K-50K (Dance)", 
+  "50K-100K (Review)", "50K-100K (Dance)", 
+  "100K+ (Review)", "100K+ (Dance)"
+];
+
+const igFbCategories = [
   {
     category: "Social Cost",
-    items: [{ id: "sc1", topic: "Photo Post", rates: ["100", "200", "450", "2000", "3000"], spanAll: false }]
+    items: [
+      { id: "sc1", topic: "IG/Twitter", rates: ["100", "200", "450", "2,000", "3,000"] },
+      { id: "sc2", topic: "Facebook", rates: ["50", "100", "150", "400", "RateCard"] }
+    ]
+  },
+  {
+    category: "Special Cost",
+    items: [
+      { id: "spc1", topic: "premium ดูดี ดูแพง (Multi photo)", rates: ["500", "500", "700", "1,500", "-"] },
+      { id: "spc2", topic: "อายุ 30+ (Multi photo)", rates: ["500", "500", "1,000", "1,000", "-"] },
+      { id: "spc3", topic: "แม่และเด็ก (ลูกอ่อน)", rates: ["1,600", "1,600", "2,400", "Rate Card", "Rate Card"] },
+      { id: "spc4", topic: "Healthy", rates: ["500", "1,000", "1,200", "-", "-"] },
+      { id: "spc5", topic: "Before-after ผลิตภัณฑ์เดียว", rates: ["300", "300", "500", "700", "1,000"] },
+      { id: "spc6", topic: "นำรูปไปใช้ต่อ 3 เดือน", rates: ["300", "500", "500", "500", "-"] },
+      { id: "spc7", topic: "cover dance", rates: ["500", "500", "500", "-", "-"] },
+      { id: "spc8", topic: "gamer (FB)", rates: ["-", "1,000", "-", "-", "-"] },
+      { id: "spc9", topic: "คนท้องถิ่น ผญ", rates: ["500", "500", "700", "-", "-"] },
+      { id: "spc10", topic: "สาย Y นิยาย (Twitter)", rates: ["300", "500", "1,000", "-", "-"] },
+      { id: "spc11", topic: "2SKU Photo", rates: ["300", "-", "500", "-", "-"] },
+      { id: "spc12", topic: "2SKU VDO", rates: ["500", "-", "700", "-", "-"] },
+      { id: "spc13", topic: "คนท้องถิ่นผู้ชาย", rates: ["500", "500", "700", "1,000", "-"] },
+      { id: "spc14", topic: "Foodie", rates: ["500", "1,000", "1,700", "3,000", "-"] },
+      { id: "spc15", topic: "แฟนคลับ (X Twitter)", rates: ["200", "500", "700", "-", "-"] }
+    ]
   },
   {
     category: "Support Cost",
-    items: [{ id: "sp1", topic: "Story", rates: ["300", "500", "700", "1000", "1500"], spanAll: false }]
+    items: [
+      { id: "sup1", topic: "Photos", rates: ["400", "650", "900", "1,200", "1,500"] },
+      { id: "sup2", topic: "VDO", rates: ["900", "1,200", "1,500", "2,000", "3,000"] },
+      { id: "sup3", topic: "Only story", rates: ["300", "500", "700", "1,000", "1,500"] },
+      { id: "sup4", topic: "Artwork", rates: ["300", "500", "700", "1,000", "1,500"] },
+      { id: "sup5", topic: "Share post", rates: ["100", "200", "300", "500", "1,000"] },
+      { id: "sup6", topic: "Trend / Seeding comment", rates: ["50", "100", "150", "200", "300"] },
+      { id: "sup7", topic: "Trend / Seeding comment + photo", rates: ["100", "200", "300", "400", "500"] },
+      { id: "sup8", topic: "Seeding Download App/ Rating App /Comment", rates: ["200\n*Not Commit Follower*", "-", "-", "-", "-"] },
+      { id: "sup9", topic: "Seeding Photo E-COMMERCE APP", rates: ["300\n*Not Commit Follower*", "-", "-", "-", "-"] },
+      { id: "sup10", topic: "Content Blog / Group ตั้งโพสต์", rates: ["1,000", "1,500", "2,000", "RateCard", "RateCard"] }
+    ]
+  },
+  {
+    category: "Via Cost",
+    items: [
+      { id: "via1", topic: "Story", rates: ["200", "200", "300", "500", "1,000"] },
+      { id: "via2", topic: "Via", rates: ["200", "200", "200", "300", "1,000"] }
+    ]
+  },
+  {
+    category: "Other Cost",
+    items: [
+      { id: "oc1", topic: "Gencode/Add Ads (% จากค่าตัว)", rates: ["50%", "50%", "30%", "25%", "20%"] },
+      { id: "oc2", topic: "Buy Out (30 days) (% จากค่าตัว)", rates: ["50%", "50%", "50%", "50%", "30%"] },
+      { id: "oc3", topic: "SKU ชิ้นต่อไป", rates: ["500", "-", "700", "-", "Rate Card"] },
+      { id: "oc4", topic: "ค่า OT OP", rates: ["ครึ่งวัน\nอิงตาม จำนวนอินฟูล\n1-15 คน : กัน OT 1,500 บาท\n15-30 คน : กัน OT 3,000 บาท\n\nเต็มวัน\nจำนวนอินฟูล\n1-15 คน : กัน OT 2,500 บาท\n15-30 คน : กัน OT 5,000 บาท\n\nNote: กรณีเป็น งาน Shopping List Rate Card ที่มีการออกนอกสถานที่ หรือ ต้องมีค่า OT ให้ OP ให้ใส่ค่า OT ในช่อง other cost (โดยระบุเป็นค่า OT OP ไปเลย) สูตรคือ 1% จาก rawcost  ไม่ต่ำกว่า 500 บาท (ไม่ต้องคิด fee20%)\n>> ให้ต่ำสุดที่ 500 บาท / สูงสุดไม่เกิน 2,500 บาท <<", "-", "-", "-", "-"] }
+    ]
+  },
+  {
+    category: "Travel Expenses",
+    items: [
+      { id: "te1", topic: "BTS < 1 KM", rates: ["500", "-", "-", "-", "-"] },
+      { id: "te2", topic: "BTS < 5 KM - 10 KM", rates: ["1,000", "-", "-", "-", "-"] },
+      { id: "te3", topic: "BTS > 10 KM", rates: ["1,500", "-", "-", "-", "-"] },
+      { id: "te4", topic: "กรณีนอกกรุงเทพ คิด Case by Case", rates: ["Case by Case", "-", "-", "-", "-"] }
+    ]
+  }
+];
+
+const tiktokCategories = [
+  {
+    category: "Social Cost",
+    items: [
+      { id: "tk_sc1", topic: "TikTok", rates: ["50", "50", "125", "125", "325", "325", "625", "625", "1,250", "1,250"] }
+    ]
+  },
+  {
+    category: "Special Cost",
+    items: [
+      { id: "tk_spc1", topic: "หมอ,เภสัช", rates: ["-", "-", "-", "-", "6,000", "-", "-", "-", "-", "-"] },
+      { id: "tk_spc2", topic: "แม่และเด็ก (ลูกอ่อน)", rates: ["-", "-", "3,000", "-", "5,000", "-", "-", "-", "-", "-"] },
+      { id: "tk_spc3", topic: "Healthy", rates: ["-", "-", "2,500", "-", "2,500", "-", "2,000", "-", "3,000", "-"] },
+      { id: "tk_spc4", topic: "ถ่ายคู่แมว (พันธ์นอก)", rates: ["-", "-", "-", "-", "2,700", "-", "5,500", "-", "-", "-"] },
+      { id: "tk_spc5", topic: "นักรีวิวหนัง", rates: ["-", "-", "-", "-", "1,500", "-", "2,000", "-", "-", "-"] },
+      { id: "tk_spc6", topic: "เล่นกีฬา/fitness", rates: ["-", "-", "1,500", "-", "2,000", "-", "3,000", "-", "4,000", "-"] },
+      { id: "tk_spc7", topic: "นำรูปไปใช้ต่อ 3 เดือน", rates: ["500", "-", "1,000", "-", "-", "-", "-", "-", "Rate Card", "-"] },
+      { id: "tk_spc8", topic: "Tiktok คนเลี้ยงหมา", rates: ["-", "-", "-", "-", "2,000", "-", "-", "-", "-", "-"] },
+      { id: "tk_spc9", topic: "สาย Y นิยาย", rates: ["500", "-", "-", "-", "1,000", "-", "-", "-", "-", "-"] },
+      { id: "tk_spc10", topic: "คนท้องถิ่นผู้ชาย", rates: ["-", "-", "-", "-", "1,000", "-", "2,000", "-", "-", "-"] },
+      { id: "tk_spc11", topic: "Foodie", rates: ["-", "-", "-", "-", "1,000", "-", "1,700", "-", "-", "-"] },
+      { id: "tk_spc12", topic: "affliate link/ติดตระกร้า", rates: ["500", "-", "500", "-", "1,000", "-", "1,500", "-", "-", "-"] },
+      { id: "tk_spc13", topic: "home decoration", rates: ["1,000", "-", "1,500", "-", "2,000", "-", "4,000", "-", "-", "-"] },
+      { id: "tk_spc14", topic: "Cooking", rates: ["700", "-", "1,000", "-", "1,500", "-", "2,000", "-", "-", "-"] },
+      { id: "tk_spc15", topic: "IT Gadget", rates: ["500", "-", "1,000", "-", "1,500", "-", "2,000", "-", "-", "-"] },
+      { id: "tk_spc16", topic: "คนทึ่มีรถยนต์ /รถจักรยานยนต์", rates: ["500", "-", "1,000", "-", "1,500", "-", "2,000", "-", "-", "-"] },
+      { id: "tk_spc17", topic: "นักเรียน นักศึกษา", rates: ["500", "-", "700", "-", "1,000", "-", "1,500", "-", "-", "-"] },
+      { id: "tk_spc18", topic: "แฟนคลับ", rates: ["500", "-", "700", "-", "1,000", "-", "1,500", "-", "-", "-"] },
+      { id: "tk_spc19", topic: "Travel", rates: ["1,000", "-", "1,500", "-", "2,000", "-", "4,000", "-", "-", "-"] },
+      { id: "tk_spc20", topic: "คู่รัก", rates: ["1,000", "-", "1,500", "-", "2,000", "-", "3,000", "-", "-", "-"] },
+      { id: "tk_spc21", topic: "คนอายุ 50+ คนสูงวัย", rates: ["2,000", "-", "3,500", "-", "4,500", "-", "6,000", "-", "-", "-"] },
+      { id: "tk_spc22", topic: "Plus Size", rates: ["500", "-", "800", "-", "1,200", "-", "2,000", "-", "-", "-"] }
+    ]
+  },
+  {
+    category: "Support Cost",
+    items: [
+      { id: "tk_sup1", topic: "Photos", rates: ["750", "870", "1,005", "1,125", "1,125", "1,305", "1,125", "1,425", "1,950", "2,250"] },
+      { id: "tk_sup2", topic: "VDO", rates: ["1,250", "1,450", "1,675", "1,875", "1,875", "2,175", "1,875", "2,375", "3,250", "4,250"] }
+    ]
+  },
+  {
+    category: "Via Cost",
+    items: [
+      { id: "tk_via1", topic: "Via", rates: ["200", "200", "300", "300", "500", "500", "500", "500", "1,000", "1,000"] }
+    ]
+  },
+  {
+    category: "Other Cost",
+    items: [
+      { id: "tk_oc1", topic: "Gencode/Add Ads (% จากค่าตัว)", rates: ["50%", "50%", "50%", "50%", "30%", "30%", "25%", "25%", "20%", "20%"] },
+      { id: "tk_oc2", topic: "Buy Out (30 days) (% จากค่าตัว)", rates: ["50%", "50%", "50%", "50%", "50%", "50%", "50%", "50%", "30%", "30%"] },
+      { id: "tk_oc3", topic: "TikTok Shop /SKU", rates: ["500", "-", "-", "-", "1,000", "-", "1,500", "-", "Rate Card", "-"] },
+      { id: "tk_oc4", topic: "SKU ชิ้นต่อไป", rates: ["500", "-", "-", "-", "700", "-", "-", "-", "Rate Card", "-"] }
+    ]
+  }
+];
+
+const lemon8Categories = [
+  {
+    category: "Support Cost",
+    items: [
+      { id: "lm_sup1", topic: "Photos", rates: ["1,000", "1,500", "2,000", "Rate card", "Rate card"] },
+      { id: "lm_sup2", topic: "VDO", rates: ["1,500", "2,000", "2,250", "Rate card", "Rate card"] }
+    ]
+  },
+  {
+    category: "Via Cost",
+    items: [
+      { id: "lm_via1", topic: "Via", rates: ["200", "300", "500", "-", "-"] }
+    ]
+  },
+  {
+    category: "Other Cost",
+    items: [
+      { id: "lm_oc1", topic: "Buy Out (30 days) (% จากค่าตัว)", rates: ["50%", "50%", "50%", "-", "-"] },
+      { id: "lm_oc2", topic: "SKU ชิ้นต่อไป", rates: ["500", "700", "-", "-", "-"] }
+    ]
   }
 ];
 
 function generateSeedData() {
-  return PLATFORMS.map((plat, idx) => ({
-    id: `SP-${1000 + idx}`,
-    name: `Standard ${plat} Pricing`,
-    platform: plat,
-    followerTiers: [...defaultTiers],
-    costTypes: JSON.parse(JSON.stringify(defaultCategories)),
+  const records = [];
+  let idCounter = 1001;
+
+  const igFbPlatforms = ["Instagram", "Facebook", "X/Twitter", "Application", "E-Commerce App"];
+
+  igFbPlatforms.forEach(plat => {
+    records.push({
+      id: `SP-${idCounter++}`,
+      name: `Standard ${plat} Pricing`,
+      platform: plat,
+      followerTiers: [...standardTiers],
+      costTypes: JSON.parse(JSON.stringify(igFbCategories)),
+      createdAt: new Date().toLocaleDateString(),
+      updatedAt: new Date().toLocaleDateString()
+    });
+  });
+
+  records.push({
+    id: `SP-${idCounter++}`,
+    name: `Standard TikTok Pricing`,
+    platform: "TikTok",
+    followerTiers: [...tiktokTiers],
+    costTypes: JSON.parse(JSON.stringify(tiktokCategories)),
     createdAt: new Date().toLocaleDateString(),
     updatedAt: new Date().toLocaleDateString()
-  }));
+  });
+
+  records.push({
+    id: `SP-${idCounter++}`,
+    name: `Standard Lemon8 Pricing`,
+    platform: "Lemon8",
+    followerTiers: [...standardTiers],
+    costTypes: JSON.parse(JSON.stringify(lemon8Categories)),
+    createdAt: new Date().toLocaleDateString(),
+    updatedAt: new Date().toLocaleDateString()
+  });
+
+  return records;
 }
 
 function cn(...classes) {
@@ -53,8 +230,8 @@ export default function StandardPricingFlow() {
 
   useEffect(() => {
     // Load from localStorage
-    const savedRecords = localStorage.getItem("kol_standard_pricing");
-    const savedLogs = localStorage.getItem("kol_standard_pricing_logs");
+    const savedRecords = localStorage.getItem("kol_standard_pricing_v4");
+    const savedLogs = localStorage.getItem("kol_standard_pricing_logs_v4");
     
     if (savedRecords) {
       setRecords(JSON.parse(savedRecords));
@@ -71,8 +248,8 @@ export default function StandardPricingFlow() {
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("kol_standard_pricing", JSON.stringify(records));
-      localStorage.setItem("kol_standard_pricing_logs", JSON.stringify(logs));
+      localStorage.setItem("kol_standard_pricing_v4", JSON.stringify(records));
+      localStorage.setItem("kol_standard_pricing_logs_v4", JSON.stringify(logs));
     }
   }, [records, logs, isLoaded]);
 
