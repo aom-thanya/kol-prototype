@@ -226,6 +226,49 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
     setSelectModalOpen(true);
   };
 
+  const applyStandardPricing = (inf) => {
+    const defaultCost = inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, "") : "";
+    if (!inf) return defaultCost;
+    
+    try {
+      const records = JSON.parse(localStorage.getItem("kol_standard_pricing_v4"));
+      if (!records) return defaultCost;
+
+      let platKey = inf.platform;
+      if (platKey === "X" || platKey === "Twitter") platKey = "X/Twitter";
+      
+      const record = records.find(r => r.platform.toLowerCase() === platKey.toLowerCase());
+      if (!record) return defaultCost;
+
+      const fw = parseInt(inf.followers) || 0;
+      let tierIdx = 4; // default 100K+
+      if (platKey === "TikTok") {
+        const isDance = (inf.character || "").toLowerCase().includes("dance");
+        if (fw < 5000) tierIdx = isDance ? 1 : 0;
+        else if (fw < 10000) tierIdx = isDance ? 3 : 2;
+        else if (fw < 50000) tierIdx = isDance ? 5 : 4;
+        else if (fw < 100000) tierIdx = isDance ? 7 : 6;
+        else tierIdx = isDance ? 9 : 8;
+      } else {
+        if (fw < 5000) tierIdx = 0;
+        else if (fw < 10000) tierIdx = 1;
+        else if (fw < 50000) tierIdx = 2;
+        else if (fw < 100000) tierIdx = 3;
+        else tierIdx = 4;
+      }
+
+      const socialCostCat = record.costTypes.find(c => c.category === "Social Cost");
+      if (socialCostCat && socialCostCat.items.length > 0) {
+        let item = socialCostCat.items.find(i => i.topic.toLowerCase().includes(platKey.toLowerCase()) || i.topic.toLowerCase().includes(inf.platform.toLowerCase())) || socialCostCat.items[0];
+        if (item && item.rates[tierIdx] && item.rates[tierIdx] !== "-") {
+          const rate = item.rates[tierIdx].replace(/[^0-9]/g, "");
+          if (rate) return rate;
+        }
+      }
+    } catch(e) {}
+    return defaultCost;
+  };
+
   const handleSelectInfluencer = (inf) => {
     setSelectModalOpen(false);
 
@@ -241,7 +284,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
         channel: inf ? inf.platform : "Other",
         contact: inf?.contacts ? inf.contacts.map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ") : "",
         contacts: inf?.contacts ? [...inf.contacts] : [],
-        rawCost: inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, "") : "",
+        rawCost: applyStandardPricing(inf),
         creditTerm: "",
         paymentType: "",
         services: {},
@@ -289,7 +332,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
       channel: inf ? inf.platform : "Other",
       contact: inf?.contacts ? inf.contacts.map(x => `${x.type === "Tel" ? "เบอร์" : x.type}: ${x.value}${x.name ? ` (${x.name})` : ""}`).join(", ") : "",
       contacts: inf?.contacts ? [...inf.contacts] : [],
-      rawCost: inf?.rawCost ? inf.rawCost.replace(/[^0-9]/g, "") : "",
+      rawCost: applyStandardPricing(inf),
       creditTerm: "",
       paymentType: "",
       services: {},

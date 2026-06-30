@@ -547,6 +547,96 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                           )}
                         </div>
                       </div>
+
+                      {/* Brand Support & On-Site Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2">
+                        <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5">
+                          <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                            <Coins className="h-4 w-4 text-[#6D5DF6]" /> Brand Support & Delivery
+                          </h5>
+                          <div className="space-y-2.5">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-400">Support Type:</span>
+                              <span className="font-bold text-slate-800">
+                                {sow.brandSupportType || "No Sponsor"}
+                                {sow.brandSupportType === "Other" && sow.brandSupportTypeOther && ` (${sow.brandSupportTypeOther})`}
+                              </span>
+                            </div>
+                            {sow.productReceiveMethod && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Receive Method:</span>
+                                <span className="font-semibold text-slate-800">{sow.productReceiveMethod}</span>
+                              </div>
+                            )}
+                            {sow.logisticsPerInfluencer ? (
+                              <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
+                                <span className="text-slate-400">Logistics Cost / KOL:</span>
+                                <span className="font-bold text-[#6D5DF6]">{Number(sow.logisticsPerInfluencer).toLocaleString()} บาท</span>
+                              </div>
+                            ) : null}
+                            {sow.reimbursement && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Reimbursement Type:</span>
+                                <span className="font-semibold text-slate-800">{sow.reimbursement}</span>
+                              </div>
+                            )}
+                            {sow.productValue ? (
+                              <div className="flex justify-between items-center border-t border-slate-200/50 pt-2 font-semibold">
+                                <span className="text-slate-400 font-normal">Product Value:</span>
+                                <span className="font-bold text-[#6D5DF6]">{Number(sow.productValue).toLocaleString()} บาท</span>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5">
+                          <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                            <MapPin className="h-4 w-4 text-[#6D5DF6]" /> On-Site & Travel Details
+                          </h5>
+                          <div className="space-y-2.5">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-400">Travel Required:</span>
+                              <span className={cn(
+                                "text-xs font-bold px-3 py-1 rounded-full border",
+                                sow.requireTravel && sow.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"
+                              )}>
+                                {sow.requireTravel || "ไม่ต้อง"}
+                              </span>
+                            </div>
+                            {sow.requireTravel && sow.requireTravel.includes("ต้อง") && (
+                              <>
+                                <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
+                                  <span className="text-slate-400">On-Site Type:</span>
+                                  <span className="font-semibold text-slate-800">{sow.onSiteType || "-"}</span>
+                                </div>
+                                {sow.onSiteType === "เข้าร่วม Event" && sow.eventDuration && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-400">Event Duration:</span>
+                                    <span className="font-semibold text-slate-800">{sow.eventDuration} Hours</span>
+                                  </div>
+                                )}
+                                {sow.reviewerTravelExpense && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-400">Travel Expense:</span>
+                                    <span className="font-semibold text-slate-800">{sow.reviewerTravelExpense}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                  <span className="text-slate-400">Buddy Frontline Support:</span>
+                                  <span className="font-semibold text-slate-800">{sow.buddyReviewSupport || "No"}</span>
+                                </div>
+                                {sow.locationDetails && (
+                                  <div className="border-t border-slate-200/50 pt-2 text-xs">
+                                    <span className="text-slate-400 font-bold block mb-1">Location Details</span>
+                                    <p className="text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed whitespace-pre-wrap">{sow.locationDetails}</p>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   ))
                 ) : (
@@ -560,77 +650,14 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
 
           {activeSubTab === "logistics" && (
             <div className="space-y-6 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2.5">
-                    <Coins className="h-5 w-5 text-[#6D5DF6]" />
-                    Brand Support & Delivery
-                  </h4>
-                  <div className="space-y-3.5 text-base">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Support Type:</span>
-                      <span className="font-bold text-slate-800">
-                        {brief.brandSupportType || "No Sponsor"}
-                        {brief.brandSupportType === "Other" && brief.brandSupportTypeOther && ` (${brief.brandSupportTypeOther})`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Receive Method:</span>
-                      <span className="font-semibold text-slate-850">{brief.productReceiveMethod || "-"}</span>
-                    </div>
-                    {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(brief.productReceiveMethod) && (
-                      <div className="flex justify-between items-center border-t border-slate-200/50 pt-3">
-                        <span className="text-slate-500">Logistics Cost / KOL:</span>
-                        <span className="font-bold text-[#6D5DF6]">
-                          {brief.logisticsPerInfluencer ? formatCurrency(brief.logisticsPerInfluencer) : "-"}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center border-t border-slate-200/50 pt-3 font-semibold">
-                      <span className="text-slate-500 font-normal">Product Value:</span>
-                      <span className="font-bold text-[#6D5DF6]">
-                        {brief.productValue ? formatCurrency(brief.productValue) : "-"}
-                      </span>
-                    </div>
+              {brief.condition && (
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3.5">
+                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Campaign Conditions & Remarks</h4>
+                  <div className="text-slate-700 bg-white border border-slate-200 p-5 rounded-xl whitespace-pre-wrap leading-relaxed text-sm shadow-3xs">
+                    {brief.condition}
                   </div>
                 </div>
-
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2.5">
-                    <MapPin className="h-5 w-5 text-[#6D5DF6]" />
-                    On-Site & Travel Details
-                  </h4>
-                  <div className="space-y-3.5 text-base">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Travel Required:</span>
-                      <span className={cn(
-                        "text-xs font-bold px-3 py-1 rounded-full border",
-                        brief.requireTravel && brief.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"
-                      )}>
-                        {brief.requireTravel || "ไม่ต้อง"}
-                      </span>
-                    </div>
-                    {brief.requireTravel && brief.requireTravel.includes("ต้อง") && (
-                      <>
-                        <div className="flex justify-between items-center border-t border-slate-200/50 pt-3">
-                          <span className="text-slate-500">On-Site Type:</span>
-                          <span className="font-semibold text-slate-800">{brief.onSiteType || "-"}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Travel Expense Reimbursement:</span>
-                          <span className="font-bold text-[#6D5DF6]">
-                            {brief.reviewerTravelExpense ? formatCurrency(brief.reviewerTravelExpense) : "-"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Buddy Frontline Support:</span>
-                          <span className="font-semibold text-slate-800">{brief.buddyReviewSupport || "No"}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>

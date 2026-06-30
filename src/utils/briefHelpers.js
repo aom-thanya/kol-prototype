@@ -82,5 +82,12 @@ export function generateScopeName(platforms = [], contentTypes = [], serviceScop
   if (contentStr) baseNameParts.push(`Create ${contentStr}`);
   if (platformStr) baseNameParts.push(contentStr ? `on ${platformStr}` : platformStr);
   
-  return baseNameParts.join(" ") || "Unnamed Scope";
+  let name = baseNameParts.join(" ");
+  
+  if (serviceScope?.viaRequired && serviceScope?.selectedVias && serviceScope.selectedVias.length > 0) {
+    const viaStr = serviceScope.selectedVias.join(" + ");
+    name = name ? `${name} via ${viaStr}` : `via ${viaStr}`;
+  }
+  
+  return name || "Unnamed Scope";
 }
