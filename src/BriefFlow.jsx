@@ -1623,7 +1623,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   const tabs = [
     { id: "overview", label: "Overview", icon: Folder },
     { id: "budget", label: "Budget & SOW Options", icon: Coins, count: activeOpt.scopeOfWorks?.length },
-    { id: "logistics", label: "Support & Logistics", icon: Truck },
+    { id: "logistics", label: "Conditions", icon: FileText },
     { id: "activity", label: "Activity Log", icon: History, count: brief.activityLog?.length }
   ];
 

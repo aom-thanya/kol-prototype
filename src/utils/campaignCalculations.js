@@ -95,9 +95,42 @@ export function getCampaignCalculations(brief, activeOptId) {
     
     const social = rates.social;
     const support = rates.support;
-    const logistics = logisticsFee;
-    const product = productValue;
-    const travel = travelExpense;
+
+    // Resolve logistics
+    let logistics = logisticsFee;
+    if (sow.logisticsPerInfluencer !== undefined && sow.logisticsPerInfluencer !== "") {
+      logistics = parseFloat(String(sow.logisticsPerInfluencer).replace(/,/g, '')) || 0;
+    }
+
+    // Resolve product
+    let product = productValue;
+    if (sow.brandSupportType !== undefined) {
+      if (sow.brandSupportType === "No Sponsor") {
+        if (sow.productReceiveMethod === "Influencer ซื้อเอง" && sow.reimbursement === "ไม่เบิก") {
+          product = 0;
+        } else {
+          product = parseFloat(String(sow.productValue || 0).replace(/,/g, '')) || 0;
+        }
+      } else if (sow.brandSupportType === "Brand Sponsor") {
+        product = 0; // sponsored
+      } else {
+        product = parseFloat(String(sow.productValue || 0).replace(/,/g, '')) || 0;
+      }
+    }
+
+    // Resolve travel
+    let travel = travelExpense;
+    if (sow.requireTravel !== undefined) {
+      if (sow.requireTravel === "ต้อง (มี On-site / Event / รับบริการ)") {
+        const expStr = String(sow.reviewerTravelExpense || "");
+        if (expStr.includes("500")) travel = 500;
+        else if (expStr.includes("1,000")) travel = 1000;
+        else if (expStr.includes("1,500")) travel = 1500;
+        else travel = parseFloat(expStr.replace(/,/g, '')) || 0;
+      } else {
+        travel = 0;
+      }
+    }
     
     const channelCost = social + support + product + travel + logistics;
     const allocationPercent = parseFloat(String(sow.allocationPercent || sow.allocation || 100).replace(/%/g, '')) || 100;

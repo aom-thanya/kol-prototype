@@ -351,30 +351,33 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
     }
   };
 
-  const getCostItemNote = (key) => {
+  const getCostItemNote = (key, chanId) => {
+    const activeOpt = brief.budgetOptions?.find(o => o.id === activeOptId) || brief.budgetOptions?.[0];
+    const sow = activeOpt?.scopeOfWorks?.find(s => s.id === chanId);
+    if (!sow) return null;
+
     if (key === "logistics") {
       let notes = [];
-      if (brief.productReceiveMethod) notes.push(brief.productReceiveMethod);
-      if (brief.logisticsPerInfluencer) notes.push(`฿${brief.logisticsPerInfluencer}`);
+      if (sow.productReceiveMethod) notes.push(sow.productReceiveMethod);
+      if (sow.logisticsPerInfluencer) notes.push(`฿${sow.logisticsPerInfluencer}`);
       return notes.join(" • ");
     }
     if (key === "product") {
       let notes = [];
-      if (brief.brandSupportType) notes.push(brief.brandSupportType);
-      if (brief.productValue) notes.push(`฿${brief.productValue}`);
+      if (sow.brandSupportType) notes.push(sow.brandSupportType);
+      if (sow.productValue) notes.push(`฿${sow.productValue}`);
       return notes.join(" • ");
     }
     if (key === "travel") {
       let notes = [];
-      if (brief.reviewerTravelExpense) {
-        if (brief.reviewerTravelExpense.includes(" Case by Case") && brief.customTravelExpense) {
-          notes.push(`ค่าเดินทาง: นอกกรุงเทพฯ (฿${brief.customTravelExpense})`);
-        } else {
-          notes.push(`ค่าเดินทาง: ${brief.reviewerTravelExpense}`);
-        }
+      if (sow.requireTravel) {
+        notes.push(sow.requireTravel.split(" ")[0]);
       }
-      if (brief.locationDetails) {
-        notes.push(`สถานที่: ${brief.locationDetails}`);
+      if (sow.reviewerTravelExpense) {
+        notes.push(`ค่าเดินทาง: ${sow.reviewerTravelExpense}`);
+      }
+      if (sow.locationDetails) {
+        notes.push(`สถานที่: ${sow.locationDetails}`);
       }
       return notes.join(" | ");
     }
@@ -711,9 +714,14 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
                     { label: "Via", key: "via" },
                     { label: "Others (Add Ads)", key: "other" }
                   ].map(costItem => (
-                    <div key={costItem.key} className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">{costItem.label}</span>
-                      <div className="flex items-center gap-2">
+                    <div key={costItem.key} className="flex justify-between items-start text-sm">
+                      <div>
+                        <span className="text-slate-500 font-medium block">{costItem.label}</span>
+                        {getCostItemNote(costItem.key, chan.id) && (
+                          <span className="text-[10px] text-slate-400 block max-w-[200px] leading-tight mt-0.5">{getCostItemNote(costItem.key, chan.id)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
                         <input
                           type="text"
                           value={chan[costItem.key] !== undefined && chan[costItem.key] !== null ? chan[costItem.key] : ""}
