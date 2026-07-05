@@ -14,7 +14,9 @@ export default function ProposalPage({ brief, onUpdateBrief, showToast }) {
   
   activeGroups.forEach(grp => {
     const tracker = brief.groupTrackers[grp];
-    const doneInfluencers = tracker.influencers.filter(inf => inf.contactStatus === "Selected");
+    const doneInfluencers = tracker.influencers.filter(inf => 
+      inf.contactStatus === "Selected" || inf.contactStatus === "Done" || inf.lot
+    );
     if (doneInfluencers.length > 0) {
       filteredTrackers[grp] = { ...tracker, influencers: doneInfluencers };
       totalDoneCount += doneInfluencers.length;

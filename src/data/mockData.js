@@ -477,6 +477,50 @@ export const briefsSeed = [
     "buddyReviewSupport": "",
     "condition": "แบรนด์ สามารถเลือก Influencer ได้ 1 ครั้ง\nแบรนด์ เป็นผู้ตรวจ Draft Content  โดยสามารถตรวจได้ 2 ครั้ง\nแบรนด์ ต้อง Sponsor Product\nBuddy Review เป็นผู้ประสานงานกับ Influencer\nรบกวนเช็ค รายละเอียด Condition ของ KOL รวมถึงราคา Boost Post / Boost fee\nแปะ Link ของ Platform ที่นำเสนอทุกช่องทาง",
     "createdAt": "2025-01-09",
+    "groups": [
+      {
+        "id": "Tiktok Review",
+        "name": "Tiktok Review",
+        "pillars": {
+          "Demographic": ["18-24 Female"],
+          "Location": ["Bangkok"],
+          "Occupation": ["Students"],
+          "Persona": ["Energetic"],
+          "StoryTelling": ["Genuine unboxing"]
+        },
+        "questions": ["ต้องการติดตะกร้า Tiktok Shop หรือไม่?", "มี Affiliate คอมมิชชั่นเท่าไหร่?"],
+        "sows": [
+          {
+            "id": "1",
+            "name": "Tiktok Review",
+            "platforms": ["TikTok"],
+            "followerReq": "5K - 50K",
+            "numInfluencers": "15"
+          }
+        ]
+      },
+      {
+        "id": "IG Reel Review",
+        "name": "IG Reel Review",
+        "pillars": {
+          "Demographic": ["25-34 Female"],
+          "Location": ["Bangkok"],
+          "Occupation": ["Office workers"],
+          "Persona": ["Elegant"],
+          "StoryTelling": ["Aesthetic routine"]
+        },
+        "questions": ["สามารถลง Reels ได้ตามเวลาที่ระบุหรือไม่?"],
+        "sows": [
+          {
+            "id": "2",
+            "name": "IG Reel Review",
+            "platforms": ["Instagram"],
+            "followerReq": "5K - 50K",
+            "numInfluencers": "10"
+          }
+        ]
+      }
+    ],
     "groupTrackers": {
       "Tiktok Review": {
         "influencers": [
@@ -519,7 +563,8 @@ export const briefsSeed = [
             },
             "detail": "เหมาะกับกลุ่มเป้าหมายผู้หญิงวัยทำงาน",
             "note": "",
-            "contactStatus": "Selected"
+            "contactStatus": "Done",
+            "lot": "Lot 1"
           },
           {
             "id": "inf-2",
@@ -601,7 +646,8 @@ export const briefsSeed = [
             },
             "detail": "บิวตี้บล็อกเกอร์ยอดนิยมช่วงนี้",
             "note": "",
-            "contactStatus": ""
+            "contactStatus": "Done",
+            "lot": "Lot 1"
           }
         ]
       },
@@ -826,7 +872,7 @@ export const briefsSeed = [
   },
   {
     "id": "BRD-2193",
-    "internalStatus": "Assign Planner/Buyer",
+    "internalStatus": "Rate Card List",
     "version": 1,
     "campaignName": "Mega Bangna Event",
     "customerId": "CUST-001",
@@ -856,11 +902,94 @@ export const briefsSeed = [
       "Instagram",
       "Tiktok"
     ],
-    "createdAt": "2025-05-10"
+    "createdAt": "2025-05-10",
+    "groups": [
+      {
+        "id": "Event Vlog",
+        "name": "Event Vlog",
+        "pillars": {
+          "Demographic": ["18 - 45 Male", "18 - 45 Female"],
+          "Location": ["Bangkok"],
+          "Occupation": ["Gamers", "IT Professionals"],
+          "Persona": ["Tech enthusiasts"],
+          "StoryTelling": ["Interactive vlog"]
+        },
+        "questions": ["มีของรางวัลแจกในบูธไหม?"],
+        "sows": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": ["TikTok"],
+            "followerReq": "10K - 100K",
+            "numInfluencers": "5"
+          }
+        ]
+      }
+    ],
+    "groupTrackers": {
+      "Event Vlog": {
+        "influencers": [
+          {
+            "id": "inf-kpi-1",
+            "accountName": "@bb_event",
+            "accountLink": "https://tiktok.com/@bb_event",
+            "follower": "150K",
+            "channel": "TikTok",
+            "contact": "Line: @bb_event",
+            "rawCost": "20000",
+            "creditTerm": "30",
+            "paymentType": "บริษัท",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {}
+          },
+          {
+            "id": "inf-kpi-2",
+            "accountName": "@nn_review",
+            "accountLink": "https://tiktok.com/@nn_review",
+            "follower": "85K",
+            "channel": "TikTok",
+            "contact": "Line: @nn_review",
+            "rawCost": "18000",
+            "creditTerm": "30",
+            "paymentType": "บุคคลธรรมดา",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {}
+          },
+          {
+            "id": "inf-kpi-3",
+            "accountName": "@lifestyle_karl",
+            "accountLink": "https://tiktok.com/@lifestyle_karl",
+            "follower": "45K",
+            "channel": "TikTok",
+            "contact": "Line: @karl_work",
+            "rawCost": "12000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Selected",
+            "services": {}
+          },
+          {
+            "id": "inf-kpi-4",
+            "accountName": "@travel_ping",
+            "accountLink": "https://tiktok.com/@travel_ping",
+            "follower": "60K",
+            "channel": "TikTok",
+            "contact": "Line: @ping_travel",
+            "rawCost": "15000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Pitching",
+            "services": {}
+          }
+        ]
+      }
+    }
   },
   {
     "id": "BRD-3001",
-    "internalStatus": "Assign Planner/Buyer",
+    "internalStatus": "Rate Card List",
     "version": 1,
     "campaignName": "Srichand Summer Collection",
     "customerId": "CUST-002",
@@ -888,7 +1017,82 @@ export const briefsSeed = [
     "platform": [
       "Tiktok"
     ],
-    "createdAt": "2025-06-01"
+    "createdAt": "2025-06-01",
+    "groups": [
+      {
+        "id": "Beauty Review",
+        "name": "Beauty Review",
+        "pillars": {
+          "Demographic": ["18 - 35 Female"],
+          "Location": ["Bangkok"],
+          "Occupation": ["Beauty Bloggers"],
+          "Persona": ["Trustworthy", "Detailed"],
+          "StoryTelling": ["Texture close-up"]
+        },
+        "questions": ["มีอาการแพ้ครีมไหม?"],
+        "sows": [
+          {
+            "id": "sow-beauty-1",
+            "name": "Beauty Review",
+            "platforms": ["TikTok"],
+            "followerReq": "10K - 50K",
+            "numInfluencers": "3",
+            "exampleCreators": [
+              {
+                "id": "inf_kpi_3",
+                "name": "Janet Beauty",
+                "username": "@janet_beauty",
+                "platform": "TikTok",
+                "followers": 45000,
+                "avatar": "https://i.pravatar.cc/160?img=11",
+                "selected": true
+              },
+              {
+                "id": "inf_kpi_4",
+                "name": "Ploy Makeup",
+                "username": "@ploy_makeup",
+                "platform": "TikTok",
+                "followers": 60000,
+                "avatar": "https://i.pravatar.cc/160?img=12",
+                "selected": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "groupTrackers": {
+      "Beauty Review": {
+        "influencers": [
+          {
+            "id": "inf-srichand-1",
+            "accountName": "@janet_beauty",
+            "accountLink": "https://tiktok.com/@janet_beauty",
+            "follower": "45K",
+            "channel": "TikTok",
+            "contact": "Line: @janet_work",
+            "rawCost": "12000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Selected",
+            "services": {}
+          },
+          {
+            "id": "inf-srichand-2",
+            "accountName": "@ploy_makeup",
+            "accountLink": "https://tiktok.com/@ploy_makeup",
+            "follower": "60K",
+            "channel": "TikTok",
+            "contact": "Line: @ploy_makeup",
+            "rawCost": "15000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Selected",
+            "services": {}
+          }
+        ]
+      }
+    }
   },
   {
     "id": "BRD-3002",

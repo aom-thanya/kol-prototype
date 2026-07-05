@@ -15,7 +15,8 @@ export default function TrackerTable({
   readOnly = false,
   allowStatusEdit = false,
   isDealsheetView = false,
-  allowReorder = null
+  allowReorder = null,
+  isBriefManagement = false
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
@@ -89,8 +90,19 @@ export default function TrackerTable({
     { value: "ไม่รับงาน", label: "ไม่รับงาน", bg: "bg-[#4B5563]", text: "text-white" }
   ];
 
+  const BRIEF_STATUS_OPTIONS = [
+    { value: "", label: "Status...", bg: "bg-slate-100", text: "text-slate-500" },
+    { value: "Accept", label: "Accept", bg: "bg-emerald-600", text: "text-white" },
+    { value: "Reject", label: "Reject", bg: "bg-rose-600", text: "text-white" }
+  ];
+
   const getStatusColor = (statusValue) => {
-    const opt = STATUS_OPTIONS.find(o => o.value === statusValue);
+    const options = isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS;
+    let opt = options.find(o => o.value === statusValue);
+    if (!opt) {
+      // Fallback search in the other array in case it has legacy values
+      opt = (isBriefManagement ? STATUS_OPTIONS : BRIEF_STATUS_OPTIONS).find(o => o.value === statusValue);
+    }
     if (!opt || !opt.value) return "bg-slate-100 text-slate-600 border-slate-200";
     return `${opt.bg} ${opt.text} border-transparent font-medium`;
   };
@@ -653,9 +665,12 @@ export default function TrackerTable({
                           getStatusColor(inf.contactStatus)
                         )}
                       >
-                        {STATUS_OPTIONS.map(opt => (
+                        {(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).map(opt => (
                           <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
                         ))}
+                        {inf.contactStatus && !(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).some(o => o.value === inf.contactStatus) && (
+                          <option value={inf.contactStatus} className="bg-white text-slate-900 font-normal">{inf.contactStatus}</option>
+                        )}
                       </select>
                       {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
                         <button 

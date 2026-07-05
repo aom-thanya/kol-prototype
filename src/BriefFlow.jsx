@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -46,6 +47,32 @@ import ProposalPage from "./components/brief/ProposalPage";
 import PlannerTrackerPage from "./components/tracker/PlannerTrackerPage";
 import { getBriefProgressStatus, getBriefDefaultTab, generateScopeName } from "./utils/briefHelpers";
 import SimpleHtmlEditor from "./components/common/SimpleHtmlEditor";
+import { generateSeedData } from "./StandardPricingFlow";
+
+const getStandardPricingRecords = () => {
+  const saved = localStorage.getItem("kol_standard_pricing_v4");
+  if (saved) return JSON.parse(saved);
+  return generateSeedData();
+};
+
+const getSpecialConditionsForPlatforms = (plats) => {
+  if (!plats || plats.length === 0) return [];
+  const records = getStandardPricingRecords();
+  
+  const specialCosts = new Set();
+  plats.forEach(plat => {
+    let mappedPlat = plat;
+    if (plat === "X") mappedPlat = "X/Twitter";
+    const record = records.find(r => r.platform === mappedPlat);
+    if (record) {
+      const specialCat = record.costTypes.find(c => c.category === "Special Cost");
+      if (specialCat && specialCat.items) {
+        specialCat.items.forEach(item => specialCosts.add(item.topic));
+      }
+    }
+  });
+  return Array.from(specialCosts);
+};
 
 // Helper utilities
 function cn(...classes) {
@@ -437,76 +464,74 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">1</span> 
                   Client & Project Details
                 </h3>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Select Customer *</label>
-                    <div className="relative">
-                      <select 
-                        value={customerId} 
-                        onChange={e => {
-                          const val = e.target.value;
-                          setCustomerId(val);
-                          const cust = customers.find(c => c.id === val);
-                          if (cust && cust.type) {
-                            setCustomerType(cust.type);
-                          }
-                        }}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"
-                      >
-                        <option value="" disabled>Select Customer...</option>
-                        {customers.map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Brand / Product Name *</label>
-                    <input type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Client Status *</label>
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="clientStatus" value="New" checked={clientStatus === "New"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">New</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="clientStatus" value="Existing" checked={clientStatus === "Existing"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Existing</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Customer Type</label>
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="customerType" value="Key Account" checked={customerType === "Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Key Account</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="customerType" value="Non-Key Account" checked={customerType === "Non-Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
-                        <span className="text-sm text-slate-700">Non-Key Account</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
+                <div className="mb-6">
+                  <h4 className="mb-4 font-semibold text-slate-900">Client</h4>
+                  <div className="flex flex-col gap-4">
                     <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Sales Owner *</label>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Sales Owner *</label>
                       <input type="text" value={salesOwner} onChange={e => setSalesOwner(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                     </div>
-                  </div>
-                  
-                  <div className="border-t border-slate-100 pt-6 mt-2">
-                    <h4 className="mb-4 font-semibold text-slate-900">Project Details</h4>
-                    <div className="flex flex-col gap-4">
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Project Name *</label>
-                        <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Select Customer</label>
+                      <div className="relative">
+                        <select 
+                          value={customerId} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            setCustomerId(val);
+                            const cust = customers.find(c => c.id === val);
+                            if (cust && cust.type) {
+                              setCustomerType(cust.type);
+                            }
+                          }}
+                          className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"
+                        >
+                          <option value="" disabled>Select Customer...</option>
+                          {customers.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Client Status *</label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="clientStatus" value="New" checked={clientStatus === "New"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                          <span className="text-sm text-slate-700">New</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="clientStatus" value="Existing" checked={clientStatus === "Existing"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                          <span className="text-sm text-slate-700">Existing</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Customer Type</label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="customerType" value="Key Account" checked={customerType === "Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                          <span className="text-sm text-slate-700">Key Account</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="customerType" value="Non-Key Account" checked={customerType === "Non-Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                          <span className="text-sm text-slate-700">Non-Key Account</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-200 pt-6">
+                  <h4 className="mb-4 font-semibold text-slate-900">Project Details</h4>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Project Name *</label>
+                      <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                    </div>
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Package Type</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Package Type *</label>
                         <div className="grid grid-cols-2 gap-3 mb-2">
                           {[
                             "Standard (1 D)", "Standard KPI (0.5 D)", 
@@ -515,34 +540,40 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             "Strategy (4 D)", "Strategy KPI (3 D)"
                           ].map(pkg => (
                             <label key={pkg} className="flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox" checked={packageType.includes(pkg)} onChange={e => {
-                                if (e.target.checked) setPackageType([...packageType, pkg]);
-                                else setPackageType(packageType.filter(p => p !== pkg));
-                              }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                              <input type="radio" name="packageType" checked={packageType === pkg} onChange={() => setPackageType(pkg)} className="h-4 w-4 text-[#6D5DF6]" />
                               <span className="text-sm text-slate-700">{pkg}</span>
                             </label>
                           ))}
                         </div>
                         <div className="flex items-center gap-2 mt-2">
                           <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                            <input type="checkbox" checked={packageType.includes("Others")} onChange={e => {
-                              if (e.target.checked) setPackageType([...packageType, "Others"]);
-                              else setPackageType(packageType.filter(p => p !== "Others"));
-                            }} className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6] focus:ring-[#6D5DF6]" />
+                            <input type="radio" name="packageType" checked={packageType === "Others"} onChange={() => setPackageType("Others")} className="h-4 w-4 text-[#6D5DF6]" />
                             <span className="text-sm text-slate-700">Others :</span>
                           </label>
-                          {packageType.includes("Others") && (
+                          {packageType === "Others" && (
                             <input type="text" value={packageTypeOther} onChange={e => setPackageTypeOther(e.target.value)} className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-[#6D5DF6]" />
                           )}
                         </div>
                         <p className="text-xs text-slate-500 mt-2">*Remark : 11:00 = Half Day / 16:00 = Next Day</p>
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Product Name & Detail *</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Campaign Period *</label>
+                        <div className="flex items-center gap-2">
+                          <input type="date" value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <span className="text-slate-400">-</span>
+                          <input type="date" value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Brand / Product Name *</label>
+                        <input type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Product Detail *</label>
                         <SimpleHtmlEditor value={product} onChange={setProduct} />
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Objective</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Objective *</label>
                         <div className="flex flex-wrap items-center gap-6">
                           {["Awareness (Reach)", "Interest (Engagement)", "Trust (Post)"].map(obj => (
                             <label key={obj} className="flex items-center gap-2 cursor-pointer">
@@ -556,7 +587,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Objective Note</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Objective Note</label>
                         <textarea rows={2} value={objectiveNote} onChange={e => setObjectiveNote(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
                       </div>
                       
@@ -592,45 +623,34 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             </div>
                           </div>
                           <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-700">Country</label>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Country</label>
                             <input type="text" value={country} onChange={e => setCountry(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                           </div>
                           <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-700">Province</label>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Province</label>
                             <input type="text" value={province} onChange={e => setProvince(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                           </div>
                           <div className="col-span-1 md:col-span-2">
-                            <label className="mb-1 block text-sm font-medium text-slate-700">Lifestyle</label>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Lifestyle</label>
                             <input type="text" value={lifestyle} onChange={e => setLifestyle(e.target.value)} placeholder="e.g. Cafe hopper, Sports, Lifestyle, Family" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Campaign Period *</label>
-                        <div className="flex items-center gap-2">
-                          <input type="date" value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                          <span className="text-slate-400">-</span>
-                          <input type="date" value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                        </div>
-                      </div>
-
-
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Previous Campaign / Work Reference</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Previous Campaign / Work Reference</label>
                         <SimpleHtmlEditor value={previousCampaign} onChange={setPreviousCampaign} />
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Competitor Info</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Competitor Info</label>
                         <SimpleHtmlEditor value={competitor} onChange={setCompetitor} />
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Additional Info</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Additional Info</label>
                         <SimpleHtmlEditor value={additionalInfo} onChange={setAdditionalInfo} />
                       </div>
                     </div>
                   </div>
-                </div>
               </section>
               )}
 
@@ -695,7 +715,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-200 pb-2">Budget Details for {activeOpt.name}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
-                        <label className="mb-1 block text-sm font-medium text-slate-700 font-semibold text-[#6D5DF6]">Option Name</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700 font-semibold text-[#6D5DF6]">Option Name</label>
                         <input
                           type="text"
                           value={activeOpt.name}
@@ -705,8 +725,11 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         />
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Budget Spending</label>
-                        <input type="text" value={activeOpt.budgetSpending} onChange={e => updateActiveOption("budgetSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Budget Spending</label>
+                        <div className="relative">
+                          <input type="text" value={activeOpt.budgetSpending} onChange={e => updateActiveOption("budgetSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                        </div>
                       </div>
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">VAT</label>
@@ -768,19 +791,25 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Estimated Brand Spending</label>
-                        <input type="text" value={activeOpt.estimatedBrandSpending} onChange={e => updateActiveOption("estimatedBrandSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Estimated Brand Spending</label>
+                        <div className="relative">
+                          <input type="text" value={activeOpt.estimatedBrandSpending} onChange={e => updateActiveOption("estimatedBrandSpending", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                        </div>
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Budget per Influencer (If any)</label>
-                        <input type="text" value={activeOpt.budgetPerInfluencer} onChange={e => updateActiveOption("budgetPerInfluencer", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Budget per Influencer (If any)</label>
+                        <div className="relative">
+                          <input type="text" value={activeOpt.budgetPerInfluencer} onChange={e => updateActiveOption("budgetPerInfluencer", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                        </div>
                       </div>
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Expected Number of Influencers (If any)</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Expected Number of Influencers (If any)</label>
                         <input type="number" value={activeOpt.expectedNumInfluencers} onChange={e => updateActiveOption("expectedNumInfluencers", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Expected Reach</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Expected Reach</label>
                         <input type="text" value={activeOpt.expectedReach} onChange={e => updateActiveOption("expectedReach", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                       </div>
                     </div>
@@ -821,11 +850,14 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           </div>
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
-                          <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Budget Boost Spending</label>
+                          <div className="relative">
+                            <input type="text" value={budgetBoostSpending} onChange={e => setBudgetBoostSpending(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white pl-3 pr-12 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                          </div>
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Detail</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Detail</label>
                           <textarea rows={2} value={buddyBoostDetail} onChange={e => setBuddyBoostDetail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                         </div>
                       </div>
@@ -856,7 +888,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       return Array.from(allTypes);
                     };
                     const getAvailableViaOptions = (plats) => {
-                      const allPlatforms = ["TikTok", "Instagram", "YouTube", "Facebook", "Facebook Page", "X", "Lemon8", "Others"];
+                      const allPlatforms = ["TikTok", "Instagram", "YouTube", "Facebook", "Facebook Page", "X", "Lemon8"];
                       const currentPlat = plats?.[0] || "";
                       return allPlatforms.filter(p => p !== currentPlat);
                     };
@@ -902,7 +934,36 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Content Type</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Via</label>
+                          <div className="flex flex-wrap gap-3 bg-white p-3 rounded-lg border border-slate-100 shadow-3xs">
+                            {getAvailableViaOptions(scopePlats).map(viaOpt => {
+                              const selectedVias = scope.serviceScope?.selectedVias || [];
+                              const isViaChecked = selectedVias.includes(viaOpt);
+                              return (
+                                <label key={viaOpt} className="flex items-center gap-2 cursor-pointer">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isViaChecked} 
+                                    onChange={e => {
+                                      let updatedVias = [...selectedVias];
+                                      if (e.target.checked) {
+                                        updatedVias.push(viaOpt);
+                                      } else {
+                                        updatedVias = updatedVias.filter(v => v !== viaOpt);
+                                      }
+                                      handleUpdateServiceScope(scope.id, 'selectedVias', updatedVias);
+                                    }} 
+                                    className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" 
+                                  />
+                                  <span className="text-sm text-slate-700">{viaOpt}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Content Type</label>
                           <MultiSelect 
                             value={scope.contentType || []} 
                             onChange={val => handleUpdateScope(scope.id, 'contentType', val)} 
@@ -911,8 +972,10 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
 
+
+
                         <div className="md:col-span-2">
-                          <h5 className="mb-3 text-sm font-semibold text-slate-900 pt-2 border-t border-slate-200">Service Scope</h5>
+                          <h5 className="mb-4 text-sm font-semibold text-slate-900 pt-6 mt-4 border-t border-slate-200">Boost by page</h5>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                             <div>
                               <label className="flex items-center gap-2 cursor-pointer mb-2">
@@ -921,7 +984,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                               </label>
                               {scope.serviceScope?.buyoutRequired && (
                                 <div className="pl-6">
-                                  <MultiSelect value={scope.serviceScope?.buyoutDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'buyoutDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                  <MultiSelect value={scope.serviceScope?.buyoutDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'buyoutDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                 </div>
                               )}
                             </div>
@@ -934,7 +997,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.boostPostRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.boostPostDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'boostPostDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.boostPostDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'boostPostDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
@@ -948,7 +1011,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.addAdsRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.addAdsDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'addAdsDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.addAdsDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'addAdsDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
@@ -962,7 +1025,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.paidPartnershipRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.paidPartnershipDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'paidPartnershipDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.paidPartnershipDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'paidPartnershipDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
@@ -976,7 +1039,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.discoveryRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.discoveryDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'discoveryDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.discoveryDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'discoveryDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
@@ -991,7 +1054,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                   </label>
                                   {scope.serviceScope?.genCodeRequired && (
                                     <div className="pl-6">
-                                      <MultiSelect value={scope.serviceScope?.genCodeDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'genCodeDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                      <MultiSelect value={scope.serviceScope?.genCodeDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'genCodeDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                     </div>
                                   )}
                                 </div>
@@ -1012,7 +1075,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.brandedContentRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.brandedContentDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'brandedContentDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.brandedContentDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'brandedContentDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
@@ -1026,63 +1089,17 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                                 {scope.serviceScope?.whitelistingRequired && (
                                   <div className="pl-6">
-                                    <MultiSelect value={scope.serviceScope?.whitelistingDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'whitelistingDuration', val)} options={["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
+                                    <MultiSelect value={scope.serviceScope?.whitelistingDuration || []} onChange={val => handleUpdateServiceScope(scope.id, 'whitelistingDuration', val)} options={packageType?.startsWith("Standard") ? ["7 วัน", "15 วัน", "30 วัน"] : ["7 วัน", "15 วัน", "30 วัน", "60 วัน", "90 วัน", "180 วัน", "365 วัน", "Permanent"]} placeholder="Duration" />
                                   </div>
                                 )}
                               </div>
                             )}
 
-                            <div>
-                              <label className="flex items-center gap-2 cursor-pointer mb-2">
-                                <input 
-                                  type="checkbox" 
-                                  checked={scope.serviceScope?.viaRequired} 
-                                  onChange={e => {
-                                    handleUpdateServiceScope(scope.id, 'viaRequired', e.target.checked);
-                                    if (!e.target.checked) {
-                                      handleUpdateServiceScope(scope.id, 'selectedVias', []);
-                                    }
-                                  }} 
-                                  className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" 
-                                />
-                                <span className="text-sm font-medium text-slate-700">Via</span>
-                              </label>
-                              {scope.serviceScope?.viaRequired && (
-                                <div className="pl-6 space-y-3">
-                                  <label className="text-xs text-slate-500 block mb-1">Select Via Types *</label>
-                                  <div className="flex flex-wrap gap-3 bg-white p-3 rounded-lg border border-slate-100 shadow-3xs">
-                                    {getAvailableViaOptions(scopePlats).map(viaOpt => {
-                                      const selectedVias = scope.serviceScope?.selectedVias || [];
-                                      const isViaChecked = selectedVias.includes(viaOpt);
-                                      return (
-                                        <label key={viaOpt} className="flex items-center gap-2 cursor-pointer">
-                                          <input 
-                                            type="checkbox" 
-                                            checked={isViaChecked} 
-                                            onChange={e => {
-                                              let updatedVias = [...selectedVias];
-                                              if (e.target.checked) {
-                                                updatedVias.push(viaOpt);
-                                              } else {
-                                                updatedVias = updatedVias.filter(v => v !== viaOpt);
-                                              }
-                                              handleUpdateServiceScope(scope.id, 'selectedVias', updatedVias);
-                                            }} 
-                                            className="h-4 w-4 rounded border-slate-300 text-[#6D5DF6]" 
-                                          />
-                                          <span className="text-xs font-semibold text-slate-700">{viaOpt}</span>
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
 
                         <div className="md:col-span-2 pt-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Scope Name</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Scope Name</label>
                           <input 
                             type="text" 
                             value={scope.name || ""} 
@@ -1092,40 +1109,61 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
 
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
-                          <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input 
-                              type="number" 
-                              value={scope.followerReqFrom || ""} 
-                              onChange={e => handleUpdateScope(scope.id, 'followerReqFrom', e.target.value)} 
-                              placeholder="From" 
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                            />
-                            <input 
-                              type="number" 
-                              value={scope.followerReqTo || ""} 
-                              onChange={e => handleUpdateScope(scope.id, 'followerReqTo', e.target.value)} 
-                              placeholder="To" 
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                            />
-                          </div>
-                        </div>
+
                         <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Details</label>
                           <SimpleHtmlEditor value={scope.details} onChange={val => handleUpdateScope(scope.id, 'details', val)} />
                         </div>
                       </div>
 
                       {/* Persona under SOW */}
-                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Influencer Persona</h5>
+                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Influencer details</h5>
                       <div className="grid gap-4 md:grid-cols-2 mb-8">
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Demographic</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
+                          <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Follower Requirement</label>
+                          {packageType?.startsWith("Standard") ? (
+                            <Select 
+                              value={scope.followerReq || ""} 
+                              onChange={val => handleUpdateScope(scope.id, 'followerReq', val)} 
+                              options={["1K - 5K", "5K - 10K", "10K - 50K", "50K - 100K", "100K+"]} 
+                              placeholder="Select follower range" 
+                            />
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2">
+                              <input 
+                                type="number" 
+                                value={scope.followerReqFrom || ""} 
+                                onChange={e => handleUpdateScope(scope.id, 'followerReqFrom', e.target.value)} 
+                                placeholder="From" 
+                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                              />
+                              <input 
+                                type="number" 
+                                value={scope.followerReqTo || ""} 
+                                onChange={e => handleUpdateScope(scope.id, 'followerReqTo', e.target.value)} 
+                                placeholder="To" 
+                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {packageType?.startsWith("Standard") && (
+                          <div className="md:col-span-2">
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Special Condition</label>
+                            <MultiSelect 
+                              value={scope.persona?.specialConditions || []} 
+                              onChange={val => handleUpdatePersona(scope.id, 'specialConditions', val)} 
+                              options={getSpecialConditionsForPlatforms(scopePlats)} 
+                              placeholder="Select special conditions"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Demographic</label>
                           <input 
                             type="text" 
                             value={scope.persona?.demographic || ""} 
@@ -1135,7 +1173,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
                           <input 
                             type="text" 
                             value={scope.persona?.location || ""} 
@@ -1145,7 +1183,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Occupation</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Occupation</label>
                           <input 
                             type="text" 
                             value={scope.persona?.occupation || ""} 
@@ -1155,7 +1193,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Persona</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Persona</label>
                           <input 
                             type="text" 
                             value={scope.persona?.persona || ""} 
@@ -1165,7 +1203,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Content Category</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Content Category</label>
                           <input 
                             type="text" 
                             value={scope.persona?.contentCategory || ""} 
@@ -1175,7 +1213,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-slate-700">Story Telling</label>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Story Telling</label>
                           <input 
                             type="text" 
                             value={scope.persona?.storyTelling || ""} 
@@ -1225,7 +1263,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           </div>
 
                           <div>
-                            <label className="mb-1 block text-sm font-medium text-slate-700">วิธีการรับสินค้า/บริการ</label>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">วิธีการรับสินค้า/บริการ</label>
                             <Select 
                               value={scope.productReceiveMethod || ""} 
                               onChange={val => {
@@ -1244,8 +1282,11 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
                           {["Buddy Review ซื้อและจัดส่งให้ Influencer", "Sponsor สินค้า (Buddy Review จัดส่ง)"].includes(scope.productReceiveMethod) && (
                             <div>
-                              <label className="mb-1 block text-sm font-medium text-slate-700">ค่าจัดส่งต่อ Influencer</label>
-                              <input type="number" value={scope.logisticsPerInfluencer || ""} onChange={e => handleUpdateScope(scope.id, 'logisticsPerInfluencer', e.target.value)} placeholder="ระบุค่าจัดส่งต่อ Influencer" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                              <label className="mb-2 block text-sm font-medium text-slate-700">ค่าจัดส่งต่อ Influencer</label>
+                              <div className="relative">
+                                <input type="number" value={scope.logisticsPerInfluencer || ""} onChange={e => handleUpdateScope(scope.id, 'logisticsPerInfluencer', e.target.value)} placeholder="ระบุค่าจัดส่งต่อ Influencer" className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                              </div>
                             </div>
                           )}
 
@@ -1269,13 +1310,16 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
                           {((scope.brandSupportType || "No Sponsor") === "No Sponsor" && (scope.productReceiveMethod === "Buddy Review ซื้อและจัดส่งให้ Influencer" || ["กำหนดงบต่อคน", "เบิกตามจริง"].includes(scope.reimbursement))) && (
                             <div className="md:col-span-2">
-                              <label className="mb-1 block text-sm font-medium text-slate-700">มูลค่าสินค้า (บาท) <span className="text-xs font-normal text-[#6D5DF6] ml-1">*เพื่อสำรองงบประมาณล่วงหน้า</span></label>
-                              <input type="number" value={scope.productValue || ""} onChange={e => handleUpdateScope(scope.id, 'productValue', e.target.value)} placeholder="ระบุมูลค่าสินค้าสูงสุดที่เบิกได้" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                              <label className="mb-2 block text-sm font-medium text-slate-700">มูลค่าสินค้า (บาท) <span className="text-xs font-normal text-[#6D5DF6] ml-1">*เพื่อสำรองงบประมาณล่วงหน้า</span></label>
+                              <div className="relative">
+                                <input type="number" value={scope.productValue || ""} onChange={e => handleUpdateScope(scope.id, 'productValue', e.target.value)} placeholder="ระบุมูลค่าสินค้าสูงสุดที่เบิกได้" className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
+                                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                              </div>
                             </div>
                           )}
 
                           <div className="md:col-span-2 border-t border-slate-200/60 pt-3">
-                            <label className="mb-1 block text-sm font-medium text-slate-700 font-semibold text-slate-800">ต้องมีการเดินทางไปถ่ายทำ / รับสินค้าหรือบริการ หรือไม่</label>
+                            <label className="mb-2 block text-sm font-medium text-slate-700 font-semibold text-slate-800">ต้องมีการเดินทางไปถ่ายทำ / รับสินค้าหรือบริการ หรือไม่</label>
                             <Select 
                               value={scope.requireTravel || "ไม่ต้อง (Remote / ถ่ายทำที่ไหนก็ได้)"} 
                               onChange={val => handleUpdateScope(scope.id, 'requireTravel', val)} 
@@ -1286,7 +1330,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           {scope.requireTravel === "ต้อง (มี On-site / Event / รับบริการ)" && (
                             <div className="md:col-span-2 grid gap-4 md:grid-cols-2 border-t border-slate-200/60 pt-3 mt-1">
                               <div>
-                                <label className="mb-1 block text-sm font-medium text-slate-700">ประเภท On-Site</label>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">ประเภท On-Site</label>
                                 <Select 
                                   value={scope.onSiteType || ""} 
                                   onChange={val => handleUpdateScope(scope.id, 'onSiteType', val)} 
@@ -1296,14 +1340,14 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
                               {scope.onSiteType === "เข้าร่วม Event" && (
                                   <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">ระยะเวลา Event (ชั่วโมง)</label>
+                                    <label className="mb-2 block text-sm font-medium text-slate-700">ระยะเวลา Event (ชั่วโมง)</label>
                                     <input type="number" value={scope.eventDuration || ""} onChange={e => handleUpdateScope(scope.id, 'eventDuration', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]" />
                                   </div>
                               )}
 
                               {["ถ่ายทำที่สถานที่ที่แบรนด์กำหนด", "เข้าร่วม Event", "รับสินค้า/บริการตามสถานที่ที่แบรนด์กำหนด"].includes(scope.onSiteType) && (
                                 <div className="md:col-span-2">
-                                  <label className="mb-1 block text-sm font-medium text-slate-700">ค่าเดินทางต่อ Influencer</label>
+                                  <label className="mb-2 block text-sm font-medium text-slate-700">ค่าเดินทางต่อ Influencer</label>
                                   <Select 
                                     value={scope.reviewerTravelExpense || ""} 
                                     onChange={val => handleUpdateScope(scope.id, 'reviewerTravelExpense', val)} 
@@ -1318,12 +1362,12 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                               )}
 
                               <div className="md:col-span-2">
-                                <label className="mb-1 block text-sm font-medium text-slate-700">รายละเอียดสถานที่</label>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">รายละเอียดสถานที่</label>
                                 <textarea rows={2} value={scope.locationDetails || ""} onChange={e => handleUpdateScope(scope.id, 'locationDetails', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
                               </div>
 
                               <div className="md:col-span-2">
-                                <label className="mb-1 block text-sm font-medium text-slate-700">Buddy Review Support (มีทีมดูแลหน้างาน)</label>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Buddy Review Support (มีทีมดูแลหน้างาน)</label>
                                 <div className="flex items-center gap-6 py-1">
                                   {["Yes", "No"].map(opt => (
                                     <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -2122,22 +2166,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                             <span className="text-slate-400 font-bold block mb-1">Content Type</span>
                             <span className="font-bold text-slate-800 text-base">{renderList(sow.contentType)}</span>
                           </div>
-                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-1">Followers Required</span>
-                            <span className="font-bold text-slate-800 text-base">
-                              {sow.followerReqFrom || sow.followerReqTo ? (
-                                <>
-                                  {sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - {sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}
-                                </>
-                              ) : (
-                                sow.followerReq || "-"
-                              )}
-                            </span>
-                          </div>
-                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-1">KOL Qty</span>
-                            <span className="font-bold text-slate-800 text-base">{sow.numInfluencers || "-"}</span>
-                          </div>
+
                           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-slate-400 font-bold block mb-1">Budget Allocation</span>
                             <span className="font-bold text-slate-800 text-base">
@@ -2160,15 +2189,26 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           {/* Influencer Persona */}
                           <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 text-sm">
                             <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer Persona
+                              <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer details
                             </h5>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                              <div><span className="text-slate-400">KOL Qty:</span> <span className="font-semibold text-slate-800">{sow.numInfluencers || "-"}</span></div>
+                              <div>
+                                <span className="text-slate-400">Followers:</span> <span className="font-semibold text-slate-800">
+                                  {sow.followerReqFrom || sow.followerReqTo ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}` : (sow.followerReq || "-")}
+                                </span>
+                              </div>
                               <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{sow.persona?.demographic || sow.persona?.infDemographic || "-"}</span></div>
                               <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{sow.persona?.location || sow.persona?.infLocation || "-"}</span></div>
                               <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{sow.persona?.occupation || sow.persona?.infOccupation || "-"}</span></div>
                               <div><span className="text-slate-400">Tone:</span> <span className="font-semibold text-slate-800">{sow.persona?.persona || sow.persona?.infPersona || "-"}</span></div>
                               <div className="col-span-2"><span className="text-slate-400">Content Category:</span> <span className="font-semibold text-slate-800">{sow.persona?.contentCategory || sow.persona?.infContent || "-"}</span></div>
                               <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{sow.persona?.storyTelling || sow.persona?.infStoryTelling || "-"}</span></div>
+                              {sow.persona?.specialConditions && sow.persona.specialConditions.length > 0 && (
+                                <div className="col-span-2">
+                                  <span className="text-slate-400">Special Condition:</span> <span className="font-semibold text-slate-800">{sow.persona.specialConditions.join(', ')}</span>
+                                </div>
+                              )}
                             </div>
                             {sow.persona?.infPreference && (
                               <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
@@ -2515,8 +2555,129 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
 // --- Planner Tracker Page Component ---
 
+function BriefExampleListView({ brief }) {
+  const cn = (...classes) => classes.filter(Boolean).join(" ");
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">Example List</h3>
+        <p className="text-[11px] text-slate-400 mt-0.5">Selected example creators for this campaign.</p>
+      </div>
+
+      {(brief.groups && brief.groups.length > 0 ? brief.groups : []).map((group, groupIndex) => (
+        <div key={group.id || groupIndex} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+          <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-3">
+            <h4 className="text-sm font-bold text-slate-800">{group.name || `Group ${groupIndex + 1}`}</h4>
+            {group?.pillar && typeof group.pillar === "string" && (
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                {group.pillar}
+              </span>
+            )}
+            {group?.pillars && Object.values(group.pillars).some(arr => arr && arr.length > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {Object.values(group.pillars).flat().filter(Boolean).map((val, i) => (
+                  <span key={i} className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                    {val}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse table-layout-fixed" style={{ minWidth: "800px" }}>
+              <thead>
+                <tr className="border-b border-slate-200 bg-white">
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200 bg-slate-50/50" style={{ width: "220px" }}>Detail</th>
+                  {group.sows?.map((sow, idx) => (
+                    <th key={sow.id || idx} className="p-4 text-xs font-bold text-slate-700 uppercase tracking-wider border-r border-slate-200 last:border-r-0 bg-white" style={{ width: "300px" }}>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-slate-900 font-bold text-xs">{sow.name || sow.contentType}</span>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {(sow.platforms || []).map((plat) => (
+                            <span key={plat} className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold text-[#6D5DF6] border border-violet-100">
+                              {plat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </th>
+                  ))}
+                  {(!group.sows || group.sows.length === 0) && <th className="p-4 text-slate-400 italic bg-white">N/A</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {/* Follower */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Follower Requirement</td>
+                  {group.sows?.map((sow, idx) => (
+                    <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
+                      {sow.followerReqFrom && sow.followerReqTo ? `${Number(sow.followerReqFrom).toLocaleString()} - ${Number(sow.followerReqTo).toLocaleString()}` : (sow.followerReqFrom || sow.followerReqTo || sow.followerReq || "-")}
+                    </td>
+                  ))}
+                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                </tr>
+                
+                {/* Num Influencers */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Number of Influencers</td>
+                  {group.sows?.map((sow, idx) => (
+                    <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
+                      {sow.numInfluencers || "-"}
+                    </td>
+                  ))}
+                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                </tr>
+
+                {/* Example List row */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Example list</td>
+                  {group.sows?.map((sow, idx) => {
+                    const selectedCreators = (sow.exampleCreators || []).filter(c => c.selected !== false);
+                    return (
+                      <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-3 bg-white">
+                        <div className="flex flex-col gap-1.5">
+                          {selectedCreators.map((creator) => (
+                            <div key={creator.id} className="flex items-center justify-between border border-slate-200/60 rounded-lg p-1.5 pr-2 bg-white shadow-xs">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <img 
+                                  src={creator.avatar || "https://i.pravatar.cc/160"} 
+                                  alt={creator.name} 
+                                  className="w-6 h-6 rounded-full object-cover bg-slate-100 flex-shrink-0" 
+                                />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-[11px] font-semibold truncate leading-tight text-slate-800">
+                                    {creator.name}
+                                  </span>
+                                  <span className="text-[9px] text-slate-450 leading-tight truncate">
+                                    {creator.username}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {selectedCreators.length === 0 && (
+                            <span className="text-slate-400 italic text-[10px]">ไม่มีรายชื่อที่เลือก</span>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // --- Main Container ---
 export default function BriefFlow({ showToast, customers = [], briefs = [], setBriefs, listOnly = false, forceOpenBrief = null }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [currentBrief, setCurrentBrief] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
@@ -2529,6 +2690,32 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
       setCurrentBrief({ ...forceOpenBrief, activeTab: getBriefDefaultTab(forceOpenBrief) });
     }
   }, [forceOpenBrief]);
+
+  useEffect(() => {
+    if (id) {
+      const found = briefs.find(b => b.id === id);
+      if (found && (!currentBrief || currentBrief.id !== id)) {
+        setCurrentBrief({ ...found, activeTab: getBriefDefaultTab(found) });
+      }
+    } else {
+      setCurrentBrief(null);
+    }
+  }, [id, briefs, currentBrief]);
+
+  useEffect(() => {
+    if (currentBrief && id) {
+      const latest = briefs.find(b => b.id === currentBrief.id);
+      if (latest) {
+        if (JSON.stringify(latest.groupTrackers) !== JSON.stringify(currentBrief.groupTrackers) || 
+            latest.internalStatus !== currentBrief.internalStatus) {
+          setCurrentBrief(prev => ({
+            ...prev,
+            ...latest
+          }));
+        }
+      }
+    }
+  }, [briefs, currentBrief, id]);
 
   const handleCreateClick = (data, status) => {
     const briefData = { ...data, internalStatus: status || "Example List" };
@@ -2642,10 +2829,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
               <button
                 onClick={() => {
                   setSuccessModalOpen(false);
-                  const hasStd = Array.isArray(createdBrief?.packageType) 
-                    ? createdBrief.packageType.some(p => p.toLowerCase().includes("standard"))
-                    : (typeof createdBrief?.packageType === "string" && createdBrief.packageType.toLowerCase().includes("standard"));
-                  setCurrentBrief({ ...createdBrief, activeTab: hasStd ? "dealsheet" : "exampleList" });
+                  navigate(`/brief/${createdBrief.id}`);
                 }}
                 className="w-full rounded-xl bg-[#6D5DF6] py-3 text-sm font-bold text-white transition hover:bg-[#5a4add]"
               >
@@ -2659,7 +2843,10 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
       {!currentBrief || listOnly ? (
         <BriefListingPage 
           briefs={briefs} 
-          onView={(b) => listOnly ? null : setCurrentBrief({ ...b, activeTab: getBriefDefaultTab(b) })} 
+          onView={(b) => {
+            if (listOnly) return;
+            navigate(`/brief/${b.id}`);
+          }} 
           onCreate={() => setCreateModalOpen(true)}
           listOnly={listOnly}
         />
@@ -2668,15 +2855,19 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
           <BriefStepProgress 
             activeTab={currentBrief.activeTab || "brief"} 
             onTabChange={(tab) => handleUpdateBrief({ ...currentBrief, activeTab: tab })} 
-            onBack={() => setCurrentBrief(null)}
+            onBack={() => navigate("/brief")}
             status={currentBrief.internalStatus}
             brief={currentBrief}
           />
-          {currentBrief.activeTab === "exampleList" || currentBrief.viewingTracker ? (
+          {currentBrief.activeTab === "exampleList" ? (
+            <BriefExampleListView brief={currentBrief} />
+          ) : currentBrief.activeTab === "rateCardList" || currentBrief.viewingTracker ? (
             <PlannerTrackerPage
               brief={currentBrief}
-              onBack={() => setCurrentBrief(null)}
+              onBack={() => navigate("/brief")}
               onUpdateBrief={handleUpdateBrief}
+              readOnly={true}
+              isBriefManagement={true}
             />
           ) : currentBrief.activeTab === "dealsheet" ? (
             <DealsheetPage brief={currentBrief} onUpdateBrief={handleUpdateBrief} showToast={showToast} />
@@ -2685,7 +2876,7 @@ export default function BriefFlow({ showToast, customers = [], briefs = [], setB
           ) : (
             <BriefDetailPage 
               brief={currentBrief} 
-              onBack={() => setCurrentBrief(null)} 
+              onBack={() => navigate("/brief")} 
               onUpdateBrief={handleUpdateBrief}
             />
           )}

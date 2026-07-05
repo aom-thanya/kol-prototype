@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Routes, Route, useNavigate, useLocation, Navigate, Link } from "react-router-dom";
 import BriefFlow from "./BriefFlow";
 import CustomerFlow from "./CustomerFlow";
 import StandardPricingFlow from "./StandardPricingFlow";
@@ -28,7 +29,9 @@ import {
   Menu,
   FileText,
   DollarSign,
-  CreditCard
+  CreditCard,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 
 const primary = "#6D5DF6";
@@ -281,102 +284,156 @@ function Toast({ toast, onClose }) {
   );
 }
 
-function Sidebar({ mobileOpen, setMobileOpen, activeTab, setActiveTab }) {
+function Sidebar({ mobileOpen, setMobileOpen, collapsed, setCollapsed }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const kolDiscoveryItems = [
     { label: "KOL Discovery", icon: Search, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
-    { label: "Rate Card List", id: "rateCardList", icon: CreditCard, active: activeTab === "rateCardList" },
+    { label: "Rate Card List", path: "/rate-card", icon: CreditCard, active: location.pathname.startsWith("/rate-card") },
   ];
 
   const briefManagementItems = [
-    { label: "Brief Management", id: "brief2", icon: FileText, active: activeTab === "brief2" },
-    { label: "Final Dealsheet", id: "finalDealsheet", icon: ClipboardList, active: activeTab === "finalDealsheet" },
-    { label: "Standard Pricing", id: "standardPricing", icon: DollarSign, active: activeTab === "standardPricing" },
+    { label: "Brief Management", path: "/brief", icon: FileText, active: location.pathname.startsWith("/brief") },
+    { label: "Final Dealsheet", path: "/final-dealsheet", icon: ClipboardList, active: location.pathname.startsWith("/final-dealsheet") },
+    { label: "Standard Pricing", path: "/standard-pricing", icon: DollarSign, active: location.pathname.startsWith("/standard-pricing") },
   ];
 
-  const renderItem = (item) => (
-    <a
-      key={item.label}
-      href={item.href || "#"}
-      target={item.href ? "_blank" : undefined}
-      rel={item.href ? "noopener noreferrer" : undefined}
-      onClick={() => {
-        if (item.id) {
-          setActiveTab(item.id);
-          setMobileOpen(false);
-        }
-      }}
-      className={cn(
-        "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition cursor-pointer",
-        item.active
-          ? "bg-violet-50 text-[#6D5DF6] ring-1 ring-violet-100"
-          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-      )}
-    >
-      <item.icon className="h-4 w-4 shrink-0" />
-      <span className="truncate">{item.label}</span>
-      {item.href && <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-60" />}
-    </a>
-  );
+  const renderItem = (item) => {
+    const isExternal = !!item.href;
+    const Component = isExternal ? "a" : Link;
+    const toProps = isExternal ? { href: item.href, target: "_blank", rel: "noopener noreferrer" } : { to: item.path || "#" };
+
+    return (
+      <Component
+        key={item.label}
+        {...toProps}
+        onClick={() => {
+          if (!isExternal) setMobileOpen(false);
+        }}
+        className={cn(
+          "group relative flex w-full items-center gap-2 rounded-xl py-2.5 text-left text-[12px] font-medium transition cursor-pointer",
+          collapsed ? "justify-center px-0" : "px-3",
+          item.active
+            ? "bg-violet-50 text-[#6D5DF6] ring-1 ring-violet-100"
+            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+        )}
+      >
+        <item.icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+        {!collapsed && isExternal && <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-60" />}
+        
+        {/* Tooltip for collapsed state */}
+        {collapsed && (
+          <div className="pointer-events-none absolute left-full ml-4 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 z-[100] shadow-md">
+            {item.label}
+          </div>
+        )}
+      </Component>
+    );
+  };
 
   return (
     <>
       <div className={cn("fixed inset-0 z-30 bg-slate-900/30 lg:hidden", mobileOpen ? "block" : "hidden")} onClick={() => setMobileOpen(false)} />
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-full w-[180px] border-r border-slate-200 bg-white p-4 transition-transform lg:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-0 z-40 h-full border-r border-slate-200 bg-white transition-all duration-300 flex flex-col",
+          collapsed ? "w-[80px] p-4" : "w-[240px] p-4",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="mb-8 flex flex-col gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6D5DF6] text-white shadow-lg shadow-violet-200">
+        <div className={cn("mb-8 flex items-center gap-3", collapsed ? "justify-center" : "")}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#6D5DF6] text-white shadow-lg shadow-violet-200">
             <Sparkles className="h-4 w-4" />
           </div>
-          <div>
-            <div className="text-[13px] font-semibold leading-tight text-slate-900">Buddy Platform</div>
-            <div className="mt-1 text-[10px] leading-tight text-slate-500">KOL Management</div>
-          </div>
+          {!collapsed && (
+            <div className="overflow-hidden whitespace-nowrap">
+              <div className="text-[13px] font-semibold leading-tight text-slate-900">Buddy Platform</div>
+              <div className="mt-1 text-[10px] leading-tight text-slate-500">KOL Management</div>
+            </div>
+          )}
         </div>
         
-        <nav className="space-y-4">
+        <nav className="flex-1 space-y-4">
           {/* KOL Discovery Section */}
           <div className="space-y-1.5">
-            <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">KOL Discovery</div>
+            {!collapsed ? (
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">KOL Discovery</div>
+            ) : (
+              <div className="h-4" />
+            )}
             <div className="space-y-1">
               {kolDiscoveryItems.map(renderItem)}
             </div>
           </div>
 
           {/* Divider */}
-          <div className="h-[1px] bg-slate-100 my-2" />
+          <div className="h-[1px] w-full bg-slate-100 my-2" />
 
           {/* Brief Management Section */}
           <div className="space-y-1.5">
-            <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Brief Management</div>
+            {!collapsed ? (
+              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Brief Management</div>
+            ) : (
+              <div className="h-4" />
+            )}
             <div className="space-y-1">
               {briefManagementItems.map(renderItem)}
             </div>
           </div>
         </nav>
 
-        <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-slate-50 p-3">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Role</div>
-          <div className="mt-2 flex flex-col gap-2">
-            <span className="rounded-full bg-white px-3 py-1.5 text-center text-[11px] font-medium text-slate-700 shadow-sm">Planner</span>
-            <span className="rounded-full bg-white px-3 py-1.5 text-center text-[11px] font-medium text-slate-700 shadow-sm">Buyer</span>
-          </div>
+        <div className="mt-auto pt-4 flex flex-col gap-3">
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden lg:flex w-full items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+
+          {!collapsed ? (
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Role</div>
+              <div className="mt-2 flex flex-col gap-2">
+                <span className="rounded-full bg-white px-3 py-1.5 text-center text-[11px] font-medium text-slate-700 shadow-sm">Planner</span>
+                <span className="rounded-full bg-white px-3 py-1.5 text-center text-[11px] font-medium text-slate-700 shadow-sm">Buyer</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center group relative cursor-help">
+               <div className="h-10 w-10 shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">P+B</div>
+               <div className="pointer-events-none absolute left-full ml-4 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 z-[100] shadow-md">
+                 Roles: Planner, Buyer
+               </div>
+            </div>
+          )}
         </div>
       </aside>
     </>
   );
 }
 
-function AppShell({ children, activeTab, setActiveTab }) {
+function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const location = useLocation();
+
+  const getPageTitle = () => {
+    if (location.pathname.startsWith("/brief")) return "Brief Management Flow";
+    if (location.pathname.startsWith("/standard-pricing")) return "Standard Pricing";
+    if (location.pathname.startsWith("/final-dealsheet")) return "Final Dealsheet";
+    if (location.pathname.startsWith("/example-list")) return "Example List Flow";
+    if (location.pathname.startsWith("/rate-card")) return "Rate Card List";
+    return "Buddy Platform";
+  };
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="lg:pl-[180px]">
+    <div className="min-h-screen bg-white text-slate-900 flex">
+      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} collapsed={collapsed} setCollapsed={setCollapsed} />
+      <main className={cn("flex-1 transition-all duration-300 min-w-0", collapsed ? "lg:pl-[80px]" : "lg:pl-[240px]")}>
         <div className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/85 px-4 backdrop-blur lg:px-8">
           <div className="flex items-center gap-3">
             <button className="rounded-xl p-2 hover:bg-slate-100 lg:hidden" onClick={() => setMobileOpen(true)}>
@@ -384,7 +441,7 @@ function AppShell({ children, activeTab, setActiveTab }) {
             </button>
             <div>
               <div className="text-sm font-medium text-slate-500">Prototype</div>
-              <div className="text-base font-semibold text-slate-900">{activeTab === "exampleList" ? "Example List Flow" : activeTab === "brief2" ? "Brief Management Flow" : activeTab === "standardPricing" ? "Standard Pricing" : activeTab === "finalDealsheet" ? "Final Dealsheet" : "Brief Flow"}</div>
+              <div className="text-base font-semibold text-slate-900">{getPageTitle()}</div>
             </div>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -1181,21 +1238,12 @@ function CreateListModal({ open, onClose, onSubmit }) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("brief2");
   const [lists, setLists] = useState(exampleListsSeed);
   const [customers, setCustomers] = useState(customersSeed);
   const [briefs, setBriefs] = useState(briefsSeed);
   const [currentList, setCurrentList] = useState(null);
   const [toast, setToast] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [forceOpenBrief, setForceOpenBrief] = useState(null);
-
-  const handleViewBrief = (brief) => {
-    setForceOpenBrief(brief);
-    setActiveTab("brief2");
-    // Clear forceOpenBrief after a small delay so we can navigate back and forth
-    setTimeout(() => setForceOpenBrief(null), 100);
-  };
 
   const showToast = (message) => {
     setToast(message);
@@ -1220,51 +1268,42 @@ export default function App() {
   };
 
   return (
-    <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
+    <AppShell>
       <Toast toast={toast} onClose={() => setToast(null)} />
       
-      {activeTab === "brief" && (
-        <BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} forceOpenBrief={forceOpenBrief} />
-      )}
-      {activeTab === "brief2" && (
-        <BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} forceOpenBrief={forceOpenBrief} />
-      )}
-
-      {activeTab === "finalDealsheet" && (
-        <FinalDealsheetFlow briefs={briefs} setBriefs={setBriefs} showToast={showToast} />
-      )}
-
-      {activeTab === "standardPricing" && (
-        <StandardPricingFlow />
-      )}
-
-      {activeTab === "rateCardList" && (
-        <RateCardListPage briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />
-      )}
-
-      {activeTab === "exampleList" && (
-        <>
-          <CreateListModal 
-            open={createModalOpen} 
-            onClose={() => setCreateModalOpen(false)} 
-            onSubmit={handleCreateNewList} 
-          />
-          {!currentList ? (
-            <ListingPage
-              lists={lists}
-              onView={setCurrentList}
-              onDuplicate={(list) => {
-                const copy = { ...list, id: `EXL${Date.now().toString().slice(-9)}`, name: `${list.name} Copy`, createdAt: "2026-05-25" };
-                setLists((prev) => [copy, ...prev]);
-                showToast("Example List duplicated.");
-              }}
-              onCreate={() => setCreateModalOpen(true)}
+      <Routes>
+        <Route path="/" element={<Navigate to="/brief" replace />} />
+        <Route path="/brief" element={<BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} />} />
+        <Route path="/brief/:id" element={<BriefFlow showToast={showToast} customers={customers} briefs={briefs} setBriefs={setBriefs} />} />
+        
+        <Route path="/final-dealsheet" element={<FinalDealsheetFlow briefs={briefs} setBriefs={setBriefs} showToast={showToast} />} />
+        <Route path="/standard-pricing" element={<StandardPricingFlow />} />
+        <Route path="/rate-card" element={<RateCardListPage briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />} />
+        
+        <Route path="/example-list" element={
+          <>
+            <CreateListModal 
+              open={createModalOpen} 
+              onClose={() => setCreateModalOpen(false)} 
+              onSubmit={handleCreateNewList} 
             />
-          ) : (
-            <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} briefs={briefs} />
-          )}
-        </>
-      )}
+            {!currentList ? (
+              <ListingPage
+                lists={lists}
+                onView={setCurrentList}
+                onDuplicate={(list) => {
+                  const copy = { ...list, id: `EXL${Date.now().toString().slice(-9)}`, name: `${list.name} Copy`, createdAt: "2026-05-25" };
+                  setLists((prev) => [copy, ...prev]);
+                  showToast("Example List duplicated.");
+                }}
+                onCreate={() => setCreateModalOpen(true)}
+              />
+            ) : (
+              <DetailPage list={currentList} onBack={() => setCurrentList(null)} showToast={showToast} briefs={briefs} />
+            )}
+          </>
+        } />
+      </Routes>
     </AppShell>
   );
 }

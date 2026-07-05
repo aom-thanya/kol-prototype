@@ -27,7 +27,8 @@ export default function BriefStepProgress({ activeTab, onTabChange, onBack, stat
   ];
   
   if (!hasStandard) {
-    steps.push({ id: "exampleList", label: "Rate card list" });
+    steps.push({ id: "exampleList", label: "Example list" });
+    steps.push({ id: "rateCardList", label: "Rate card list" });
   }
   
   steps.push({ id: "dealsheet", label: "Dealsheet" });
@@ -42,19 +43,36 @@ export default function BriefStepProgress({ activeTab, onTabChange, onBack, stat
     if (!status || status === "Draft") return 0; // Brief
     
     if (hasStandard) {
-      return 2; // Unlock both Dealsheet (1) and Proposal (2)
+      return 2; // Unlock Dealsheet & Proposal
+    }
+
+    let hasExampleSelected = false;
+    if (brief.groups) {
+      brief.groups.forEach(g => {
+        if (g.sows) {
+          g.sows.forEach(s => {
+            if (s.exampleCreators && s.exampleCreators.some(c => c.selected !== false)) {
+              hasExampleSelected = true;
+            }
+          });
+        }
+      });
     }
 
     let hasDone = false;
     if (brief.groupTrackers) {
       Object.values(brief.groupTrackers).forEach(t => {
-        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected")) hasDone = true;
+        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected" || i.contactStatus === "Done" || i.lot || i.contactStatus === "Accept" || i.contactStatus === "Reject")) {
+          hasDone = true;
+        }
       });
     }
-    if (!hasDone) return 1; // Rate card list
-    return 3; // Unlock both Dealsheet (2) and Proposal (3)
+
+    if (!hasExampleSelected) return 1; // Example list
+    if (!hasDone) return 2; // Rate card list
+    return 4; // Unlock Dealsheet & Proposal
   };
-  
+
   const progressIdx = Math.min(getProgressIdx(), steps.length - 1);
   
   return (

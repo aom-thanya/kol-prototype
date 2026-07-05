@@ -23,7 +23,8 @@ export function getBriefProgressStatus(brief) {
   ];
   
   if (!hasStandard) {
-    steps.push({ id: "exampleList", label: "Rate card list" });
+    steps.push({ id: "exampleList", label: "Example list" });
+    steps.push({ id: "rateCardList", label: "Rate card list" });
   }
   
   steps.push({ id: "dealsheet", label: "Dealsheet" });
@@ -42,15 +43,32 @@ export function getBriefProgressStatus(brief) {
       return 1;
     }
 
+    let hasExampleSelected = false;
+    if (brief.groups) {
+      brief.groups.forEach(g => {
+        if (g.sows) {
+          g.sows.forEach(s => {
+            if (s.exampleCreators && s.exampleCreators.some(c => c.selected !== false)) {
+              hasExampleSelected = true;
+            }
+          });
+        }
+      });
+    }
+
     let hasDone = false;
     if (brief.groupTrackers) {
       Object.values(brief.groupTrackers).forEach(t => {
-        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected")) hasDone = true;
+        if (t.influencers && t.influencers.some(i => i.contactStatus === "Selected" || i.contactStatus === "Done" || i.lot || i.contactStatus === "Accept" || i.contactStatus === "Reject")) {
+          hasDone = true;
+        }
       });
     }
-    if (!hasDone) return 1;
-    if (activeTab === "proposal") return 3;
-    return 2;
+
+    if (!hasExampleSelected) return 1; // Example list
+    if (!hasDone) return 2; // Rate card list
+    if (activeTab === "proposal") return 4;
+    return 3; // Dealsheet
   };
 
   const progressIdx = getProgressIdx();
@@ -61,8 +79,10 @@ export function getBriefDefaultTab(brief) {
   if (!brief) return "brief";
   const progressStatus = getBriefProgressStatus(brief);
   switch (progressStatus) {
-    case "Rate card list":
+    case "Example list":
       return "exampleList";
+    case "Rate card list":
+      return "rateCardList";
     case "Dealsheet":
       return "dealsheet";
     case "Proposal":
@@ -84,7 +104,7 @@ export function generateScopeName(platforms = [], contentTypes = [], serviceScop
   
   let name = baseNameParts.join(" ");
   
-  if (serviceScope?.viaRequired && serviceScope?.selectedVias && serviceScope.selectedVias.length > 0) {
+  if (serviceScope?.selectedVias && serviceScope.selectedVias.length > 0) {
     const viaStr = serviceScope.selectedVias.join(" + ");
     name = name ? `${name} via ${viaStr}` : `via ${viaStr}`;
   }

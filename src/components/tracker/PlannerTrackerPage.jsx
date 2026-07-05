@@ -65,7 +65,7 @@ SOW :
 Gen code
 Buy out นำคลิปไปใช้ต่อในช่องทางของแบรนด์ (ระบุ : offline/online)`;
 
-export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActions }) {
+export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActions, readOnly = false, isBriefManagement = false }) {
   // Initialize trackers for each group if they don't exist yet
   const initializeTrackers = () => {
     const trackers = { ...(brief.groupTrackers || {}) };
@@ -367,6 +367,10 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
 
   React.useEffect(() => {
     if (setHeaderActions) {
+      if (readOnly) {
+        setHeaderActions(null);
+        return;
+      }
       setHeaderActions(
         <div className="flex items-center gap-3">
           <Button 
@@ -391,7 +395,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
       return () => setHeaderActions(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eligibleForLot.length, activeGroups.length, brief.internalStatus, isFinishWorkEnabled, setHeaderActions]);
+  }, [eligibleForLot.length, activeGroups.length, brief.internalStatus, isFinishWorkEnabled, setHeaderActions, readOnly]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20">
@@ -425,10 +429,11 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                     }}
                     onAddClick={(groupId) => handleAddInfluencerClick(grp.id)}
                     onReplaceClick={(groupName, infId, infName) => handleReplaceInfluencerClick(grp.id, infId, infName)}
-                    readOnly={false}
-                    allowStatusEdit={true}
+                    readOnly={readOnly}
+                    allowStatusEdit={isBriefManagement ? true : !readOnly}
                     hideAddButton={true}
-                    allowReorder={true}
+                    allowReorder={!readOnly}
+                    isBriefManagement={isBriefManagement}
                   />
                 ))}
               </div>

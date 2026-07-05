@@ -168,7 +168,7 @@ const lemon8Categories = [
   }
 ];
 
-function generateSeedData() {
+export function generateSeedData() {
   const records = [];
   let idCounter = 1001;
 
