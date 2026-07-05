@@ -233,6 +233,21 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
     }
   };
 
+  const handleBudgetSpendingChange = (e) => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    if (brief.budgetOptions && brief.budgetOptions.length > 0) {
+      const updatedOptions = brief.budgetOptions.map(opt => {
+        if (opt.id === activeOptId) {
+          return { ...opt, budgetSpending: val };
+        }
+        return opt;
+      });
+      onUpdateBrief({ ...brief, budgetOptions: updatedOptions });
+    } else {
+      onUpdateBrief({ ...brief, budgetSpending: val });
+    }
+  };
+
   const handleBuddyboostAdsChange = (e) => {
     const val = e.target.value.replace(/,/g, '');
     if (!isNaN(val)) {
@@ -481,7 +496,18 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
               <>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 font-medium">Budget</span>
-                  <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBudget)} บาท</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text"
+                      value={(() => {
+                        const activeOpt = (brief.budgetOptions || []).find(o => o.id === activeOptId) || (brief.budgetOptions || [])[0];
+                        return formatCurrency(activeOpt?.budgetSpending || brief.budgetSpending || 15000);
+                      })()}
+                      onChange={handleBudgetSpendingChange}
+                      className="w-32 text-right border-b border-slate-200 focus:border-blue-500 outline-none p-0 bg-transparent font-semibold text-slate-800 text-sm"
+                    />
+                    <span className="font-semibold text-slate-800">บาท</span>
+                  </div>
                 </div>
 
                 {/* Buddy Boost Section */}
@@ -653,7 +679,18 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
               <>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 font-medium">Total Budget</span>
-                  <span className="font-semibold text-slate-800">{formatCurrency(calc.totalBudget)} บาท</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text"
+                      value={(() => {
+                        const activeOpt = (brief.budgetOptions || []).find(o => o.id === activeOptId) || (brief.budgetOptions || [])[0];
+                        return formatCurrency(activeOpt?.budgetSpending || brief.budgetSpending || 15000);
+                      })()}
+                      onChange={handleBudgetSpendingChange}
+                      className="w-32 text-right border-b border-slate-200 focus:border-blue-500 outline-none p-0 bg-transparent font-semibold text-slate-800 text-sm"
+                    />
+                    <span className="font-semibold text-slate-800">บาท</span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 font-medium">Total Boost Ads</span>
