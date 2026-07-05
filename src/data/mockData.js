@@ -475,7 +475,7 @@ export const briefsSeed = [
     "eventDuration": "",
     "locationDetails": "",
     "buddyReviewSupport": "",
-    "condition": "แบรนด์ สามารถเลือก Influencer ได้ 1 ครั้ง\nแบรนด์ เป็นผู้ตรวจ Draft Content  โดยสามารถตรวจได้ 2 ครั้ง\nแบรนด์ ต้อง Sponsor Product\nBuddy Review เป็นผู้ประสานงานกับ Influencer\nรบกวนเช็ค รายละเอียด Condition ของ KOL รวมถึงราคา Boost Post / Boost fee\nแปะ Link ของ Platform ที่นำเสนอทุกช่องทาง",
+    "condition": "1. Brand สามารถเลือก Influencer ได้จำนวน ... ครั้ง\n2. Brand สามารถตรวจ Content Idea ได้ ... ครั้ง\n3. Brand สามารถตรวจ Draft ได้จำนวน ... ครั้ง (แก้ไขได้เฉพาะการตัดต่อและแคปชั่นในกรณีที่ทำออกมาไม่ตรงตาม Final Brief เท่านั้น)\n4. Buddy Review เป็นผู้ประสานงานกับ Influencer\n5. Recheck คิวและราคาอีกครั้ง ก่อน Confirm งาน\n6. ราคานำเสนอดังกล่าว สามารถใช้ได้ถึง .........",
     "createdAt": "2025-01-09",
     "groups": [
       {
@@ -867,7 +867,7 @@ export const briefsSeed = [
     ],
     "influencerBuyValue": "",
     "influencerPickupLocation": "จัดส่งให้ถึงบ้าน",
-    "condition": "ต้องแปะตะกร้า Tiktok Shop\nแบรนด์ตรวจคลิปได้ 1 ครั้ง",
+    "condition": "1. Brand สามารถเลือก Influencer ได้จำนวน ... ครั้ง\n2. Brand สามารถตรวจ Content Idea ได้ ... ครั้ง\n3. Brand สามารถตรวจ Draft ได้จำนวน ... ครั้ง (แก้ไขได้เฉพาะการตัดต่อและแคปชั่นในกรณีที่ทำออกมาไม่ตรงตาม Final Brief เท่านั้น)\n4. Buddy Review เป็นผู้ประสานงานกับ Influencer\n5. Recheck คิวและราคาอีกครั้ง ก่อน Confirm งาน\n6. ราคานำเสนอดังกล่าว สามารถใช้ได้ถึง .........",
     "createdAt": "2025-01-10"
   },
   {
@@ -1157,7 +1157,16 @@ export const briefsSeed = [
               "TikTok"
             ],
             "followerReq": "10K - 50K",
-            "allocationPercent": 100
+            "allocationPercent": 100,
+            "numInfluencers": "10",
+            "persona": {
+              "specialConditions": ["KPI Guarantee (Reach/View)"]
+            },
+            "serviceScope": {
+              "boostPostRequired": true,
+              "boostPostDuration": ["30 วัน"],
+              "selectedVias": ["Link in Bio"]
+            }
           }
         ]
       },
@@ -1187,7 +1196,16 @@ export const briefsSeed = [
               "TikTok"
             ],
             "followerReq": "10K - 50K",
-            "allocationPercent": 50
+            "allocationPercent": 50,
+            "numInfluencers": "5",
+            "persona": {
+              "specialConditions": ["KPI Guarantee (Reach/View)"]
+            },
+            "serviceScope": {
+              "boostPostRequired": true,
+              "boostPostDuration": ["30 วัน"],
+              "selectedVias": ["Link in Bio"]
+            }
           },
           {
             "brandSupportType": "No Sponsor",
@@ -1208,7 +1226,94 @@ export const briefsSeed = [
               "Instagram"
             ],
             "followerReq": "10K - 50K",
-            "allocationPercent": 50
+            "allocationPercent": 50,
+            "numInfluencers": "5",
+            "persona": {
+              "specialConditions": ["KPI Guarantee (Reach/View)"]
+            },
+            "serviceScope": {
+              "boostPostRequired": true,
+              "boostPostDuration": ["30 วัน"],
+              "selectedVias": ["Story", "Link in Bio"]
+            }
+          }
+        ]
+      }
+    ]
+  }
+  ,{
+    "id": "NRP202501022",
+    "internalStatus": "Draft",
+    "version": 1,
+    "campaignName": "Standard Review Campaign",
+    "customerId": "CUST-002",
+    "brand": "Srichand",
+    "product": "Srichand Super Coverage Foundation",
+    "clientStatus": "New",
+    "customerType": "Non-Key Account",
+    "salesOwner": "เจน",
+    "packageType": [
+      "Standard (1 D)"
+    ],
+    "objective": [
+      "Awareness (Reach)"
+    ],
+    "objectiveNote": "Review and Awareness",
+    "gender": [
+      "Female"
+    ],
+    "lifestyle": "Cosmetics & Skincare",
+    "country": "Thailand",
+    "province": "Bangkok",
+    "ageRange": "18 - 34",
+    "campaignStartDate": "2025-09-01",
+    "campaignEndDate": "2025-09-15",
+    "platform": [
+      "TikTok"
+    ],
+    "createdAt": "2025-07-05",
+    "condition": "1. Brand สามารถเลือก Influencer ได้จำนวน ... ครั้ง\n2. Brand สามารถตรวจ Content Idea ได้ ... ครั้ง\n3. Brand สามารถตรวจ Draft ได้จำนวน ... ครั้ง (แก้ไขได้เฉพาะการตัดต่อและแคปชั่นในกรณีที่ทำออกมาไม่ตรงตาม Final Brief เท่านั้น)\n4. Buddy Review เป็นผู้ประสานงานกับ Influencer\n5. Recheck คิวและราคาอีกครั้ง ก่อน Confirm งาน\n6. ราคานำเสนอดังกล่าว สามารถใช้ได้ถึง .........",
+    "budgetOptions": [
+      {
+        "id": "opt-1",
+        "name": "Option 1 (Standard TikTok)",
+        "totalBudget": "50000",
+        "totalBoostAds": "5000",
+        "totalOtherServices": "0",
+        "scopeOfWorks": [
+          {
+            "id": "sow-1",
+            "name": "Standard TikTok Pricing via Story",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReq": "10K - 50K",
+            "numInfluencers": "5",
+            "allocationPercent": 100,
+            "persona": {
+              "demographic": "18-34 Female",
+              "location": "Bangkok",
+              "occupation": "Students, First jobbers",
+              "persona": "Beauty enthusiast",
+              "contentCategory": "Makeup tutorials",
+              "storyTelling": "Before & After",
+              "specialConditions": [
+                "premium ดูดี ดูแพง (Multi photo)"
+              ]
+            },
+            "serviceScope": {
+              "buyoutRequired": true,
+              "buyoutDuration": [
+                "180 วัน"
+              ],
+              "boostPostRequired": true,
+              "boostPostDuration": [
+                "30 วัน"
+              ],
+              "selectedVias": [
+                "Story"
+              ]
+            }
           }
         ]
       }

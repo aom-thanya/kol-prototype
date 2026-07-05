@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Download } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
 import Button from "../common/Button";
@@ -410,6 +410,29 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
 
   const sumReserveInfluencers = recalculatedChannels.reduce((acc, c) => acc + c.reserveInfs, 0);
 
+  const handleAddOption = () => {
+    if (!brief.budgetOptions || brief.budgetOptions.length === 0) return;
+    const sourceOpt = brief.budgetOptions.find(o => o.id === activeOptId) || brief.budgetOptions[0];
+    const newId = `opt-${Date.now()}`;
+    const newOptionName = `Option ${String.fromCharCode(65 + brief.budgetOptions.length)}`;
+    const clonedSows = sourceOpt.scopeOfWorks ? sourceOpt.scopeOfWorks.map((sow, idx) => ({
+      ...sow,
+      id: `sow-${Date.now()}-${idx}`
+    })) : [];
+    const newOption = {
+      ...sourceOpt,
+      id: newId,
+      name: newOptionName,
+      scopeOfWorks: clonedSows
+    };
+    const updatedOptions = [...brief.budgetOptions, newOption];
+    onUpdateBrief({
+      ...brief,
+      budgetOptions: updatedOptions
+    });
+    setActiveOptId(newId);
+  };
+
   return (
     <div className="space-y-6 w-full pb-10">
       {/* Header */}
@@ -420,13 +443,13 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
           </h1>
           
           {/* Option Selector Tabs */}
-          {calc.budgetOptions && calc.budgetOptions.length > 1 && (
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          {calc.budgetOptions && calc.budgetOptions.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
               {calc.budgetOptions.map((opt, idx) => (
                 <button
                   key={opt.id}
                   onClick={() => setActiveOptId(opt.id)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
                     activeOptId === opt.id 
                       ? "bg-white text-slate-800 shadow-xs" 
                       : "text-slate-500 hover:text-slate-700"
@@ -435,6 +458,13 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
                   {opt.name || `Option ${String.fromCharCode(65 + idx)}`}
                 </button>
               ))}
+              <button
+                onClick={handleAddOption}
+                className="px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors flex items-center justify-center rounded-lg hover:bg-slate-200/50"
+                title="Add Option"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
           )}
         </div>

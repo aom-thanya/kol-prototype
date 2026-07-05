@@ -2167,6 +2167,13 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                             <span className="font-bold text-slate-800 text-base">{renderList(sow.contentType)}</span>
                           </div>
 
+                          {sow.serviceScope?.selectedVias && sow.serviceScope.selectedVias.length > 0 && (
+                            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                              <span className="text-slate-400 font-bold block mb-1">Via</span>
+                              <span className="font-bold text-slate-800 text-base">{sow.serviceScope.selectedVias.join(', ')}</span>
+                            </div>
+                          )}
+
                           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-slate-400 font-bold block mb-1">Budget Allocation</span>
                             <span className="font-bold text-slate-800 text-base">
@@ -2221,7 +2228,7 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           {/* Active Services */}
                           <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-sm">
                             <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500" /> Special Services Requested
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" /> Boost by page
                             </h5>
                             <div className="flex flex-wrap gap-2 pt-1">
                               {sow.serviceScope?.buyoutRequired && (
