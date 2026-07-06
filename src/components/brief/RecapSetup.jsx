@@ -485,29 +485,46 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                 placeholder="e.g. TikTok Video (Boost by Page 30 วัน)"
                               />
                             </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
-                              <input type="number" value={sow.numInfluencers || ""} onChange={e => handleUpdateSow(group.id, sow.id, { numInfluencers: e.target.value })} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input 
-                                  type="number" 
-                                  value={sow.followerReqFrom || ""} 
-                                  onChange={e => handleUpdateSow(group.id, sow.id, { followerReqFrom: e.target.value })} 
-                                  placeholder="From" 
-                                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                                />
-                                <input 
-                                  type="number" 
-                                  value={sow.followerReqTo || ""} 
-                                  onChange={e => handleUpdateSow(group.id, sow.id, { followerReqTo: e.target.value })} 
-                                  placeholder="To" 
-                                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                                />
+                            {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                              <div className="md:col-span-2">
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Influencer Details (Read Only)</label>
+                                <div className="space-y-2">
+                                  {sow.influencerDetails.map((detail, idx) => (
+                                    <div key={idx} className="flex gap-4 p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">
+                                      <div><span className="text-slate-500 mr-1">Group {idx + 1}:</span></div>
+                                      <div><span className="text-slate-400 mr-1">Influencers:</span><span className="font-medium">{detail.numInfluencers || "-"}</span></div>
+                                      <div><span className="text-slate-400 mr-1">Followers:</span><span className="font-medium">{detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - {detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}</span></div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <>
+                                <div>
+                                  <label className="mb-1 block text-sm font-medium text-slate-700">Number of Influencers</label>
+                                  <input type="number" value={sow.numInfluencers || ""} onChange={e => handleUpdateSow(group.id, sow.id, { numInfluencers: e.target.value })} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-sm font-medium text-slate-700">Follower Requirement</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <input 
+                                      type="number" 
+                                      value={sow.followerReqFrom || ""} 
+                                      onChange={e => handleUpdateSow(group.id, sow.id, { followerReqFrom: e.target.value })} 
+                                      placeholder="From" 
+                                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                                    />
+                                    <input 
+                                      type="number" 
+                                      value={sow.followerReqTo || ""} 
+                                      onChange={e => handleUpdateSow(group.id, sow.id, { followerReqTo: e.target.value })} 
+                                      placeholder="To" 
+                                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
                             <div className="md:col-span-2">
                               <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
                               <SimpleHtmlEditor value={sow.details || ""} onChange={val => handleUpdateSow(group.id, sow.id, { details: val })} />

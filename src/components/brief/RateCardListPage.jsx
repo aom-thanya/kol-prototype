@@ -460,7 +460,13 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                           <span className="text-slate-400 font-bold block mb-1">Followers Required</span>
                           <span className="font-bold text-slate-800 text-base">
-                            {sow.followerReqFrom || sow.followerReqTo ? (
+                            {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                              <div className="text-[11px] font-medium leading-tight space-y-0.5 mt-0.5">
+                                {sow.influencerDetails.map((d, i) => (
+                                  <div key={i}><span className="text-slate-400 mr-1">G{i+1}:</span>{d.followerReqFrom ? Number(d.followerReqFrom).toLocaleString() : "0"} - {d.followerReqTo ? Number(d.followerReqTo).toLocaleString() : "Any"}</div>
+                                ))}
+                              </div>
+                            ) : sow.followerReqFrom || sow.followerReqTo ? (
                               <>
                                 {sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - {sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}
                               </>
@@ -471,7 +477,13 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                           <span className="text-slate-400 font-bold block mb-1">KOL Qty</span>
-                          <span className="font-bold text-slate-800 text-base">{sow.numInfluencers || "-"}</span>
+                          <span className="font-bold text-slate-800 text-base">
+                            {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                              sow.influencerDetails.reduce((sum, d) => sum + (Number(d.numInfluencers) || 0), 0)
+                            ) : (
+                              sow.numInfluencers || "-"
+                            )}
+                          </span>
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                           <span className="text-slate-400 font-bold block mb-1">Budget Allocation</span>
@@ -488,18 +500,36 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                         </div>
                       )}
 
-                      {sow.persona && Object.values(sow.persona).some(Boolean) && (
-                        <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs">
-                          <span className="font-bold text-slate-450 block mb-3 uppercase text-[10px] tracking-wider">Influencer Persona Requirements</span>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3.5">
-                            {sow.persona.demographic && <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.demographic)}</span></div>}
-                            {sow.persona.location && <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.location)}</span></div>}
-                            {sow.persona.occupation && <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.occupation)}</span></div>}
-                            {sow.persona.persona && <div><span className="text-slate-400 font-bold block mb-0.5">Characteristics (Persona)</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.persona)}</span></div>}
-                            {sow.persona.contentCategory && <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.contentCategory)}</span></div>}
-                            {sow.persona.storyTelling && <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.storyTelling)}</span></div>}
-                          </div>
+                      {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                        <div className="space-y-3 mt-4">
+                          {sow.influencerDetails.map((detail, idx) => (
+                             <div key={idx} className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs">
+                               <span className="font-bold text-slate-450 block mb-3 uppercase text-[10px] tracking-wider">Group {idx + 1} Persona Requirements</span>
+                               <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3.5">
+                                 {detail.persona?.demographic && <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.demographic)}</span></div>}
+                                 {detail.persona?.location && <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.location)}</span></div>}
+                                 {detail.persona?.occupation && <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.occupation)}</span></div>}
+                                 {detail.persona?.persona && <div><span className="text-slate-400 font-bold block mb-0.5">Characteristics (Persona)</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.persona)}</span></div>}
+                                 {detail.persona?.contentCategory && <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.contentCategory)}</span></div>}
+                                 {detail.persona?.storyTelling && <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.storyTelling)}</span></div>}
+                               </div>
+                             </div>
+                          ))}
                         </div>
+                      ) : (
+                        sow.persona && Object.values(sow.persona).some(Boolean) && (
+                          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs mt-4">
+                            <span className="font-bold text-slate-450 block mb-3 uppercase text-[10px] tracking-wider">Influencer Persona Requirements</span>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3.5">
+                              {sow.persona.demographic && <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.demographic)}</span></div>}
+                              {sow.persona.location && <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.location)}</span></div>}
+                              {sow.persona.occupation && <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.occupation)}</span></div>}
+                              {sow.persona.persona && <div><span className="text-slate-400 font-bold block mb-0.5">Characteristics (Persona)</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.persona)}</span></div>}
+                              {sow.persona.contentCategory && <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.contentCategory)}</span></div>}
+                              {sow.persona.storyTelling && <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.storyTelling)}</span></div>}
+                            </div>
+                          </div>
+                        )
                       )}
 
                       <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs space-y-3">
@@ -1535,7 +1565,17 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                             <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Follower Requirement</td>
                             {group.sows?.map((sow, idx) => (
                               <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
-                                {sow.followerReqFrom && sow.followerReqTo ? `${Number(sow.followerReqFrom).toLocaleString()} - ${Number(sow.followerReqTo).toLocaleString()}` : (sow.followerReqFrom || sow.followerReqTo || "-")}
+                                {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                                  <div className="text-[11px] font-medium leading-tight space-y-0.5 mt-0.5">
+                                    {sow.influencerDetails.map((d, i) => (
+                                      <div key={i}><span className="text-slate-400 mr-1">G{i+1}:</span>{d.followerReqFrom ? Number(d.followerReqFrom).toLocaleString() : "0"} - {d.followerReqTo ? Number(d.followerReqTo).toLocaleString() : "Any"}</div>
+                                    ))}
+                                  </div>
+                                ) : sow.followerReqFrom && sow.followerReqTo ? (
+                                  `${Number(sow.followerReqFrom).toLocaleString()} - ${Number(sow.followerReqTo).toLocaleString()}`
+                                ) : (
+                                  sow.followerReqFrom || sow.followerReqTo || "-"
+                                )}
                               </td>
                             ))}
                             {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
@@ -1546,7 +1586,11 @@ export default function RateCardListPage({ briefs, onUpdateBriefs, showToast }) 
                             <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Number of Influencers</td>
                             {group.sows?.map((sow, idx) => (
                               <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
-                                {sow.numInfluencers || "-"}
+                                {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                                  sow.influencerDetails.reduce((sum, d) => sum + (Number(d.numInfluencers) || 0), 0)
+                                ) : (
+                                  sow.numInfluencers || "-"
+                                )}
                               </td>
                             ))}
                             {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}

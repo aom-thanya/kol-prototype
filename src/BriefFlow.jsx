@@ -83,6 +83,92 @@ function cn(...classes) {
 
 // --- Mock Influencer Data for Selection ---
 
+// --- Influencer Detail Modal Component ---
+function InfluencerDetailModal({ open, onClose, onSave, initialData }) {
+  const [data, setData] = useState({
+    numInfluencers: "",
+    followerReqFrom: "",
+    followerReqTo: "",
+    persona: {
+      demographic: "",
+      location: "",
+      occupation: "",
+      persona: "",
+      contentCategory: "",
+      storyTelling: ""
+    }
+  });
+
+  useEffect(() => {
+    if (open) {
+      setData(initialData || {
+        numInfluencers: "",
+        followerReqFrom: "",
+        followerReqTo: "",
+        persona: { demographic: "", location: "", occupation: "", persona: "", contentCategory: "", storyTelling: "" }
+      });
+    }
+  }, [open, initialData]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4">
+          <h2 className="text-lg font-bold text-slate-800">Influencer Details</h2>
+          <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-slate-100">
+            <X className="h-5 w-5 text-slate-500" />
+          </button>
+        </div>
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
+              <input type="number" value={data.numInfluencers} onChange={e => setData({...data, numInfluencers: e.target.value})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Follower Requirement</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="number" value={data.followerReqFrom} onChange={e => setData({...data, followerReqFrom: e.target.value})} placeholder="From" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                <input type="number" value={data.followerReqTo} onChange={e => setData({...data, followerReqTo: e.target.value})} placeholder="To" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+              </div>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Demographic</label>
+              <input type="text" value={data.persona?.demographic || ""} onChange={e => setData({...data, persona: {...data.persona, demographic: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
+              <input type="text" value={data.persona?.location || ""} onChange={e => setData({...data, persona: {...data.persona, location: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Occupation</label>
+              <input type="text" value={data.persona?.occupation || ""} onChange={e => setData({...data, persona: {...data.persona, occupation: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Characteristics (Persona)</label>
+              <input type="text" value={data.persona?.persona || ""} onChange={e => setData({...data, persona: {...data.persona, persona: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Content Category</label>
+              <input type="text" value={data.persona?.contentCategory || ""} onChange={e => setData({...data, persona: {...data.persona, contentCategory: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Storytelling Styles</label>
+              <input type="text" value={data.persona?.storyTelling || ""} onChange={e => setData({...data, persona: {...data.persona, storyTelling: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 border-t border-slate-100 p-4 bg-slate-50">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200">Cancel</button>
+          <button type="button" onClick={() => { onSave(data); onClose(); }} className="rounded-lg bg-[#6D5DF6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5b4df0]">Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Form Modal Component ---
 function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1, customers = [] }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
@@ -225,6 +311,10 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   });
 
   const [activeOptionId, setActiveOptionId] = useState(() => budgetOptions[0]?.id);
+
+  const [infDetailModalOpen, setInfDetailModalOpen] = useState(false);
+  const [currentEditingInfDetail, setCurrentEditingInfDetail] = useState(null);
+  const [currentEditingScopeInfo, setCurrentEditingScopeInfo] = useState(null);
 
   const updateActiveOption = (field, value) => {
     setBudgetOptions(prev => prev.map(opt => opt.id === activeOptionId ? { ...opt, [field]: value } : opt));
@@ -425,7 +515,36 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
   const activeOpt = budgetOptions.find(opt => opt.id === activeOptionId) || budgetOptions[0];
 
   return (
-    <AnimatePresence>
+    <>
+      <InfluencerDetailModal 
+        open={infDetailModalOpen} 
+        onClose={() => setInfDetailModalOpen(false)}
+        initialData={currentEditingInfDetail}
+        onSave={(data) => {
+          setBudgetOptions(prev => prev.map(opt => {
+            if (opt.id === currentEditingScopeInfo?.optId) {
+              return {
+                ...opt,
+                scopeOfWorks: opt.scopeOfWorks.map(s => {
+                  if (s.id === currentEditingScopeInfo?.sowId) {
+                    const newDetails = [...(s.influencerDetails || [])];
+                    if (currentEditingScopeInfo.detailId) {
+                      const idx = newDetails.findIndex(d => d.id === currentEditingScopeInfo.detailId);
+                      if (idx >= 0) newDetails[idx] = { ...data, id: currentEditingScopeInfo.detailId };
+                    } else {
+                      newDetails.push({ ...data, id: Date.now() + Math.random() });
+                    }
+                    return { ...s, influencerDetails: newDetails };
+                  }
+                  return s;
+                })
+              }
+            }
+            return opt;
+          }));
+        }}
+      />
+      <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -1097,7 +1216,6 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
 
                           </div>
                         </div>
-
                         <div className="md:col-span-2 pt-2">
                           <label className="mb-2 block text-sm font-medium text-slate-700">Scope Name</label>
                           <input 
@@ -1117,41 +1235,38 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       </div>
 
                       {/* Persona under SOW */}
-                      <h5 className="mb-4 text-sm font-semibold text-slate-900 border-t border-slate-200 pt-6">Influencer details</h5>
-                      <div className="grid gap-4 md:grid-cols-2 mb-8">
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
-                          <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Follower Requirement</label>
-                          {packageType?.startsWith("Standard") ? (
+                      <div className="flex items-center justify-between mb-4 border-t border-slate-200 pt-6">
+                        <h5 className="text-sm font-semibold text-slate-900">Influencer details</h5>
+                        {!packageType?.startsWith("Standard") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentEditingScopeInfo({ optId: activeOpt.id, sowId: scope.id, detailId: null });
+                              setCurrentEditingInfDetail(null);
+                              setInfDetailModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-[#6D5DF6] hover:bg-violet-100 transition-colors"
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Add Influencer Details
+                          </button>
+                        )}
+                      </div>
+                      
+                      {packageType?.startsWith("Standard") ? (
+                        <div className="grid gap-4 md:grid-cols-2 mb-8">
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
+                            <input type="number" value={scope.numInfluencers} onChange={e => handleUpdateScope(scope.id, 'numInfluencers', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Follower Requirement</label>
                             <Select 
                               value={scope.followerReq || ""} 
                               onChange={val => handleUpdateScope(scope.id, 'followerReq', val)} 
                               options={["1K - 5K", "5K - 10K", "10K - 50K", "50K - 100K", "100K+"]} 
                               placeholder="Select follower range" 
                             />
-                          ) : (
-                            <div className="grid grid-cols-2 gap-2">
-                              <input 
-                                type="number" 
-                                value={scope.followerReqFrom || ""} 
-                                onChange={e => handleUpdateScope(scope.id, 'followerReqFrom', e.target.value)} 
-                                placeholder="From" 
-                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                              />
-                              <input 
-                                type="number" 
-                                value={scope.followerReqTo || ""} 
-                                onChange={e => handleUpdateScope(scope.id, 'followerReqTo', e.target.value)} 
-                                placeholder="To" 
-                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                              />
-                            </div>
-                          )}
-                        </div>
-                        {packageType?.startsWith("Standard") && (
+                          </div>
                           <div className="md:col-span-2">
                             <label className="mb-2 block text-sm font-medium text-slate-700">Special Condition</label>
                             <MultiSelect 
@@ -1161,73 +1276,133 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                               placeholder="Select special conditions"
                             />
                           </div>
-                        )}
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Demographic</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.demographic || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'demographic', e.target.value)} 
-                            placeholder="e.g. 18-24 Female, Gen Z" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Demographic</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.demographic || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'demographic', e.target.value)} 
+                              placeholder="e.g. 18-24 Female, Gen Z" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.location || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'location', e.target.value)} 
+                              placeholder="e.g. Bangkok, Upcountry" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Occupation</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.occupation || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'occupation', e.target.value)} 
+                              placeholder="e.g. Office worker, Student" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Persona</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.persona || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'persona', e.target.value)} 
+                              placeholder="e.g. Friendly, Informative" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Content Category</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.contentCategory || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'contentCategory', e.target.value)} 
+                              placeholder="e.g. Beauty, Lifestyle, Tech" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">Story Telling</label>
+                            <input 
+                              type="text" 
+                              value={scope.persona?.storyTelling || ""} 
+                              onChange={e => handleUpdatePersona(scope.id, 'storyTelling', e.target.value)} 
+                              placeholder="e.g. Soft-sell, Daily vlog" 
+                              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.location || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'location', e.target.value)} 
-                            placeholder="e.g. Bangkok, Upcountry" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
+                      ) : (
+                        <div className="mb-8 space-y-3">
+                          {scope.influencerDetails && scope.influencerDetails.length > 0 ? (
+                            scope.influencerDetails.map((detail, idx) => (
+                              <div key={detail.id || idx} className="rounded-xl border border-slate-200 bg-white p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h6 className="text-sm font-bold text-slate-800">Group {idx + 1}</h6>
+                                  <div className="flex items-center gap-2">
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        setCurrentEditingScopeInfo({ optId: activeOpt.id, sowId: scope.id, detailId: detail.id });
+                                        setCurrentEditingInfDetail(detail);
+                                        setInfDetailModalOpen(true);
+                                      }}
+                                      className="p-1.5 text-slate-400 hover:text-[#6D5DF6] hover:bg-slate-50 rounded-lg"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        if (window.confirm("Delete this group?")) {
+                                          const newDetails = scope.influencerDetails.filter(d => d.id !== detail.id);
+                                          handleUpdateScope(scope.id, 'influencerDetails', newDetails);
+                                        }
+                                      }}
+                                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Influencers</div>
+                                    <div className="font-semibold text-slate-700">{detail.numInfluencers || "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Followers</div>
+                                    <div className="font-semibold text-slate-700">{detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom || "0"} - ${detail.followerReqTo || "Any"}` : "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Demographic</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.demographic || "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Location</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.location || "-"}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-8 text-center">
+                              <Users className="mx-auto h-6 w-6 text-slate-400 mb-2" />
+                              <p className="text-sm text-slate-500">No influencer details added yet.</p>
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Occupation</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.occupation || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'occupation', e.target.value)} 
-                            placeholder="e.g. Office worker, Student" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Persona</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.persona || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'persona', e.target.value)} 
-                            placeholder="e.g. Friendly, Informative" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Content Category</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.contentCategory || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'contentCategory', e.target.value)} 
-                            placeholder="e.g. Beauty, Lifestyle, Tech" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-slate-700">Story Telling</label>
-                          <input 
-                            type="text" 
-                            value={scope.persona?.storyTelling || ""} 
-                            onChange={e => handleUpdatePersona(scope.id, 'storyTelling', e.target.value)} 
-                            placeholder="e.g. Soft-sell, Daily vlog" 
-                            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
-                          />
-                        </div>
-                      </div>
+                      )}
 
-                      <div className="md:col-span-2 border-t border-slate-200 pt-4 space-y-4">
+                      <div className="md:col-span-2 border-t border-slate-200 pt-6 space-y-4">
                         <h5 className="text-sm font-semibold text-slate-900">Brand Support & On-Site</h5>
                         
-                        <div className="grid gap-4 md:grid-cols-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="grid gap-6 md:grid-cols-2 bg-slate-50 p-6 md:p-8 rounded-xl border border-slate-100">
                           <div className="md:col-span-2">
                             <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">Brand Support Type</label>
                             <div className="flex items-center gap-6 py-1">
@@ -1291,9 +1466,9 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           )}
 
                           {(scope.brandSupportType || "No Sponsor") === "No Sponsor" && scope.productReceiveMethod === "Influencer ซื้อเอง" && (
-                            <div className="md:col-span-2 pt-1">
+                            <div className="md:col-span-2 pt-3">
                               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">การเบิกค่าใช้จ่าย</label>
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-3">
                                 {["กำหนดงบต่อคน", "เบิกตามจริง", "ไม่เบิก"].map(reimOpt => (
                                   <label key={reimOpt} className={`relative flex cursor-pointer rounded-xl border px-4 py-2.5 transition-colors ${scope.reimbursement === reimOpt ? "border-[#6D5DF6] bg-violet-50/30 ring-1 ring-[#6D5DF6]" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
                                     <div className="flex items-center gap-3">
@@ -1318,7 +1493,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                             </div>
                           )}
 
-                          <div className="md:col-span-2 border-t border-slate-200/60 pt-3">
+                          <div className="md:col-span-2 border-t border-slate-200/60 pt-5 mt-2">
                             <label className="mb-2 block text-sm font-medium text-slate-700 font-semibold text-slate-800">ต้องมีการเดินทางไปถ่ายทำ / รับสินค้าหรือบริการ หรือไม่</label>
                             <Select 
                               value={scope.requireTravel || "ไม่ต้อง (Remote / ถ่ายทำที่ไหนก็ได้)"} 
@@ -1328,7 +1503,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           </div>
 
                           {scope.requireTravel === "ต้อง (มี On-site / Event / รับบริการ)" && (
-                            <div className="md:col-span-2 grid gap-4 md:grid-cols-2 border-t border-slate-200/60 pt-3 mt-1">
+                            <div className="md:col-span-2 grid gap-6 md:grid-cols-2 border-t border-slate-200/60 pt-5 mt-2">
                               <div>
                                 <label className="mb-2 block text-sm font-medium text-slate-700">ประเภท On-Site</label>
                                 <Select 
@@ -1449,6 +1624,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
         </motion.div>
       </div>
     </AnimatePresence>
+    </>
   );
 }
 

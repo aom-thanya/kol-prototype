@@ -32,15 +32,19 @@ export function getCampaignCalculations(brief, activeOptId) {
 
   const getFollowerTier = (sowOrStr) => {
     if (sowOrStr && typeof sowOrStr === "object") {
-      if (sowOrStr.followerReqFrom !== undefined && sowOrStr.followerReqFrom !== "") {
-        const fromVal = Number(sowOrStr.followerReqFrom);
+      let target = sowOrStr;
+      if (sowOrStr.influencerDetails && sowOrStr.influencerDetails.length > 0) {
+         target = sowOrStr.influencerDetails[0];
+      }
+      if (target.followerReqFrom !== undefined && target.followerReqFrom !== "") {
+        const fromVal = Number(target.followerReqFrom);
         if (fromVal >= 100000) return 4;
         if (fromVal >= 50000) return 3;
         if (fromVal >= 10000) return 2;
         if (fromVal >= 5000) return 1;
         return 0;
       }
-      return getFollowerTier(sowOrStr.followerReq);
+      return getFollowerTier(target.followerReq);
     }
     const str = sowOrStr;
     if (!str) return 2; // Default to 10K-50K (index 2)
@@ -135,9 +139,12 @@ export function getCampaignCalculations(brief, activeOptId) {
     const channelCost = social + support + product + travel + logistics;
     const allocationPercent = parseFloat(String(sow.allocationPercent || sow.allocation || 100).replace(/%/g, '')) || 100;
     
-    const displayFollower = sow.followerReqFrom || sow.followerReqTo 
-      ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}`
-      : sow.followerReq || "10,000 - 50,000";
+    let displayFollower = sow.followerReq || "10,000 - 50,000";
+    if (sow.influencerDetails && sow.influencerDetails.length > 0) {
+      displayFollower = sow.influencerDetails.map(d => `${d.followerReqFrom ? Number(d.followerReqFrom).toLocaleString() : "0"} - ${d.followerReqTo ? Number(d.followerReqTo).toLocaleString() : "Any"}`).join(", ");
+    } else if (sow.followerReqFrom || sow.followerReqTo) {
+      displayFollower = `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}`;
+    }
 
     return {
       id: sow.id,

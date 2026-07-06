@@ -138,7 +138,23 @@ export const briefsSeed = [
               "tiktokShopDuration": [],
               "addAdsRequired": true,
               "addAdsDuration": []
-            }
+            },
+            "influencerDetails": [
+              {
+                "id": "inf-17832985383880.6398476726893294",
+                "numInfluencers": "15",
+                "followerReqFrom": "5000",
+                "followerReqTo": "50000",
+                "persona": {
+                  "demographic": "18-24 Female, Gen Z Skincare users",
+                  "location": "Bangkok & Metropolitan cities",
+                  "occupation": "University Students, Beauty Bloggers",
+                  "persona": "Energetic, Authentic, Fun storytelling",
+                  "contentCategory": "Skincare, Makeup tutorials",
+                  "storyTelling": "Genuine unboxing and 7-day challenge results"
+                }
+              }
+            ]
           },
           {
             "brandSupportType": "No Sponsor",
@@ -184,7 +200,23 @@ export const briefsSeed = [
               ],
               "boostPostRequired": true,
               "boostPostDuration": []
-            }
+            },
+            "influencerDetails": [
+              {
+                "id": "inf-17832985383880.4124464428107102",
+                "numInfluencers": "10",
+                "followerReqFrom": "5000",
+                "followerReqTo": "50000",
+                "persona": {
+                  "demographic": "25-34 Female, Modern Working Women",
+                  "location": "Bangkok and major cities (Chiang Mai, Phuket)",
+                  "occupation": "Office workers, Professionals, Freelancers",
+                  "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
+                  "contentCategory": "Premium beauty products, Self-care",
+                  "storyTelling": "Aesthetic morning routine and texture close-ups"
+                }
+              }
+            ]
           },
           {
             "brandSupportType": "No Sponsor",
@@ -224,7 +256,23 @@ export const briefsSeed = [
               "boostPostDuration": [
                 "30 วัน"
               ]
-            }
+            },
+            "influencerDetails": [
+              {
+                "id": "inf-17832985383880.5529684910239892",
+                "numInfluencers": "5",
+                "followerReqFrom": "5000",
+                "followerReqTo": "10000",
+                "persona": {
+                  "demographic": "30-45 Female, Moms & Families",
+                  "location": "Nationwide Thailand",
+                  "occupation": "Housewives, Full-time moms, Salary workers",
+                  "persona": "Informative, Sincere, Detailed reviewer",
+                  "contentCategory": "Skincare science, Safe ingredients",
+                  "storyTelling": "Detailed step-by-step review with explanation of active ingredients"
+                }
+              }
+            ]
           }
         ]
       },
@@ -267,7 +315,23 @@ export const briefsSeed = [
               "persona": "Energetic, Authentic, Fun storytelling",
               "contentCategory": "Skincare, Makeup tutorials",
               "storyTelling": "Genuine unboxing and 7-day challenge results"
-            }
+            },
+            "influencerDetails": [
+              {
+                "id": "inf-17832985383880.41468867319296077",
+                "numInfluencers": "20",
+                "followerReqFrom": "10000",
+                "followerReqTo": "50000",
+                "persona": {
+                  "demographic": "18-24 Female, Gen Z Skincare users",
+                  "location": "Bangkok & Metropolitan cities",
+                  "occupation": "University Students, Beauty Bloggers",
+                  "persona": "Energetic, Authentic, Fun storytelling",
+                  "contentCategory": "Skincare, Makeup tutorials",
+                  "storyTelling": "Genuine unboxing and 7-day challenge results"
+                }
+              }
+            ]
           },
           {
             "brandSupportType": "No Sponsor",
@@ -301,7 +365,23 @@ export const briefsSeed = [
               "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
               "contentCategory": "Premium beauty products, Self-care",
               "storyTelling": "Aesthetic morning routine and texture close-ups"
-            }
+            },
+            "influencerDetails": [
+              {
+                "id": "inf-17832985383880.057895026266953864",
+                "numInfluencers": "5",
+                "followerReqFrom": "5000",
+                "followerReqTo": "10000",
+                "persona": {
+                  "demographic": "25-34 Female, Modern Working Women",
+                  "location": "Bangkok and major cities (Chiang Mai, Phuket)",
+                  "occupation": "Office workers, Professionals, Freelancers",
+                  "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
+                  "contentCategory": "Premium beauty products, Self-care",
+                  "storyTelling": "Aesthetic morning routine and texture close-ups"
+                }
+              }
+            ]
           }
         ]
       }
