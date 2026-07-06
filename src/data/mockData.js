@@ -1,24 +1,24 @@
 export const customersSeed = [
   {
-    id: "CUST-001",
-    name: "L'Oréal Thailand",
-    image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=160&q=80",
-    type: "Key Account",
-    createdAt: "2025-01-05"
+    "id": "CUST-001",
+    "name": "L'Oréal Thailand",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=160&q=80",
+    "type": "Key Account",
+    "createdAt": "2025-01-05"
   },
   {
-    id: "CUST-002",
-    name: "Srichand",
-    image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=160&q=80",
-    type: "Non-Key Account",
-    createdAt: "2025-02-12"
+    "id": "CUST-002",
+    "name": "Srichand",
+    "image": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=160&q=80",
+    "type": "Non-Key Account",
+    "createdAt": "2025-02-12"
   },
   {
-    id: "CUST-003",
-    name: "Unilever",
-    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=160&q=80",
-    type: "Key Account",
-    createdAt: "2025-03-20"
+    "id": "CUST-003",
+    "name": "Unilever",
+    "image": "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=160&q=80",
+    "type": "Key Account",
+    "createdAt": "2025-03-20"
   }
 ];
 
@@ -482,18 +482,33 @@ export const briefsSeed = [
         "id": "Tiktok Review",
         "name": "Tiktok Review",
         "pillars": {
-          "Demographic": ["18-24 Female"],
-          "Location": ["Bangkok"],
-          "Occupation": ["Students"],
-          "Persona": ["Energetic"],
-          "StoryTelling": ["Genuine unboxing"]
+          "Demographic": [
+            "18-24 Female"
+          ],
+          "Location": [
+            "Bangkok"
+          ],
+          "Occupation": [
+            "Students"
+          ],
+          "Persona": [
+            "Energetic"
+          ],
+          "StoryTelling": [
+            "Genuine unboxing"
+          ]
         },
-        "questions": ["ต้องการติดตะกร้า Tiktok Shop หรือไม่?", "มี Affiliate คอมมิชชั่นเท่าไหร่?"],
+        "questions": [
+          "ต้องการติดตะกร้า Tiktok Shop หรือไม่?",
+          "มี Affiliate คอมมิชชั่นเท่าไหร่?"
+        ],
         "sows": [
           {
             "id": "1",
             "name": "Tiktok Review",
-            "platforms": ["TikTok"],
+            "platforms": [
+              "TikTok"
+            ],
             "followerReq": "5K - 50K",
             "numInfluencers": "15"
           }
@@ -503,18 +518,32 @@ export const briefsSeed = [
         "id": "IG Reel Review",
         "name": "IG Reel Review",
         "pillars": {
-          "Demographic": ["25-34 Female"],
-          "Location": ["Bangkok"],
-          "Occupation": ["Office workers"],
-          "Persona": ["Elegant"],
-          "StoryTelling": ["Aesthetic routine"]
+          "Demographic": [
+            "25-34 Female"
+          ],
+          "Location": [
+            "Bangkok"
+          ],
+          "Occupation": [
+            "Office workers"
+          ],
+          "Persona": [
+            "Elegant"
+          ],
+          "StoryTelling": [
+            "Aesthetic routine"
+          ]
         },
-        "questions": ["สามารถลง Reels ได้ตามเวลาที่ระบุหรือไม่?"],
+        "questions": [
+          "สามารถลง Reels ได้ตามเวลาที่ระบุหรือไม่?"
+        ],
         "sows": [
           {
             "id": "2",
             "name": "IG Reel Review",
-            "platforms": ["Instagram"],
+            "platforms": [
+              "Instagram"
+            ],
             "followerReq": "5K - 50K",
             "numInfluencers": "10"
           }
@@ -691,7 +720,15 @@ export const briefsSeed = [
           }
         ]
       }
-    }
+    },
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": ""
   },
   {
     "id": "NRP202501021",
@@ -751,8 +788,12 @@ export const briefsSeed = [
           {
             "id": "sow-f1",
             "name": "Create Short Video on Tiktok",
-            "platforms": ["Tiktok"],
-            "contentType": ["VDO content (Short Clip)"],
+            "platforms": [
+              "Tiktok"
+            ],
+            "contentType": [
+              "VDO content (Short Clip)"
+            ],
             "followerReq": "10K - 50K",
             "followerReqFrom": "10000",
             "followerReqTo": "50000",
@@ -772,7 +813,9 @@ export const briefsSeed = [
             "buddyReviewSupport": "No",
             "serviceScope": {
               "tiktokShopRequired": true,
-              "tiktokShopDuration": ["30 วัน"]
+              "tiktokShopDuration": [
+                "30 วัน"
+              ]
             }
           }
         ]
@@ -790,8 +833,12 @@ export const briefsSeed = [
           {
             "id": "sow-f2",
             "name": "Create Short Video on Tiktok",
-            "platforms": ["Tiktok"],
-            "contentType": ["VDO content (Short Clip)"],
+            "platforms": [
+              "Tiktok"
+            ],
+            "contentType": [
+              "VDO content (Short Clip)"
+            ],
             "followerReq": "10K - 50K",
             "followerReqFrom": "10000",
             "followerReqTo": "50000",
@@ -811,14 +858,20 @@ export const briefsSeed = [
             "buddyReviewSupport": "No",
             "serviceScope": {
               "tiktokShopRequired": true,
-              "tiktokShopDuration": ["30 วัน"]
+              "tiktokShopDuration": [
+                "30 วัน"
+              ]
             }
           },
           {
             "id": "sow-f3",
             "name": "Create Photo Album on Facebook",
-            "platforms": ["Facebook"],
-            "contentType": ["Photo Album"],
+            "platforms": [
+              "Facebook"
+            ],
+            "contentType": [
+              "Photo Album"
+            ],
             "followerReq": "5K - 10K",
             "followerReqFrom": "5000",
             "followerReqTo": "10000",
@@ -838,7 +891,9 @@ export const briefsSeed = [
             "buddyReviewSupport": "No",
             "serviceScope": {
               "boostPostRequired": true,
-              "boostPostDuration": ["15 วัน"]
+              "boostPostDuration": [
+                "15 วัน"
+              ]
             }
           }
         ]
@@ -908,18 +963,34 @@ export const briefsSeed = [
         "id": "Event Vlog",
         "name": "Event Vlog",
         "pillars": {
-          "Demographic": ["18 - 45 Male", "18 - 45 Female"],
-          "Location": ["Bangkok"],
-          "Occupation": ["Gamers", "IT Professionals"],
-          "Persona": ["Tech enthusiasts"],
-          "StoryTelling": ["Interactive vlog"]
+          "Demographic": [
+            "18 - 45 Male",
+            "18 - 45 Female"
+          ],
+          "Location": [
+            "Bangkok"
+          ],
+          "Occupation": [
+            "Gamers",
+            "IT Professionals"
+          ],
+          "Persona": [
+            "Tech enthusiasts"
+          ],
+          "StoryTelling": [
+            "Interactive vlog"
+          ]
         },
-        "questions": ["มีของรางวัลแจกในบูธไหม?"],
+        "questions": [
+          "มีของรางวัลแจกในบูธไหม?"
+        ],
         "sows": [
           {
             "id": "sow-event-vlog",
             "name": "Event Vlog",
-            "platforms": ["TikTok"],
+            "platforms": [
+              "TikTok"
+            ],
             "followerReq": "10K - 100K",
             "numInfluencers": "5"
           }
@@ -985,7 +1056,15 @@ export const briefsSeed = [
           }
         ]
       }
-    }
+    },
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": ""
   },
   {
     "id": "BRD-3001",
@@ -1023,18 +1102,33 @@ export const briefsSeed = [
         "id": "Beauty Review",
         "name": "Beauty Review",
         "pillars": {
-          "Demographic": ["18 - 35 Female"],
-          "Location": ["Bangkok"],
-          "Occupation": ["Beauty Bloggers"],
-          "Persona": ["Trustworthy", "Detailed"],
-          "StoryTelling": ["Texture close-up"]
+          "Demographic": [
+            "18 - 35 Female"
+          ],
+          "Location": [
+            "Bangkok"
+          ],
+          "Occupation": [
+            "Beauty Bloggers"
+          ],
+          "Persona": [
+            "Trustworthy",
+            "Detailed"
+          ],
+          "StoryTelling": [
+            "Texture close-up"
+          ]
         },
-        "questions": ["มีอาการแพ้ครีมไหม?"],
+        "questions": [
+          "มีอาการแพ้ครีมไหม?"
+        ],
         "sows": [
           {
             "id": "sow-beauty-1",
             "name": "Beauty Review",
-            "platforms": ["TikTok"],
+            "platforms": [
+              "TikTok"
+            ],
             "followerReq": "10K - 50K",
             "numInfluencers": "3",
             "exampleCreators": [
@@ -1092,7 +1186,15 @@ export const briefsSeed = [
           }
         ]
       }
-    }
+    },
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": ""
   },
   {
     "id": "BRD-3002",
@@ -1160,12 +1262,18 @@ export const briefsSeed = [
             "allocationPercent": 100,
             "numInfluencers": "10",
             "persona": {
-              "specialConditions": ["KPI Guarantee (Reach/View)"]
+              "specialConditions": [
+                "KPI Guarantee (Reach/View)"
+              ]
             },
             "serviceScope": {
               "boostPostRequired": true,
-              "boostPostDuration": ["30 วัน"],
-              "selectedVias": ["Link in Bio"]
+              "boostPostDuration": [
+                "30 วัน"
+              ],
+              "selectedVias": [
+                "Link in Bio"
+              ]
             }
           }
         ]
@@ -1199,12 +1307,18 @@ export const briefsSeed = [
             "allocationPercent": 50,
             "numInfluencers": "5",
             "persona": {
-              "specialConditions": ["KPI Guarantee (Reach/View)"]
+              "specialConditions": [
+                "KPI Guarantee (Reach/View)"
+              ]
             },
             "serviceScope": {
               "boostPostRequired": true,
-              "boostPostDuration": ["30 วัน"],
-              "selectedVias": ["Link in Bio"]
+              "boostPostDuration": [
+                "30 วัน"
+              ],
+              "selectedVias": [
+                "Link in Bio"
+              ]
             }
           },
           {
@@ -1229,19 +1343,34 @@ export const briefsSeed = [
             "allocationPercent": 50,
             "numInfluencers": "5",
             "persona": {
-              "specialConditions": ["KPI Guarantee (Reach/View)"]
+              "specialConditions": [
+                "KPI Guarantee (Reach/View)"
+              ]
             },
             "serviceScope": {
               "boostPostRequired": true,
-              "boostPostDuration": ["30 วัน"],
-              "selectedVias": ["Story", "Link in Bio"]
+              "boostPostDuration": [
+                "30 วัน"
+              ],
+              "selectedVias": [
+                "Story",
+                "Link in Bio"
+              ]
             }
           }
         ]
       }
-    ]
-  }
-  ,{
+    ],
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": ""
+  },
+  {
     "id": "NRP202501022",
     "internalStatus": "Draft",
     "version": 1,
@@ -1313,10 +1442,30 @@ export const briefsSeed = [
               "selectedVias": [
                 "Story"
               ]
-            }
+            },
+            "brandSupportType": "No Sponsor",
+            "brandSupportTypeOther": "",
+            "productValue": "",
+            "productReceiveMethod": "",
+            "logisticsPerInfluencer": "",
+            "reimbursement": "",
+            "requireTravel": "ไม่ต้อง (Remote / ถ่ายทำที่ไหนก็ได้)",
+            "reviewerTravelExpense": "",
+            "onSiteType": "",
+            "eventDuration": "",
+            "locationDetails": "",
+            "buddyReviewSupport": "No"
           }
         ]
       }
-    ]
+    ],
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": ""
   }
 ];
