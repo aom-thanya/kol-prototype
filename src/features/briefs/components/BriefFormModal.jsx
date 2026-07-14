@@ -16,6 +16,7 @@ import SimpleHtmlEditor from "../../../components/common/SimpleHtmlEditor";
 import Select from "../../../components/common/Select";
 import MultiSelect from "../../../components/common/MultiSelect";
 import Modal from "../../../components/common/Modal";
+import Stepper from "../../../components/common/Modal";
 import Button from "../../../components/common/Button";
 import ActivityTimeline from "../../../components/common/ActivityTimeline";
 import RateCardListPage from "../../../components/brief/RateCardListPage";
@@ -414,12 +415,10 @@ export default function BriefFormModal({ open, onClose, onSubmit, initialData = 
               </button>
             </div>
             {!initialData && (
-              <div className="h-1 w-full bg-slate-100">
-                <motion.div 
-                  className="h-full bg-[#6D5DF6]"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                  transition={{ duration: 0.3 }}
+              <div className="border-b border-slate-100 bg-slate-50/50">
+                <Stepper 
+                  steps={["Client & Project", "Budget & SOW", "Support & Conditions"]}
+                  currentStepIndex={currentStep - 1}
                 />
               </div>
             )}
