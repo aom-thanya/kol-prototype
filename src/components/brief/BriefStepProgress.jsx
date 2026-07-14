@@ -1,4 +1,3 @@
-import React from "react";
 import { ArrowLeft } from "lucide-react";
 
 export default function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {

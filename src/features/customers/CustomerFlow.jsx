@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
+
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Eye, X, CheckCircle2, ChevronDown, ArrowUpDown, FileText } from "lucide-react";
+import { Search, Plus, Eye, X, ChevronDown, FileText } from "lucide-react";
 
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");

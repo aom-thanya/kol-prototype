@@ -1,10 +1,8 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Download } from "lucide-react";
 import Button from "../common/Button";
 import TrackerTable from "../tracker/TrackerTable";
 import ActivityTimeline from "../common/ActivityTimeline";
-import { getCampaignCalculations } from "../../utils/campaignCalculations";
 
 export default function ProposalPage({ brief, onUpdateBrief, showToast }) {
   const activeGroups = Object.keys(brief.groupTrackers || {});

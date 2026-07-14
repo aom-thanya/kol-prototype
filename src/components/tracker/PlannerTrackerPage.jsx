@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Copy, Save, CheckCircle2 } from "lucide-react";
+import { Copy, Save, CheckCircle2 } from "lucide-react";
 import Button from "../common/Button";
 import TrackerTable from "./TrackerTable";
-import GroupSelectionModal from "./GroupSelectionModal";
 import InfluencerSelectModal from "./InfluencerSelectModal";
 
 const DEFAULT_INFLUENCER_TEMPLATE = `สวัสดีครับ เบสจาก Buddy Review นะครับ 

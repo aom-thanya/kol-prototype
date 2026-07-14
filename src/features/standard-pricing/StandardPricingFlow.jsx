@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from 'react';
+
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Plus, Edit2, Copy, Trash2, Search, ChevronRight, ChevronLeft,
-  X, CheckCircle2, History, AlertCircle, Save
+  Plus, Trash2, ChevronRight, ChevronLeft,
+  X, CheckCircle2, History, Save
 } from "lucide-react";
 
 // Initial Seed Data (if localStorage is empty)

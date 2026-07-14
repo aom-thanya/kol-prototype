@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Download, TrendingUp, BarChart3, Calculator, Users } from "lucide-react";
+import { CheckCircle2, Download, TrendingUp, Calculator, Users } from "lucide-react";
 import Button from "../common/Button";
 import TrackerTable from "../tracker/TrackerTable";
-import CampaignCalculationsView from "./CampaignCalculationsView";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
 import { formatCurrency } from "../../utils/formatHelpers";
 import DealsheetStandardView from "./DealsheetStandardView";

@@ -1,4 +1,3 @@
-import React from "react";
 import { Calculator, TrendingUp, Clock, Coins, Users } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from 'react';
+
+import { motion } from "framer-motion";
 import { DollarSign, ChevronRight, ArrowLeft } from "lucide-react";
 
 const standardCostData = [

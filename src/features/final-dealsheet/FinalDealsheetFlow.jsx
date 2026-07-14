@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
+
 import { motion } from "framer-motion";
-import { Search, ArrowLeft, ClipboardList, Folder, Eye } from "lucide-react";
-import Button from "./components/common/Button";
-import DealsheetPage from "./components/brief/DealsheetPage";
+import { Search, ArrowLeft, Folder, Eye } from "lucide-react";
+import Button from "../../components/common/Button";
+import DealsheetPage from "../../components/brief/DealsheetPage";
 
 export default function FinalDealsheetFlow({ briefs, setBriefs, showToast }) {
   const [selectedBriefId, setSelectedBriefId] = useState(null);

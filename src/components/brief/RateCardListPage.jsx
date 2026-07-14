@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, Plus, X, ArrowLeft, Users, FileText, CreditCard, 
-  Trash2, UserPlus, Calculator, DollarSign, ExternalLink, RefreshCw,
+  Search, Plus, X, ArrowLeft, Users, FileText, 
+  Trash2, ExternalLink,
   Clock, MapPin, Briefcase, User, Tag, MessageSquare,
-  Folder, Truck, Calendar, ChevronUp, ChevronDown, Compass, Sparkles, Check, Coins
+  Folder, ChevronUp, ChevronDown, Compass, Sparkles, Check, Coins
 } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
-import { influencerSeed } from "../../data/influencerSeed";
 import InfluencerSelectModal from "../tracker/InfluencerSelectModal";
 import PlannerTrackerPage from "../tracker/PlannerTrackerPage";
 import RecapSetup from "./RecapSetup";

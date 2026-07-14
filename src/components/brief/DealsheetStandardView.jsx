@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Download, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
-import Button from "../common/Button";
 
 export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId }) {
 

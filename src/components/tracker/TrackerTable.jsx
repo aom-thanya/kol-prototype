@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, GripVertical, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import Button from "../common/Button";
 import { cn } from "../../utils/cn";

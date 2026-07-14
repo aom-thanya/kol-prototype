@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, ArrowUpDown, Eye, Copy } from "lucide-react";
 import { cn } from "../../utils/cn";
