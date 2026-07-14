@@ -114,12 +114,29 @@ export const briefsSeed = [
             "allocationPercent": 50,
             "details": "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate",
             "persona": {
-              "demographic": "18-24 Female, Gen Z Skincare users",
-              "location": "Bangkok & Metropolitan cities",
-              "occupation": "University Students, Beauty Bloggers",
-              "persona": "Energetic, Authentic, Fun storytelling",
-              "contentCategory": "Skincare, Makeup tutorials",
-              "storyTelling": "Genuine unboxing and 7-day challenge results"
+              "demographic": [
+                "18-24 Female",
+                "Gen Z Skincare users"
+              ],
+              "location": [
+                "Bangkok & Metropolitan cities"
+              ],
+              "occupation": [
+                "University Students",
+                "Beauty Bloggers"
+              ],
+              "persona": [
+                "Energetic",
+                "Authentic",
+                "Fun storytelling"
+              ],
+              "contentCategory": [
+                "Skincare",
+                "Makeup tutorials"
+              ],
+              "storyTelling": [
+                "Genuine unboxing and 7-day challenge results"
+              ]
             },
             "serviceScope": {
               "buyoutRequired": true,
@@ -146,13 +163,63 @@ export const briefsSeed = [
                 "followerReqFrom": "5000",
                 "followerReqTo": "50000",
                 "persona": {
-                  "demographic": "18-24 Female, Gen Z Skincare users",
-                  "location": "Bangkok & Metropolitan cities",
-                  "occupation": "University Students, Beauty Bloggers",
-                  "persona": "Energetic, Authentic, Fun storytelling",
-                  "contentCategory": "Skincare, Makeup tutorials",
-                  "storyTelling": "Genuine unboxing and 7-day challenge results"
-                }
+                  "demographic": [
+                    "18-24 Female",
+                    "Gen Z Skincare users"
+                  ],
+                  "location": [
+                    "Bangkok & Metropolitan cities"
+                  ],
+                  "occupation": [
+                    "University Students",
+                    "Beauty Bloggers"
+                  ],
+                  "persona": [
+                    "Energetic",
+                    "Authentic",
+                    "Fun storytelling"
+                  ],
+                  "contentCategory": [
+                    "Skincare",
+                    "Makeup tutorials"
+                  ],
+                  "storyTelling": [
+                    "Genuine unboxing and 7-day challenge results"
+                  ]
+                },
+                "referenceInfluencers": [
+                  {
+                    "id": 1,
+                    "username": "@jane_doe",
+                    "platform": "Instagram",
+                    "profileUrl": "https://instagram.com/jane_doe",
+                    "followers": "120K",
+                    "engagement": "3.2%",
+                    "category": [
+                      "Beauty",
+                      "Lifestyle"
+                    ],
+                    "persona": [
+                      "Trendy"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=1"
+                  },
+                  {
+                    "id": 2,
+                    "username": "@john_smith",
+                    "platform": "TikTok",
+                    "profileUrl": "https://tiktok.com/@john_smith",
+                    "followers": "45K",
+                    "engagement": "4.5%",
+                    "category": [
+                      "Tech"
+                    ],
+                    "persona": [
+                      "Geek"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=2"
+                  }
+                ]
               }
             ]
           },
@@ -182,12 +249,32 @@ export const briefsSeed = [
             "allocationPercent": 30,
             "details": "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
             "persona": {
-              "demographic": "25-34 Female, Modern Working Women",
-              "location": "Bangkok and major cities (Chiang Mai, Phuket)",
-              "occupation": "Office workers, Professionals, Freelancers",
-              "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
-              "contentCategory": "Premium beauty products, Self-care",
-              "storyTelling": "Aesthetic morning routine and texture close-ups"
+              "demographic": [
+                "25-34 Female",
+                "Modern Working Women"
+              ],
+              "location": [
+                "Bangkok and major cities (Chiang Mai",
+                "Phuket)"
+              ],
+              "occupation": [
+                "Office workers",
+                "Professionals",
+                "Freelancers"
+              ],
+              "persona": [
+                "Elegant",
+                "Minimalist",
+                "Trustworthy",
+                "Aspirational"
+              ],
+              "contentCategory": [
+                "Premium beauty products",
+                "Self-care"
+              ],
+              "storyTelling": [
+                "Aesthetic morning routine and texture close-ups"
+              ]
             },
             "serviceScope": {
               "buyoutRequired": true,
@@ -208,13 +295,66 @@ export const briefsSeed = [
                 "followerReqFrom": "5000",
                 "followerReqTo": "50000",
                 "persona": {
-                  "demographic": "25-34 Female, Modern Working Women",
-                  "location": "Bangkok and major cities (Chiang Mai, Phuket)",
-                  "occupation": "Office workers, Professionals, Freelancers",
-                  "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
-                  "contentCategory": "Premium beauty products, Self-care",
-                  "storyTelling": "Aesthetic morning routine and texture close-ups"
-                }
+                  "demographic": [
+                    "25-34 Female",
+                    "Modern Working Women"
+                  ],
+                  "location": [
+                    "Bangkok and major cities (Chiang Mai",
+                    "Phuket)"
+                  ],
+                  "occupation": [
+                    "Office workers",
+                    "Professionals",
+                    "Freelancers"
+                  ],
+                  "persona": [
+                    "Elegant",
+                    "Minimalist",
+                    "Trustworthy",
+                    "Aspirational"
+                  ],
+                  "contentCategory": [
+                    "Premium beauty products",
+                    "Self-care"
+                  ],
+                  "storyTelling": [
+                    "Aesthetic morning routine and texture close-ups"
+                  ]
+                },
+                "referenceInfluencers": [
+                  {
+                    "id": 1,
+                    "username": "@jane_doe",
+                    "platform": "Instagram",
+                    "profileUrl": "https://instagram.com/jane_doe",
+                    "followers": "120K",
+                    "engagement": "3.2%",
+                    "category": [
+                      "Beauty",
+                      "Lifestyle"
+                    ],
+                    "persona": [
+                      "Trendy"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=1"
+                  },
+                  {
+                    "id": 2,
+                    "username": "@john_smith",
+                    "platform": "TikTok",
+                    "profileUrl": "https://tiktok.com/@john_smith",
+                    "followers": "45K",
+                    "engagement": "4.5%",
+                    "category": [
+                      "Tech"
+                    ],
+                    "persona": [
+                      "Geek"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=2"
+                  }
+                ]
               }
             ]
           },
@@ -244,12 +384,30 @@ export const briefsSeed = [
             "allocationPercent": 20,
             "details": "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
             "persona": {
-              "demographic": "30-45 Female, Moms & Families",
-              "location": "Nationwide Thailand",
-              "occupation": "Housewives, Full-time moms, Salary workers",
-              "persona": "Informative, Sincere, Detailed reviewer",
-              "contentCategory": "Skincare science, Safe ingredients",
-              "storyTelling": "Detailed step-by-step review with explanation of active ingredients"
+              "demographic": [
+                "30-45 Female",
+                "Moms & Families"
+              ],
+              "location": [
+                "Nationwide Thailand"
+              ],
+              "occupation": [
+                "Housewives",
+                "Full-time moms",
+                "Salary workers"
+              ],
+              "persona": [
+                "Informative",
+                "Sincere",
+                "Detailed reviewer"
+              ],
+              "contentCategory": [
+                "Skincare science",
+                "Safe ingredients"
+              ],
+              "storyTelling": [
+                "Detailed step-by-step review with explanation of active ingredients"
+              ]
             },
             "serviceScope": {
               "boostPostRequired": true,
@@ -264,13 +422,64 @@ export const briefsSeed = [
                 "followerReqFrom": "5000",
                 "followerReqTo": "10000",
                 "persona": {
-                  "demographic": "30-45 Female, Moms & Families",
-                  "location": "Nationwide Thailand",
-                  "occupation": "Housewives, Full-time moms, Salary workers",
-                  "persona": "Informative, Sincere, Detailed reviewer",
-                  "contentCategory": "Skincare science, Safe ingredients",
-                  "storyTelling": "Detailed step-by-step review with explanation of active ingredients"
-                }
+                  "demographic": [
+                    "30-45 Female",
+                    "Moms & Families"
+                  ],
+                  "location": [
+                    "Nationwide Thailand"
+                  ],
+                  "occupation": [
+                    "Housewives",
+                    "Full-time moms",
+                    "Salary workers"
+                  ],
+                  "persona": [
+                    "Informative",
+                    "Sincere",
+                    "Detailed reviewer"
+                  ],
+                  "contentCategory": [
+                    "Skincare science",
+                    "Safe ingredients"
+                  ],
+                  "storyTelling": [
+                    "Detailed step-by-step review with explanation of active ingredients"
+                  ]
+                },
+                "referenceInfluencers": [
+                  {
+                    "id": 1,
+                    "username": "@jane_doe",
+                    "platform": "Instagram",
+                    "profileUrl": "https://instagram.com/jane_doe",
+                    "followers": "120K",
+                    "engagement": "3.2%",
+                    "category": [
+                      "Beauty",
+                      "Lifestyle"
+                    ],
+                    "persona": [
+                      "Trendy"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=1"
+                  },
+                  {
+                    "id": 2,
+                    "username": "@john_smith",
+                    "platform": "TikTok",
+                    "profileUrl": "https://tiktok.com/@john_smith",
+                    "followers": "45K",
+                    "engagement": "4.5%",
+                    "category": [
+                      "Tech"
+                    ],
+                    "persona": [
+                      "Geek"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=2"
+                  }
+                ]
               }
             ]
           }
@@ -309,12 +518,29 @@ export const briefsSeed = [
             "allocationPercent": 80,
             "details": "เน้นการรีวิวทาง TikTok เป็นหลักเพื่อกระตุ้นยอดขายผ่าน Affiliate และ TikTok Shop",
             "persona": {
-              "demographic": "18-24 Female, Gen Z Skincare users",
-              "location": "Bangkok & Metropolitan cities",
-              "occupation": "University Students, Beauty Bloggers",
-              "persona": "Energetic, Authentic, Fun storytelling",
-              "contentCategory": "Skincare, Makeup tutorials",
-              "storyTelling": "Genuine unboxing and 7-day challenge results"
+              "demographic": [
+                "18-24 Female",
+                "Gen Z Skincare users"
+              ],
+              "location": [
+                "Bangkok & Metropolitan cities"
+              ],
+              "occupation": [
+                "University Students",
+                "Beauty Bloggers"
+              ],
+              "persona": [
+                "Energetic",
+                "Authentic",
+                "Fun storytelling"
+              ],
+              "contentCategory": [
+                "Skincare",
+                "Makeup tutorials"
+              ],
+              "storyTelling": [
+                "Genuine unboxing and 7-day challenge results"
+              ]
             },
             "influencerDetails": [
               {
@@ -323,13 +549,63 @@ export const briefsSeed = [
                 "followerReqFrom": "10000",
                 "followerReqTo": "50000",
                 "persona": {
-                  "demographic": "18-24 Female, Gen Z Skincare users",
-                  "location": "Bangkok & Metropolitan cities",
-                  "occupation": "University Students, Beauty Bloggers",
-                  "persona": "Energetic, Authentic, Fun storytelling",
-                  "contentCategory": "Skincare, Makeup tutorials",
-                  "storyTelling": "Genuine unboxing and 7-day challenge results"
-                }
+                  "demographic": [
+                    "18-24 Female",
+                    "Gen Z Skincare users"
+                  ],
+                  "location": [
+                    "Bangkok & Metropolitan cities"
+                  ],
+                  "occupation": [
+                    "University Students",
+                    "Beauty Bloggers"
+                  ],
+                  "persona": [
+                    "Energetic",
+                    "Authentic",
+                    "Fun storytelling"
+                  ],
+                  "contentCategory": [
+                    "Skincare",
+                    "Makeup tutorials"
+                  ],
+                  "storyTelling": [
+                    "Genuine unboxing and 7-day challenge results"
+                  ]
+                },
+                "referenceInfluencers": [
+                  {
+                    "id": 1,
+                    "username": "@jane_doe",
+                    "platform": "Instagram",
+                    "profileUrl": "https://instagram.com/jane_doe",
+                    "followers": "120K",
+                    "engagement": "3.2%",
+                    "category": [
+                      "Beauty",
+                      "Lifestyle"
+                    ],
+                    "persona": [
+                      "Trendy"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=1"
+                  },
+                  {
+                    "id": 2,
+                    "username": "@john_smith",
+                    "platform": "TikTok",
+                    "profileUrl": "https://tiktok.com/@john_smith",
+                    "followers": "45K",
+                    "engagement": "4.5%",
+                    "category": [
+                      "Tech"
+                    ],
+                    "persona": [
+                      "Geek"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=2"
+                  }
+                ]
               }
             ]
           },
@@ -359,12 +635,32 @@ export const briefsSeed = [
             "allocationPercent": 20,
             "details": "ลง IG Reels เสริมเล็กน้อยเพื่อกระตุ้นภาพลักษณ์ของแบรนด์",
             "persona": {
-              "demographic": "25-34 Female, Modern Working Women",
-              "location": "Bangkok and major cities (Chiang Mai, Phuket)",
-              "occupation": "Office workers, Professionals, Freelancers",
-              "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
-              "contentCategory": "Premium beauty products, Self-care",
-              "storyTelling": "Aesthetic morning routine and texture close-ups"
+              "demographic": [
+                "25-34 Female",
+                "Modern Working Women"
+              ],
+              "location": [
+                "Bangkok and major cities (Chiang Mai",
+                "Phuket)"
+              ],
+              "occupation": [
+                "Office workers",
+                "Professionals",
+                "Freelancers"
+              ],
+              "persona": [
+                "Elegant",
+                "Minimalist",
+                "Trustworthy",
+                "Aspirational"
+              ],
+              "contentCategory": [
+                "Premium beauty products",
+                "Self-care"
+              ],
+              "storyTelling": [
+                "Aesthetic morning routine and texture close-ups"
+              ]
             },
             "influencerDetails": [
               {
@@ -373,13 +669,66 @@ export const briefsSeed = [
                 "followerReqFrom": "5000",
                 "followerReqTo": "10000",
                 "persona": {
-                  "demographic": "25-34 Female, Modern Working Women",
-                  "location": "Bangkok and major cities (Chiang Mai, Phuket)",
-                  "occupation": "Office workers, Professionals, Freelancers",
-                  "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
-                  "contentCategory": "Premium beauty products, Self-care",
-                  "storyTelling": "Aesthetic morning routine and texture close-ups"
-                }
+                  "demographic": [
+                    "25-34 Female",
+                    "Modern Working Women"
+                  ],
+                  "location": [
+                    "Bangkok and major cities (Chiang Mai",
+                    "Phuket)"
+                  ],
+                  "occupation": [
+                    "Office workers",
+                    "Professionals",
+                    "Freelancers"
+                  ],
+                  "persona": [
+                    "Elegant",
+                    "Minimalist",
+                    "Trustworthy",
+                    "Aspirational"
+                  ],
+                  "contentCategory": [
+                    "Premium beauty products",
+                    "Self-care"
+                  ],
+                  "storyTelling": [
+                    "Aesthetic morning routine and texture close-ups"
+                  ]
+                },
+                "referenceInfluencers": [
+                  {
+                    "id": 1,
+                    "username": "@jane_doe",
+                    "platform": "Instagram",
+                    "profileUrl": "https://instagram.com/jane_doe",
+                    "followers": "120K",
+                    "engagement": "3.2%",
+                    "category": [
+                      "Beauty",
+                      "Lifestyle"
+                    ],
+                    "persona": [
+                      "Trendy"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=1"
+                  },
+                  {
+                    "id": 2,
+                    "username": "@john_smith",
+                    "platform": "TikTok",
+                    "profileUrl": "https://tiktok.com/@john_smith",
+                    "followers": "45K",
+                    "engagement": "4.5%",
+                    "category": [
+                      "Tech"
+                    ],
+                    "persona": [
+                      "Geek"
+                    ],
+                    "avatar": "https://i.pravatar.cc/150?u=2"
+                  }
+                ]
               }
             ]
           }
@@ -412,12 +761,29 @@ export const briefsSeed = [
         "name": "Tiktok Review",
         "details": "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ of อินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + ติดตะกร้า + Affiliate",
         "persona": {
-          "demographic": "18-24 Female, Gen Z Skincare users",
-          "location": "Bangkok & Metropolitan cities",
-          "occupation": "University Students, Beauty Bloggers",
-          "persona": "Energetic, Authentic, Fun storytelling",
-          "contentCategory": "Skincare, Makeup tutorials",
-          "storyTelling": "Genuine unboxing and 7-day challenge results"
+          "demographic": [
+            "18-24 Female",
+            "Gen Z Skincare users"
+          ],
+          "location": [
+            "Bangkok & Metropolitan cities"
+          ],
+          "occupation": [
+            "University Students",
+            "Beauty Bloggers"
+          ],
+          "persona": [
+            "Energetic",
+            "Authentic",
+            "Fun storytelling"
+          ],
+          "contentCategory": [
+            "Skincare",
+            "Makeup tutorials"
+          ],
+          "storyTelling": [
+            "Genuine unboxing and 7-day challenge results"
+          ]
         },
         "serviceScope": {
           "buyoutRequired": true,
@@ -463,12 +829,32 @@ export const briefsSeed = [
         "name": "IG Reel Review",
         "details": "ครีเอทคอนเท้น ในรูปแบบ Video Short Clip รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
         "persona": {
-          "demographic": "25-34 Female, Modern Working Women",
-          "location": "Bangkok and major cities (Chiang Mai, Phuket)",
-          "occupation": "Office workers, Professionals, Freelancers",
-          "persona": "Elegant, Minimalist, Trustworthy, Aspirational",
-          "contentCategory": "Premium beauty products, Self-care",
-          "storyTelling": "Aesthetic morning routine and texture close-ups"
+          "demographic": [
+            "25-34 Female",
+            "Modern Working Women"
+          ],
+          "location": [
+            "Bangkok and major cities (Chiang Mai",
+            "Phuket)"
+          ],
+          "occupation": [
+            "Office workers",
+            "Professionals",
+            "Freelancers"
+          ],
+          "persona": [
+            "Elegant",
+            "Minimalist",
+            "Trustworthy",
+            "Aspirational"
+          ],
+          "contentCategory": [
+            "Premium beauty products",
+            "Self-care"
+          ],
+          "storyTelling": [
+            "Aesthetic morning routine and texture close-ups"
+          ]
         },
         "serviceScope": {
           "buyoutRequired": true,
@@ -508,12 +894,30 @@ export const briefsSeed = [
         "name": "Facebook Album Review",
         "details": "ครีเอทคอนเท้น ในรูปแบบ Photo Album รีวิว สินค้าคนละ 1 SKU (สินค้ามี 5 SKU ลูกค้าต้องการแบ่งรีวิว) ให้เข้ากับไลฟ์สไตล์ของอินฟู และอยากให้อินฟลูเล่าถึงผลลัพธ์หลังการใช้งาน และชูจุดเด่นของสินค้า เช่น ส่วนผสมหลัก + Affiliate",
         "persona": {
-          "demographic": "30-45 Female, Moms & Families",
-          "location": "Nationwide Thailand",
-          "occupation": "Housewives, Full-time moms, Salary workers",
-          "persona": "Informative, Sincere, Detailed reviewer",
-          "contentCategory": "Skincare science, Safe ingredients",
-          "storyTelling": "Detailed step-by-step review with explanation of active ingredients"
+          "demographic": [
+            "30-45 Female",
+            "Moms & Families"
+          ],
+          "location": [
+            "Nationwide Thailand"
+          ],
+          "occupation": [
+            "Housewives",
+            "Full-time moms",
+            "Salary workers"
+          ],
+          "persona": [
+            "Informative",
+            "Sincere",
+            "Detailed reviewer"
+          ],
+          "contentCategory": [
+            "Skincare science",
+            "Safe ingredients"
+          ],
+          "storyTelling": [
+            "Detailed step-by-step review with explanation of active ingredients"
+          ]
         },
         "serviceScope": {
           "boostPostRequired": true,
@@ -1040,24 +1444,25 @@ export const briefsSeed = [
     "createdAt": "2025-05-10",
     "groups": [
       {
-        "id": "Event Vlog",
+        "id": "group_sow-event-vlog",
         "name": "Event Vlog",
         "pillars": {
-          "Demographic": [
+          "demographic": [
             "18 - 45 Male",
             "18 - 45 Female"
           ],
-          "Location": [
+          "location": [
             "Bangkok"
           ],
-          "Occupation": [
+          "occupation": [
             "Gamers",
             "IT Professionals"
           ],
-          "Persona": [
+          "persona": [
             "Tech enthusiasts"
           ],
-          "StoryTelling": [
+          "contentCategory": [],
+          "storyTelling": [
             "Interactive vlog"
           ]
         },
@@ -1071,14 +1476,40 @@ export const briefsSeed = [
             "platforms": [
               "TikTok"
             ],
-            "followerReq": "10K - 100K",
-            "numInfluencers": "5"
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
           }
         ]
       }
     ],
     "groupTrackers": {
-      "Event Vlog": {
+      "group_sow-event-vlog": {
         "influencers": [
           {
             "id": "inf-kpi-1",
@@ -1092,7 +1523,8 @@ export const briefsSeed = [
             "paymentType": "บริษัท",
             "contactStatus": "Done",
             "lot": "Lot 1",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
           },
           {
             "id": "inf-kpi-2",
@@ -1106,7 +1538,8 @@ export const briefsSeed = [
             "paymentType": "บุคคลธรรมดา",
             "contactStatus": "Done",
             "lot": "Lot 1",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
           },
           {
             "id": "inf-kpi-3",
@@ -1119,7 +1552,8 @@ export const briefsSeed = [
             "creditTerm": "",
             "paymentType": "",
             "contactStatus": "Selected",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
           },
           {
             "id": "inf-kpi-4",
@@ -1132,7 +1566,8 @@ export const briefsSeed = [
             "creditTerm": "",
             "paymentType": "",
             "contactStatus": "Pitching",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
           }
         ]
       }
@@ -1144,7 +1579,53 @@ export const briefsSeed = [
     "budgetCondition": "",
     "budgetPerInfluencer": "",
     "expectedNumInfluencers": "",
-    "expectedReach": ""
+    "expectedReach": "",
+    "budgetOptions": [
+      {
+        "id": "opt_1784034990711",
+        "name": "Option 1",
+        "totalBudget": "100000",
+        "totalBoostAds": "0",
+        "totalOtherServices": "0",
+        "scopeOfWorks": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "BRD-3001",
@@ -1179,23 +1660,24 @@ export const briefsSeed = [
     "createdAt": "2025-06-01",
     "groups": [
       {
-        "id": "Beauty Review",
+        "id": "group_sow-beauty-1",
         "name": "Beauty Review",
         "pillars": {
-          "Demographic": [
+          "demographic": [
             "18 - 35 Female"
           ],
-          "Location": [
+          "location": [
             "Bangkok"
           ],
-          "Occupation": [
+          "occupation": [
             "Beauty Bloggers"
           ],
-          "Persona": [
+          "persona": [
             "Trustworthy",
             "Detailed"
           ],
-          "StoryTelling": [
+          "contentCategory": [],
+          "storyTelling": [
             "Texture close-up"
           ]
         },
@@ -1209,34 +1691,39 @@ export const briefsSeed = [
             "platforms": [
               "TikTok"
             ],
-            "followerReq": "10K - 50K",
+            "followerReqFrom": "10000",
+            "followerReqTo": "50000",
             "numInfluencers": "3",
-            "exampleCreators": [
-              {
-                "id": "inf_kpi_3",
-                "name": "Janet Beauty",
-                "username": "@janet_beauty",
-                "platform": "TikTok",
-                "followers": 45000,
-                "avatar": "https://i.pravatar.cc/160?img=11",
-                "selected": true
-              },
-              {
-                "id": "inf_kpi_4",
-                "name": "Ploy Makeup",
-                "username": "@ploy_makeup",
-                "platform": "TikTok",
-                "followers": 60000,
-                "avatar": "https://i.pravatar.cc/160?img=12",
-                "selected": true
-              }
-            ]
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 35 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Beauty Bloggers"
+              ],
+              "persona": [
+                "Trustworthy",
+                "Detailed"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Texture close-up"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
           }
         ]
       }
     ],
     "groupTrackers": {
-      "Beauty Review": {
+      "group_sow-beauty-1": {
         "influencers": [
           {
             "id": "inf-srichand-1",
@@ -1249,7 +1736,8 @@ export const briefsSeed = [
             "creditTerm": "",
             "paymentType": "",
             "contactStatus": "Selected",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-beauty-1"
           },
           {
             "id": "inf-srichand-2",
@@ -1262,7 +1750,8 @@ export const briefsSeed = [
             "creditTerm": "",
             "paymentType": "",
             "contactStatus": "Selected",
-            "services": {}
+            "services": {},
+            "scopeOfWork": "sow-beauty-1"
           }
         ]
       }
@@ -1274,7 +1763,52 @@ export const briefsSeed = [
     "budgetCondition": "",
     "budgetPerInfluencer": "",
     "expectedNumInfluencers": "",
-    "expectedReach": ""
+    "expectedReach": "",
+    "budgetOptions": [
+      {
+        "id": "opt_1784034990712",
+        "name": "Option 1",
+        "totalBudget": "100000",
+        "totalBoostAds": "0",
+        "totalOtherServices": "0",
+        "scopeOfWorks": [
+          {
+            "id": "sow-beauty-1",
+            "name": "Beauty Review",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "50000",
+            "numInfluencers": "3",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 35 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Beauty Bloggers"
+              ],
+              "persona": [
+                "Trustworthy",
+                "Detailed"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Texture close-up"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "BRD-3002",
@@ -1500,12 +2034,25 @@ export const briefsSeed = [
             "numInfluencers": "5",
             "allocationPercent": 100,
             "persona": {
-              "demographic": "18-34 Female",
-              "location": "Bangkok",
-              "occupation": "Students, First jobbers",
-              "persona": "Beauty enthusiast",
-              "contentCategory": "Makeup tutorials",
-              "storyTelling": "Before & After",
+              "demographic": [
+                "18-34 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Students",
+                "First jobbers"
+              ],
+              "persona": [
+                "Beauty enthusiast"
+              ],
+              "contentCategory": [
+                "Makeup tutorials"
+              ],
+              "storyTelling": [
+                "Before & After"
+              ],
               "specialConditions": [
                 "premium ดูดี ดูแพง (Multi photo)"
               ]
@@ -1547,5 +2094,441 @@ export const briefsSeed = [
     "budgetPerInfluencer": "",
     "expectedNumInfluencers": "",
     "expectedReach": ""
+  },
+  {
+    "id": "BRD-2D-MOCK",
+    "internalStatus": "Rate Card List",
+    "version": 1,
+    "campaignName": "Rate Card (2 D)",
+    "customerId": "CUST-001",
+    "brand": "Mega Bangna",
+    "product": "Event details at Mega Bangna",
+    "clientStatus": "New",
+    "customerType": "Key Account",
+    "salesOwner": "ข้าว",
+    "packageType": [
+      "Rate Card KPI (1.5 D)"
+    ],
+    "objective": [
+      "Awareness (Reach)"
+    ],
+    "objectiveNote": "",
+    "gender": [
+      "Male",
+      "Female"
+    ],
+    "lifestyle": "Gadgets & IT",
+    "country": "Thailand",
+    "province": "Bangkok",
+    "ageRange": "18 - 45",
+    "campaignStartDate": "2025-06-01",
+    "campaignEndDate": "2025-06-15",
+    "platform": [
+      "Instagram",
+      "Tiktok"
+    ],
+    "createdAt": "2025-05-10",
+    "groups": [
+      {
+        "id": "group_sow-event-vlog",
+        "name": "Event Vlog",
+        "pillars": {
+          "demographic": [
+            "18 - 45 Male",
+            "18 - 45 Female"
+          ],
+          "location": [
+            "Bangkok"
+          ],
+          "occupation": [
+            "Gamers",
+            "IT Professionals"
+          ],
+          "persona": [
+            "Tech enthusiasts"
+          ],
+          "contentCategory": [],
+          "storyTelling": [
+            "Interactive vlog"
+          ]
+        },
+        "questions": [
+          "มีของรางวัลแจกในบูธไหม?"
+        ],
+        "sows": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ],
+    "groupTrackers": {
+      "group_sow-event-vlog": {
+        "influencers": [
+          {
+            "id": "inf-kpi-1",
+            "accountName": "@bb_event",
+            "accountLink": "https://tiktok.com/@bb_event",
+            "follower": "150K",
+            "channel": "TikTok",
+            "contact": "Line: @bb_event",
+            "rawCost": "20000",
+            "creditTerm": "30",
+            "paymentType": "บริษัท",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-2",
+            "accountName": "@nn_review",
+            "accountLink": "https://tiktok.com/@nn_review",
+            "follower": "85K",
+            "channel": "TikTok",
+            "contact": "Line: @nn_review",
+            "rawCost": "18000",
+            "creditTerm": "30",
+            "paymentType": "บุคคลธรรมดา",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-3",
+            "accountName": "@lifestyle_karl",
+            "accountLink": "https://tiktok.com/@lifestyle_karl",
+            "follower": "45K",
+            "channel": "TikTok",
+            "contact": "Line: @karl_work",
+            "rawCost": "12000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Selected",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-4",
+            "accountName": "@travel_ping",
+            "accountLink": "https://tiktok.com/@travel_ping",
+            "follower": "60K",
+            "channel": "TikTok",
+            "contact": "Line: @ping_travel",
+            "rawCost": "15000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Pitching",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          }
+        ]
+      }
+    },
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": "",
+    "budgetOptions": [
+      {
+        "id": "opt_1784034990712",
+        "name": "Option 1",
+        "totalBudget": "100000",
+        "totalBoostAds": "0",
+        "totalOtherServices": "0",
+        "scopeOfWorks": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "BRD-KPI-MOCK",
+    "internalStatus": "Rate Card List",
+    "version": 1,
+    "campaignName": "Ratecard KPI",
+    "customerId": "CUST-001",
+    "brand": "Mega Bangna",
+    "product": "Event details at Mega Bangna",
+    "clientStatus": "New",
+    "customerType": "Key Account",
+    "salesOwner": "ข้าว",
+    "packageType": [
+      "Rate Card KPI (1.5 D)"
+    ],
+    "objective": [
+      "Awareness (Reach)"
+    ],
+    "objectiveNote": "",
+    "gender": [
+      "Male",
+      "Female"
+    ],
+    "lifestyle": "Gadgets & IT",
+    "country": "Thailand",
+    "province": "Bangkok",
+    "ageRange": "18 - 45",
+    "campaignStartDate": "2025-06-01",
+    "campaignEndDate": "2025-06-15",
+    "platform": [
+      "Instagram",
+      "Tiktok"
+    ],
+    "createdAt": "2025-05-10",
+    "groups": [
+      {
+        "id": "group_sow-event-vlog",
+        "name": "Event Vlog",
+        "pillars": {
+          "demographic": [
+            "18 - 45 Male",
+            "18 - 45 Female"
+          ],
+          "location": [
+            "Bangkok"
+          ],
+          "occupation": [
+            "Gamers",
+            "IT Professionals"
+          ],
+          "persona": [
+            "Tech enthusiasts"
+          ],
+          "contentCategory": [],
+          "storyTelling": [
+            "Interactive vlog"
+          ]
+        },
+        "questions": [
+          "มีของรางวัลแจกในบูธไหม?"
+        ],
+        "sows": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ],
+    "groupTrackers": {
+      "group_sow-event-vlog": {
+        "influencers": [
+          {
+            "id": "inf-kpi-1",
+            "accountName": "@bb_event",
+            "accountLink": "https://tiktok.com/@bb_event",
+            "follower": "150K",
+            "channel": "TikTok",
+            "contact": "Line: @bb_event",
+            "rawCost": "20000",
+            "creditTerm": "30",
+            "paymentType": "บริษัท",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-2",
+            "accountName": "@nn_review",
+            "accountLink": "https://tiktok.com/@nn_review",
+            "follower": "85K",
+            "channel": "TikTok",
+            "contact": "Line: @nn_review",
+            "rawCost": "18000",
+            "creditTerm": "30",
+            "paymentType": "บุคคลธรรมดา",
+            "contactStatus": "Done",
+            "lot": "Lot 1",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-3",
+            "accountName": "@lifestyle_karl",
+            "accountLink": "https://tiktok.com/@lifestyle_karl",
+            "follower": "45K",
+            "channel": "TikTok",
+            "contact": "Line: @karl_work",
+            "rawCost": "12000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Selected",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          },
+          {
+            "id": "inf-kpi-4",
+            "accountName": "@travel_ping",
+            "accountLink": "https://tiktok.com/@travel_ping",
+            "follower": "60K",
+            "channel": "TikTok",
+            "contact": "Line: @ping_travel",
+            "rawCost": "15000",
+            "creditTerm": "",
+            "paymentType": "",
+            "contactStatus": "Pitching",
+            "services": {},
+            "scopeOfWork": "sow-event-vlog"
+          }
+        ]
+      }
+    },
+    "budgetSpending": "",
+    "budgetBoostSpending": "",
+    "estimatedBrandSpending": "",
+    "vat": "Incl. VAT",
+    "budgetCondition": "",
+    "budgetPerInfluencer": "",
+    "expectedNumInfluencers": "",
+    "expectedReach": "",
+    "budgetOptions": [
+      {
+        "id": "opt_1784034990712",
+        "name": "Option 1",
+        "totalBudget": "100000",
+        "totalBoostAds": "0",
+        "totalOtherServices": "0",
+        "scopeOfWorks": [
+          {
+            "id": "sow-event-vlog",
+            "name": "Event Vlog",
+            "platforms": [
+              "TikTok"
+            ],
+            "followerReqFrom": "10000",
+            "followerReqTo": "100000",
+            "numInfluencers": "5",
+            "contentType": [
+              "Video (1-3 min)"
+            ],
+            "persona": {
+              "demographic": [
+                "18 - 45 Male",
+                "18 - 45 Female"
+              ],
+              "location": [
+                "Bangkok"
+              ],
+              "occupation": [
+                "Gamers",
+                "IT Professionals"
+              ],
+              "persona": [
+                "Tech enthusiasts"
+              ],
+              "contentCategory": [],
+              "storyTelling": [
+                "Interactive vlog"
+              ]
+            },
+            "serviceScope": {},
+            "brandSupportType": "No Sponsor"
+          }
+        ]
+      }
+    ]
   }
 ];

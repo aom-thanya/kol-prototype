@@ -310,17 +310,38 @@ export default function TrackerTable({
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
-            {group?.pillar && typeof group.pillar === "string" && (
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
-                {group.pillar}
-              </span>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-slate-900">{groupName}</h2>
+              {group?.sows && group.sows.length > 0 && (() => {
+                const sow = group.sows[0];
+                return (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {sow.platforms?.map((p, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">{p}</span>
+                    ))}
+                    {(sow.followerReqFrom || sow.followerReqTo) && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                        {sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : 0} 
+                        {sow.followerReqTo ? ` - ${Number(sow.followerReqTo).toLocaleString()}` : ''} Followers
+                      </span>
+                    )}
+                    {sow.contentType?.length > 0 && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        {sow.contentType.join(', ')}
+                      </span>
+                    )}
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
+                      {sow.numInfluencers || 0} Influencer(s)
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
             {group?.pillars && Object.values(group.pillars).some(arr => arr && arr.length > 0) && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {Object.values(group.pillars).flat().filter(Boolean).map((val, i) => (
-                  <span key={i} className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide border border-indigo-100">
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 text-[10px] font-medium border border-slate-200">
                     {val}
                   </span>
                 ))}

@@ -501,18 +501,69 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                       )}
 
                       {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
-                        <div className="space-y-3 mt-4">
+                        <div className="space-y-4 mt-4">
                           {sow.influencerDetails.map((detail, idx) => (
-                             <div key={idx} className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs">
-                               <span className="font-bold text-slate-450 block mb-3 uppercase text-[10px] tracking-wider">Group {idx + 1} Persona Requirements</span>
-                               <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3.5">
-                                 {detail.persona?.demographic && <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.demographic)}</span></div>}
-                                 {detail.persona?.location && <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.location)}</span></div>}
-                                 {detail.persona?.occupation && <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.occupation)}</span></div>}
-                                 {detail.persona?.persona && <div><span className="text-slate-400 font-bold block mb-0.5">Characteristics (Persona)</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.persona)}</span></div>}
-                                 {detail.persona?.contentCategory && <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.contentCategory)}</span></div>}
-                                 {detail.persona?.storyTelling && <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona.storyTelling)}</span></div>}
+                             <div key={detail.id || idx} className="bg-white p-4 rounded-xl border border-slate-200">
+                               <h6 className="text-sm font-bold text-slate-800 mb-3">Group {idx + 1}</h6>
+                               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                                 <div><span className="text-slate-400 block mb-1 text-xs">KOL Qty</span> <span className="font-semibold text-slate-800 text-sm">{detail.numInfluencers || "-"}</span></div>
+                                 <div>
+                                   <span className="text-slate-400 block mb-1 text-xs">Followers</span> <span className="font-semibold text-slate-800 text-sm">
+                                     {detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` : "-"}
+                                   </span>
+                                 </div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.demographic)}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.location)}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.occupation)}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Tone</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.persona)}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.contentCategory)}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Storytelling</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.storyTelling)}</span></div>
                                </div>
+
+                               {/* Reference Influencers Display */}
+                               {(() => {
+                                 const originalSowRefs = brief.budgetOptions?.[0]?.scopeOfWorks?.flatMap(s => s.referenceInfluencers || []) || [];
+                                 const fallbackRefs = brief.referenceInfluencers && brief.referenceInfluencers.length > 0 
+                                   ? brief.referenceInfluencers 
+                                   : originalSowRefs;
+                                 const displayRefs = detail.referenceInfluencers && detail.referenceInfluencers.length > 0 
+                                   ? detail.referenceInfluencers 
+                                   : fallbackRefs;
+                                 
+                                 if (!displayRefs || displayRefs.length === 0) return null;
+                                 
+                                 return (
+                                 <div className="mt-4 pt-4 border-t border-slate-100">
+                                   <div className="text-slate-400 mb-3 text-xs font-semibold uppercase tracking-wider">Reference Influencers</div>
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                     {displayRefs.map(ref => (
+                                       <div key={ref.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                         <img src={ref.avatar} alt={ref.username} className="h-10 w-10 rounded-full object-cover border border-slate-200 mt-1" />
+                                         <div className="flex-1 min-w-0 space-y-1">
+                                           <div className="flex items-center justify-between">
+                                             <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-800 hover:text-[#6D5DF6] text-sm flex items-center gap-1 transition-colors">
+                                               {ref.username} <ExternalLink className="h-3 w-3" />
+                                             </a>
+                                             <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">{ref.platform}</span>
+                                           </div>
+                                           <div className="flex items-center gap-3 text-xs text-slate-500 pb-1">
+                                             <span><strong className="text-slate-700">Folls:</strong> {ref.followers}</span>
+                                             <span><strong className="text-slate-700">ER:</strong> {ref.engagement}</span>
+                                           </div>
+                                           <div className="flex flex-wrap gap-1.5">
+                                             {ref.category && ref.category.map(c => (
+                                               <span key={c} className="text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-md">{c}</span>
+                                             ))}
+                                             {ref.persona && ref.persona.map(p => (
+                                               <span key={p} className="text-[10px] font-semibold bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-md">{p}</span>
+                                             ))}
+                                           </div>
+                                         </div>
+                                       </div>
+                                     ))}
+                                   </div>
+                                 </div>
+                               ); })()}
                              </div>
                           ))}
                         </div>
@@ -520,13 +571,13 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                         sow.persona && Object.values(sow.persona).some(Boolean) && (
                           <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-xs mt-4">
                             <span className="font-bold text-slate-450 block mb-3 uppercase text-[10px] tracking-wider">Influencer Persona Requirements</span>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3.5">
-                              {sow.persona.demographic && <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.demographic)}</span></div>}
-                              {sow.persona.location && <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.location)}</span></div>}
-                              {sow.persona.occupation && <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.occupation)}</span></div>}
-                              {sow.persona.persona && <div><span className="text-slate-400 font-bold block mb-0.5">Characteristics (Persona)</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.persona)}</span></div>}
-                              {sow.persona.contentCategory && <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.contentCategory)}</span></div>}
-                              {sow.persona.storyTelling && <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.storyTelling)}</span></div>}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3.5">
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.demographic)}</span></div>
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Location</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.location)}</span></div>
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Occupation</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.occupation)}</span></div>
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Tone</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.persona)}</span></div>
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Content Category</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.contentCategory)}</span></div>
+                              <div><span className="text-slate-400 font-bold block mb-0.5">Storytelling Styles</span> <span className="font-semibold text-slate-850 text-sm">{renderList(sow.persona.storyTelling)}</span></div>
                             </div>
                           </div>
                         )

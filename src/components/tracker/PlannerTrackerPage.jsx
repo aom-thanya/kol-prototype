@@ -336,7 +336,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
       creditTerm: "",
       paymentType: "",
       services: {},
-      scopeOfWork: "",
+      scopeOfWork: brief.groups?.find(g => g.id === currentGroupId)?.sows?.[0]?.id || "",
       detail: "",
       condition: "1. แก้ไขดราฟได้สูงสุดกี่ครั้ง =\n2. ใส่ # สูงสุดได้กี่อัน =\n3. ใส่ Text/AW/Logo ในชิ้นงานได้หรือไม่ =\n4. ระยะเวลาทำ Script/Idea  =\n5. ระยะเวลาทำ Draft = \n6. ลบโพสต์หรือไม่ = ",
       brandSupports: {},
@@ -431,7 +431,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                     onReplaceClick={(groupName, infId, infName) => handleReplaceInfluencerClick(grp.id, infId, infName)}
                     readOnly={readOnly}
                     allowStatusEdit={isBriefManagement ? true : !readOnly}
-                    hideAddButton={true}
+                    hideAddButton={readOnly}
                     allowReorder={!readOnly}
                     isBriefManagement={isBriefManagement}
                   />

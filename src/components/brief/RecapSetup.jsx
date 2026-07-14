@@ -1,12 +1,38 @@
 import React, { useState } from "react";
-import { Plus, X, Trash2, Edit2, ChevronDown, Check, Copy } from "lucide-react";
+import { Plus, X, Trash2, Edit2, ChevronDown, Check, Copy, ExternalLink } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import MultiSelect from "../common/MultiSelect";
 import SimpleHtmlEditor from "../common/SimpleHtmlEditor";
 import { generateScopeName } from "../../utils/briefHelpers";
 
 export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
-  const [groups, setGroups] = useState(brief.groups || []);
+  const [groups, setGroups] = useState(() => {
+    if (brief.groups && brief.groups.length > 0) return brief.groups;
+    
+    const sows = brief.budgetOptions?.[0]?.scopeOfWorks || [];
+    return sows.map((sow, idx) => {
+      const getArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+      return {
+        id: `group_${Date.now()}_${idx}`,
+        name: sow.name || `Group ${idx + 1}`,
+        pillars: {
+          demographic: getArray(sow.persona?.demographic),
+          location: getArray(sow.persona?.location),
+          occupation: getArray(sow.persona?.occupation),
+          persona: getArray(sow.persona?.persona),
+          contentCategory: getArray(sow.persona?.contentCategory),
+          storyTelling: getArray(sow.persona?.storyTelling)
+        },
+        sows: [{ ...sow, id: `sow_${Date.now()}_${idx}` }]
+      };
+    });
+  });
+
+  React.useEffect(() => {
+    if (!brief.groups || brief.groups.length === 0) {
+      onUpdateBrief({ ...brief, groups });
+    }
+  }, []);
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [newGroupName, setNewGroupName] = useState("");
 
@@ -25,7 +51,19 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
         contentCategory: [],
         storyTelling: []
       },
-      sows: []
+      sows: [{
+        id: `sow_${Date.now()}`,
+        name: newGroupName || `Group ${groups.length + 1}`,
+        platforms: [],
+        contentType: [],
+        notes: "",
+        allocation: "",
+        numInfluencers: "",
+        followerReqFrom: "",
+        followerReqTo: "",
+        details: "",
+        serviceScope: {}
+      }]
     };
     const updated = [...groups, newGroup];
     setGroups(updated);
@@ -59,32 +97,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
     onUpdateBrief({ ...brief, groups: updated });
   };
 
-  const handleAddSow = (groupId) => {
-    const updated = groups.map(g => {
-      if (g.id === groupId) {
-        return {
-          ...g,
-          sows: [...g.sows, {
-            id: `sow_${Date.now()}`,
-            name: "",
-            platforms: [],
-            contentType: [],
-            notes: "",
-            allocation: "",
-            numInfluencers: "",
-            followerReqFrom: "",
-            followerReqTo: "",
-            details: "",
-            serviceScope: {}
-          }]
-        };
-      }
-      return g;
-    });
-    setGroups(updated);
-    onUpdateBrief({ ...brief, groups: updated });
-  };
-
+  
   const handleUpdateSow = (groupId, sowId, updates) => {
     const updated = groups.map(g => {
       if (g.id === groupId) {
@@ -133,38 +146,8 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
     setGroups(updated);
     onUpdateBrief({ ...brief, groups: updated });
   };
-  const handleDuplicateSow = (groupId, sow) => {
-    const updated = groups.map(g => {
-      if (g.id === groupId) {
-        const duplicatedSow = { 
-          ...sow, 
-          id: `sow-${Date.now()}` 
-        };
-        return {
-          ...g,
-          sows: [...g.sows, duplicatedSow]
-        };
-      }
-      return g;
-    });
-    setGroups(updated);
-    onUpdateBrief({ ...brief, groups: updated });
-  };
-
-  const handleDeleteSow = (groupId, sowId) => {
-    const updated = groups.map(g => {
-      if (g.id === groupId) {
-        return {
-          ...g,
-          sows: g.sows.filter(s => s.id !== sowId)
-        };
-      }
-      return g;
-    });
-    setGroups(updated);
-    onUpdateBrief({ ...brief, groups: updated });
-  };
-
+  
+  
   const isNextDisabled = () => {
     if (!groups || groups.length === 0) return true;
     for (const group of groups) {
@@ -302,25 +285,10 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h5 className="text-sm font-bold text-slate-700 border-l-4 border-emerald-500 pl-2">Step 2.3: Scopes of Work (SOW)</h5>
-                    <button
-                      onClick={() => handleAddSow(group.id)}
-                      className="text-xs font-bold text-[#6D5DF6] hover:bg-violet-50 px-3 py-1.5 rounded-lg border border-[#6D5DF6] flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Add SOW
-                    </button>
-                  </div>
-                  
+                  <h5 className="text-sm font-bold text-slate-700 border-l-4 border-emerald-500 pl-2 mb-3">Step 2.3: Scope of Work Details</h5>
                   <div className="space-y-4">
-                    {group.sows.map((sow, sIndex) => (
+                    {group.sows.map((sow) => (
                       <div key={sow.id} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-                        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-                          <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">SOW {sIndex + 1}</span>
-                          <button onClick={() => handleDeleteSow(group.id, sow.id)} className="text-rose-400 hover:text-rose-600">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
                         <div className="p-4 space-y-6 bg-white">
                           <div className="grid gap-6 md:grid-cols-2 mb-8">
                             <div className="md:col-span-2">
@@ -525,17 +493,72 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                 </div>
                               </>
                             )}
+                            
+                            {/* Reference Influencers Display */}
+                            <div className="md:col-span-2 mt-4 pt-4 border-t border-slate-100">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="text-slate-500 text-sm font-semibold uppercase tracking-wider">Reference Influencers</div>
+                                <button type="button" onClick={() => alert("Feature coming soon: Search and add reference influencers")} className="text-xs font-bold text-[#6D5DF6] flex items-center gap-1 hover:bg-violet-50 px-2 py-1 rounded border border-transparent hover:border-violet-100 transition-colors">
+                                  <Plus className="w-3 h-3" /> Add Reference
+                                </button>
+                              </div>
+                              {(() => {
+                                const originalSowRefs = brief.budgetOptions?.[0]?.scopeOfWorks?.flatMap(s => s.referenceInfluencers || []) || [];
+                                const fallbackRefs = brief.referenceInfluencers && brief.referenceInfluencers.length > 0 
+                                  ? brief.referenceInfluencers 
+                                  : originalSowRefs;
+                                const displayRefs = sow.referenceInfluencers && sow.referenceInfluencers.length > 0 
+                                  ? sow.referenceInfluencers 
+                                  : fallbackRefs;
+                                return displayRefs.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {displayRefs.map(ref => (
+                                    <div key={ref.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                      <img src={ref.avatar || "https://ui-avatars.com/api/?name=" + ref.username} alt={ref.username} className="h-10 w-10 rounded-full object-cover border border-slate-200 mt-1" />
+                                      <div className="flex-1 min-w-0 space-y-1">
+                                        <div className="flex items-center justify-between">
+                                          <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-800 hover:text-[#6D5DF6] text-sm flex items-center gap-1 transition-colors">
+                                            {ref.username} <ExternalLink className="h-3 w-3" />
+                                          </a>
+                                          <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">{ref.platform}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-slate-500 pb-1">
+                                          <span><strong className="text-slate-700">Folls:</strong> {ref.followers || "-"}</span>
+                                          <span><strong className="text-slate-700">ER:</strong> {ref.engagement || "-"}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {ref.category && ref.category.map(c => (
+                                            <span key={c} className="text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-md">{c}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <button type="button" onClick={() => {
+                                        // If removing from default fallbackRefs, we need to clone it to sow.referenceInfluencers first
+                                        const sourceRefs = sow.referenceInfluencers && sow.referenceInfluencers.length > 0 ? sow.referenceInfluencers : fallbackRefs;
+                                        const updatedRefs = sourceRefs.filter(r => r.id !== ref.id);
+                                        handleUpdateSow(group.id, sow.id, { referenceInfluencers: updatedRefs });
+                                      }} className="text-slate-400 hover:text-rose-500 p-1">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                ) : (
+                                  <div className="text-center py-6 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                                    <p className="text-slate-400 font-semibold text-sm">No reference influencers added yet.</p>
+                                    <p className="text-slate-400 text-xs mt-1">Click "Add Reference" to include example creators for this scope.</p>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            
                             <div className="md:col-span-2">
                               <label className="mb-1 block text-sm font-medium text-slate-700">Details</label>
                               <SimpleHtmlEditor value={sow.details || ""} onChange={val => handleUpdateSow(group.id, sow.id, { details: val })} />
                             </div>
                           </div>
                           
-                          <div className="flex justify-end pt-2 border-t border-slate-100">
-                            <button type="button" onClick={() => handleDuplicateSow(group.id, sow)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
-                              <Copy className="h-3 w-3" /> Duplicate SOW
-                            </button>
-                          </div>
+                          
                         </div>
                       </div>
                     ))}

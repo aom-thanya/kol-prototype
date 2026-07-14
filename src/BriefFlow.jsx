@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Clock,
   Compass,
+  UploadCloud,
   FileText,
   History,
   Sparkles,
@@ -83,6 +84,65 @@ function cn(...classes) {
 
 // --- Mock Influencer Data for Selection ---
 
+function TagInput({ value, onChange, label, suggested, onManualEdit }) {
+  const [inputValue, setInputValue] = useState("");
+  const tags = Array.isArray(value) ? value : [];
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && inputValue.trim()) {
+      e.preventDefault();
+      if (!tags.includes(inputValue.trim())) {
+        const newTags = [...tags, inputValue.trim()];
+        onChange(newTags);
+        if (onManualEdit) onManualEdit(newTags);
+      }
+      setInputValue("");
+    } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      const newTags = tags.slice(0, -1);
+      onChange(newTags);
+      if (onManualEdit) onManualEdit(newTags);
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    const newTags = tags.filter(tag => tag !== tagToRemove);
+    onChange(newTags);
+    if (onManualEdit) onManualEdit(newTags);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-medium text-slate-700">{label}</label>
+        {suggested && (
+          <span className="text-[10px] font-semibold text-[#6D5DF6] bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            Suggested from reference
+          </span>
+        )}
+      </div>
+      <div className={`flex flex-wrap gap-2 p-2 min-h-[44px] rounded-lg border bg-white focus-within:border-[#6D5DF6] transition-colors ${suggested ? 'border-[#6D5DF6] bg-violet-50/30' : 'border-slate-200'}`}>
+        {tags.map((tag, idx) => (
+          <div key={idx} className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs font-medium">
+            {tag}
+            <button type="button" onClick={() => removeTag(tag)} className="text-slate-400 hover:text-rose-500 rounded-full p-0.5">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        <input 
+          type="text" 
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={tags.length === 0 ? "Type and press Enter..." : ""}
+          className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-slate-700 py-1"
+        />
+      </div>
+    </div>
+  );
+}
+
 // --- Influencer Detail Modal Component ---
 function InfluencerDetailModal({ open, onClose, onSave, initialData }) {
   const [data, setData] = useState({
@@ -90,14 +150,43 @@ function InfluencerDetailModal({ open, onClose, onSave, initialData }) {
     followerReqFrom: "",
     followerReqTo: "",
     persona: {
-      demographic: "",
-      location: "",
-      occupation: "",
-      persona: "",
-      contentCategory: "",
-      storyTelling: ""
-    }
+      demographic: [],
+      location: [],
+      occupation: [],
+      persona: [],
+      contentCategory: [],
+      storyTelling: []
+    },
+    referenceInfluencers: []
   });
+
+  const [activeTab, setActiveTab] = useState("username"); // 'username' | 'face'
+  
+  // Auto-fill state
+  const [manualEdits, setManualEdits] = useState({});
+  const [suggestedValues, setSuggestedValues] = useState({});
+
+  // Username search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchingUsername, setIsSearchingUsername] = useState(false);
+  const [usernameResults, setUsernameResults] = useState([]);
+  
+  // Face search state
+  const [faceImage, setFaceImage] = useState(null);
+  const [faceImagePreview, setFaceImagePreview] = useState(null);
+  const [faceError, setFaceError] = useState("");
+  const [isSearchingFace, setIsSearchingFace] = useState(false);
+  const [faceResults, setFaceResults] = useState([]);
+
+  // Mock Data
+  const MOCK_RESULTS = [
+    { id: 1, username: "@jane_doe", platform: "Instagram", profileUrl: "https://instagram.com/jane_doe", followers: "120K", engagement: "3.2%", category: ["Beauty", "Lifestyle"], persona: ["Trendy"], match: 95, avatar: "https://i.pravatar.cc/150?u=1", suggestedFollowerFrom: "100000", suggestedFollowerTo: "200000", suggestedDemographic: "Female 18-24", suggestedLocation: "Bangkok", suggestedOccupation: "Student", suggestedStoryTelling: "Aesthetic Vlogs, Product Reviews" },
+    { id: 2, username: "@john_smith", platform: "TikTok", profileUrl: "https://tiktok.com/@john_smith", followers: "45K", engagement: "4.5%", category: ["Tech"], persona: ["Geek"], match: 88, avatar: "https://i.pravatar.cc/150?u=2", suggestedFollowerFrom: "10000", suggestedFollowerTo: "50000", suggestedDemographic: "Male 18-34", suggestedLocation: "Urban Cities", suggestedOccupation: "Tech Professional", suggestedStoryTelling: "Gadget Unboxing, Tutorials" },
+    { id: 3, username: "@foodie_bkk", platform: "Facebook", profileUrl: "https://facebook.com/foodiebkk", followers: "250K", engagement: "2.1%", category: ["Food"], persona: ["Friendly"], match: 82, avatar: "https://i.pravatar.cc/150?u=3", suggestedFollowerFrom: "150000", suggestedFollowerTo: "300000", suggestedDemographic: "All 25-45", suggestedLocation: "Thailand", suggestedOccupation: "Any", suggestedStoryTelling: "Cafe Hopping, Honest Reviews" },
+    { id: 4, username: "@travel_wander", platform: "Instagram", profileUrl: "https://instagram.com/travel_wander", followers: "80K", engagement: "5.0%", category: ["Travel"], persona: ["Adventurous"], match: 75, avatar: "https://i.pravatar.cc/150?u=4", suggestedFollowerFrom: "50000", suggestedFollowerTo: "100000", suggestedDemographic: "All 20-35", suggestedLocation: "Global", suggestedOccupation: "Freelancer", suggestedStoryTelling: "Cinematic, Adventure Story" },
+    { id: 5, username: "@fit_guru", platform: "YouTube", profileUrl: "https://youtube.com/fitguru", followers: "300K", engagement: "1.8%", category: ["Fitness"], persona: ["Motivator"], match: 60, avatar: "https://i.pravatar.cc/150?u=5", suggestedFollowerFrom: "250000", suggestedFollowerTo: "500000", suggestedDemographic: "Male 25-40", suggestedLocation: "City", suggestedOccupation: "Office Worker", suggestedStoryTelling: "Workout Routine, Diet Plan" },
+    { id: 6, username: "@pet_lover", platform: "TikTok", profileUrl: "https://tiktok.com/@pet_lover", followers: "15K", engagement: "8.9%", category: ["Pets"], persona: ["Cute"], match: 55, avatar: "https://i.pravatar.cc/150?u=6", suggestedFollowerFrom: "5000", suggestedFollowerTo: "20000", suggestedDemographic: "Female 13-24", suggestedLocation: "Suburbs", suggestedOccupation: "Student", suggestedStoryTelling: "Funny Pet Moments" },
+  ];
 
   useEffect(() => {
     if (open) {
@@ -105,64 +194,419 @@ function InfluencerDetailModal({ open, onClose, onSave, initialData }) {
         numInfluencers: "",
         followerReqFrom: "",
         followerReqTo: "",
-        persona: { demographic: "", location: "", occupation: "", persona: "", contentCategory: "", storyTelling: "" }
+        persona: { demographic: [], location: [], occupation: [], persona: [], contentCategory: [], storyTelling: [] },
+        referenceInfluencers: []
       });
+      // reset states
+      setActiveTab("username");
+      setSearchQuery("");
+      setUsernameResults([]);
+      setFaceImage(null);
+      setFaceImagePreview(null);
+      setFaceResults([]);
+      setFaceError("");
+      setManualEdits({});
+      setSuggestedValues({});
     }
   }, [open, initialData]);
+
+  const handleManualEdit = (fieldPath, value) => {
+    setManualEdits(prev => ({...prev, [fieldPath]: true}));
+    
+    if (fieldPath.includes('.')) {
+      const [parent, child] = fieldPath.split('.');
+      setData(prev => ({ ...prev, [parent]: { ...prev[parent], [child]: value } }));
+    } else {
+      setData(prev => ({ ...prev, [fieldPath]: value }));
+    }
+  };
+
+  const updateReferences = (newRefs) => {
+    const getTags = (str) => {
+      if (!str) return [];
+      if (Array.isArray(str)) return str;
+      return str.split(',').map(s => s.trim()).filter(Boolean);
+    };
+
+    const aggregatedSuggestions = {
+       "persona.demographic": [],
+       "persona.location": [],
+       "persona.occupation": [],
+       "persona.persona": [],
+       "persona.contentCategory": [],
+       "persona.storyTelling": []
+    };
+    
+    newRefs.forEach(r => {
+        aggregatedSuggestions["persona.demographic"].push(...getTags(r.suggestedDemographic));
+        aggregatedSuggestions["persona.location"].push(...getTags(r.suggestedLocation));
+        aggregatedSuggestions["persona.occupation"].push(...getTags(r.suggestedOccupation));
+        aggregatedSuggestions["persona.persona"].push(...(r.persona || []));
+        aggregatedSuggestions["persona.contentCategory"].push(...(r.category || []));
+        aggregatedSuggestions["persona.storyTelling"].push(...getTags(r.suggestedStoryTelling));
+    });
+
+    Object.keys(aggregatedSuggestions).forEach(k => {
+      aggregatedSuggestions[k] = [...new Set(aggregatedSuggestions[k])];
+    });
+    
+    if (newRefs.length > 0) {
+      aggregatedSuggestions.followerReqFrom = newRefs[0].suggestedFollowerFrom || "";
+      aggregatedSuggestions.followerReqTo = newRefs[0].suggestedFollowerTo || "";
+    } else {
+      aggregatedSuggestions.followerReqFrom = "";
+      aggregatedSuggestions.followerReqTo = "";
+    }
+
+    setSuggestedValues(aggregatedSuggestions);
+    
+    const newData = { ...data, referenceInfluencers: newRefs };
+    
+    Object.keys(aggregatedSuggestions).forEach(key => {
+      if (!manualEdits[key]) {
+        if (key.includes('.')) {
+          const [parent, child] = key.split('.');
+          newData[parent] = { ...(newData[parent] || {}), [child]: aggregatedSuggestions[key] };
+        } else {
+          newData[key] = aggregatedSuggestions[key];
+        }
+      }
+    });
+    
+    setData(newData);
+  };
+
+
+  // Debounce username search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.length > 0) {
+        handleUsernameSearch();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleUsernameSearch = () => {
+    setIsSearchingUsername(true);
+    setTimeout(() => {
+      setUsernameResults(MOCK_RESULTS.sort((a,b) => b.match - a.match));
+      setIsSearchingUsername(false);
+    }, 800);
+  };
+
+  const handleFaceUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      setFaceError("Unsupported file format. Please upload JPG, JPEG, or PNG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setFaceError("File size exceeds 10 MB limit.");
+      return;
+    }
+
+    setFaceError("");
+    setFaceImage(file);
+    setFaceImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleFaceSearch = () => {
+    setIsSearchingFace(true);
+    setTimeout(() => {
+      setFaceResults(MOCK_RESULTS.sort((a,b) => b.match - a.match));
+      setIsSearchingFace(false);
+    }, 1200);
+  };
+
+  const renderLabel = (label, fieldPath) => {
+    const isSuggested = !manualEdits[fieldPath] && suggestedValues[fieldPath] && 
+                        (fieldPath.includes('.') 
+                          ? data[fieldPath.split('.')[0]]?.[fieldPath.split('.')[1]] === suggestedValues[fieldPath] 
+                          : data[fieldPath] === suggestedValues[fieldPath]);
+    
+    return (
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-medium text-slate-700">{label}</label>
+        {isSuggested && (
+          <span className="text-[10px] font-semibold text-[#6D5DF6] bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            Suggested from reference
+          </span>
+        )}
+      </div>
+    );
+  };
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-slate-100 p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-6xl h-[90vh] flex flex-col rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4 shrink-0">
           <h2 className="text-lg font-bold text-slate-800">Influencer Details</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-slate-100 transition-colors">
             <X className="h-5 w-5 text-slate-500" />
           </button>
         </div>
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
-              <input type="number" value={data.numInfluencers} onChange={e => setData({...data, numInfluencers: e.target.value})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Follower Requirement</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input type="number" value={data.followerReqFrom} onChange={e => setData({...data, followerReqFrom: e.target.value})} placeholder="From" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                <input type="number" value={data.followerReqTo} onChange={e => setData({...data, followerReqTo: e.target.value})} placeholder="To" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+        
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Column: Form */}
+          <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-100 relative">
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-slate-700">Number of Influencers</label>
+                <input type="number" value={data.numInfluencers} onChange={e => handleManualEdit("numInfluencers", e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+              </div>
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-slate-700">Follower Requirement</label>
+                  {((!manualEdits["followerReqFrom"] && suggestedValues["followerReqFrom"] && data["followerReqFrom"] === suggestedValues["followerReqFrom"]) || 
+                    (!manualEdits["followerReqTo"] && suggestedValues["followerReqTo"] && data["followerReqTo"] === suggestedValues["followerReqTo"])) && (
+                    <span className="text-[10px] font-semibold text-[#6D5DF6] bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Suggested from reference
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" value={data.followerReqFrom} onChange={e => handleManualEdit("followerReqFrom", e.target.value)} placeholder="From" className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6] ${!manualEdits["followerReqFrom"] && suggestedValues["followerReqFrom"] && data["followerReqFrom"] === suggestedValues["followerReqFrom"] ? 'border-[#6D5DF6] bg-violet-50/30' : 'border-slate-200'}`} />
+                  <input type="number" value={data.followerReqTo} onChange={e => handleManualEdit("followerReqTo", e.target.value)} placeholder="To" className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6] ${!manualEdits["followerReqTo"] && suggestedValues["followerReqTo"] && data["followerReqTo"] === suggestedValues["followerReqTo"] ? 'border-[#6D5DF6] bg-violet-50/30' : 'border-slate-200'}`} />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Demographic" 
+                  value={data.persona?.demographic} 
+                  onChange={val => handleManualEdit("persona.demographic", val)} 
+                  suggested={!manualEdits["persona.demographic"] && suggestedValues["persona.demographic"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Location" 
+                  value={data.persona?.location} 
+                  onChange={val => handleManualEdit("persona.location", val)} 
+                  suggested={!manualEdits["persona.location"] && suggestedValues["persona.location"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Occupation" 
+                  value={data.persona?.occupation} 
+                  onChange={val => handleManualEdit("persona.occupation", val)} 
+                  suggested={!manualEdits["persona.occupation"] && suggestedValues["persona.occupation"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Persona" 
+                  value={data.persona?.persona} 
+                  onChange={val => handleManualEdit("persona.persona", val)} 
+                  suggested={!manualEdits["persona.persona"] && suggestedValues["persona.persona"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Content Category" 
+                  value={data.persona?.contentCategory} 
+                  onChange={val => handleManualEdit("persona.contentCategory", val)} 
+                  suggested={!manualEdits["persona.contentCategory"] && suggestedValues["persona.contentCategory"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TagInput 
+                  label="Storytelling Styles" 
+                  value={data.persona?.storyTelling} 
+                  onChange={val => handleManualEdit("persona.storyTelling", val)} 
+                  suggested={!manualEdits["persona.storyTelling"] && suggestedValues["persona.storyTelling"]?.length > 0} 
+                  onManualEdit={() => {}}
+                />
               </div>
             </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Demographic</label>
-              <input type="text" value={data.persona?.demographic || ""} onChange={e => setData({...data, persona: {...data.persona, demographic: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
-              <input type="text" value={data.persona?.location || ""} onChange={e => setData({...data, persona: {...data.persona, location: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Occupation</label>
-              <input type="text" value={data.persona?.occupation || ""} onChange={e => setData({...data, persona: {...data.persona, occupation: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Characteristics (Persona)</label>
-              <input type="text" value={data.persona?.persona || ""} onChange={e => setData({...data, persona: {...data.persona, persona: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Content Category</label>
-              <input type="text" value={data.persona?.contentCategory || ""} onChange={e => setData({...data, persona: {...data.persona, contentCategory: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Storytelling Styles</label>
-              <input type="text" value={data.persona?.storyTelling || ""} onChange={e => setData({...data, persona: {...data.persona, storyTelling: e.target.value}})} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-            </div>
+
+            {/* Selected References Detailed List */}
+            {data.referenceInfluencers?.length > 0 && (
+              <div className="mt-8 border-t border-slate-100 pt-6">
+                <h3 className="text-sm font-bold text-slate-800 mb-4">{data.referenceInfluencers.length} Reference{data.referenceInfluencers.length > 1 ? 's' : ''} Selected</h3>
+                <div className="flex flex-col gap-4">
+                  {data.referenceInfluencers.map(ref => (
+                    <div key={ref.id} className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4 relative">
+                      <button onClick={() => updateReferences(data.referenceInfluencers.filter(r => r.id !== ref.id))} className="absolute top-3 right-3 p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-md transition-colors">
+                        <X className="h-4 w-4" />
+                      </button>
+                      <img src={ref.avatar} alt="Avatar" className="h-16 w-16 rounded-full object-cover border border-slate-100" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-bold text-slate-800">{ref.username}</span>
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-medium">{ref.platform}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 mb-2">{ref.followers} followers • {ref.engagement} ER</div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {ref.category.map(c => <span key={c} className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md">{c}</span>)}
+                          {ref.persona.map(c => <span key={c} className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-md">{c}</span>)}
+                        </div>
+                        <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-[#6D5DF6] hover:underline flex items-center gap-1">
+                          View Profile <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Reference Search */}
+          <div className="w-1/2 flex flex-col overflow-hidden bg-slate-50/50">
+            <div className="p-6 shrink-0 border-b border-slate-100 bg-white shadow-sm z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-slate-800">Reference Influencers <span className="text-xs font-normal text-slate-500">(Optional)</span></h3>
+              </div>
+
+                  {/* Tabs */}
+                  <div className="flex gap-2 p-1 bg-slate-100 rounded-lg mb-6">
+                    <button onClick={() => setActiveTab("username")} className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "username" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Search by Username</button>
+                    <button onClick={() => setActiveTab("face")} className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "face" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Search by Face</button>
+                  </div>
+
+                  {/* Search by Username */}
+                  {activeTab === "username" && (
+                    <div className="relative flex items-center">
+                      <Search className="absolute left-3 h-4 w-4 text-slate-400" />
+                      <input 
+                        type="text" 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleUsernameSearch()}
+                        placeholder="Search influencer username" 
+                        className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-20 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" 
+                      />
+                      <div className="absolute right-2 flex items-center gap-1">
+                        {searchQuery && (
+                          <button onClick={() => { setSearchQuery(""); setUsernameResults([]); }} className="p-1 hover:bg-slate-100 rounded-full">
+                            <X className="h-3 w-3 text-slate-400" />
+                          </button>
+                        )}
+                        <button onClick={handleUsernameSearch} className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-md">Search</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search by Face */}
+                  {activeTab === "face" && (
+                    <div className="flex flex-col gap-3">
+                      {!faceImagePreview ? (
+                        <div className="relative group border-2 border-dashed border-slate-200 hover:border-[#6D5DF6] rounded-xl p-6 text-center transition-colors bg-white">
+                          <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={handleFaceUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                          <UploadCloud className="mx-auto h-8 w-8 text-slate-400 group-hover:text-[#6D5DF6] mb-2 transition-colors" />
+                          <div className="text-sm font-medium text-slate-700">Upload a clear face photo</div>
+                          <div className="text-xs text-slate-400 mt-1">JPG, JPEG, PNG up to 10 MB</div>
+                        </div>
+                      ) : (
+                        <div className="border border-slate-200 rounded-xl p-4 bg-white flex items-center gap-4">
+                          <img src={faceImagePreview} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-slate-100" />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-slate-700 truncate">{faceImage.name}</div>
+                            <div className="flex gap-3 mt-1">
+                              <label className="text-xs font-semibold text-[#6D5DF6] cursor-pointer hover:underline">
+                                Replace image
+                                <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={handleFaceUpload} className="hidden" />
+                              </label>
+                              <button onClick={() => { setFaceImage(null); setFaceImagePreview(null); setFaceResults([]); }} className="text-xs font-semibold text-rose-500 hover:underline">Remove image</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {faceError && <div className="text-xs text-rose-500">{faceError}</div>}
+                      {faceImagePreview && (
+                        <button onClick={handleFaceSearch} className="w-full rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition-colors">
+                          Find Similar Influencers
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Results */}
+                <div className="flex-1 overflow-y-auto p-6 pt-0 bg-slate-50/50">
+                  {/* Loading State */}
+                  {(isSearchingUsername || isSearchingFace) && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[1,2,3,4].map(i => (
+                        <div key={i} className="animate-pulse bg-white border border-slate-100 rounded-xl p-4 flex flex-col items-center">
+                          <div className="h-16 w-16 bg-slate-200 rounded-full mb-3"></div>
+                          <div className="h-4 w-24 bg-slate-200 rounded mb-2"></div>
+                          <div className="h-3 w-16 bg-slate-200 rounded mb-4"></div>
+                          <div className="w-full h-8 bg-slate-200 rounded-lg"></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Results Grid */}
+                  {!isSearchingUsername && !isSearchingFace && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {(activeTab === "username" ? usernameResults : faceResults).slice(0, 6).map(res => {
+                        const isSelected = data.referenceInfluencers?.some(r => r.id === res.id);
+                        return (
+                          <div key={res.id} className={`bg-white border rounded-xl p-4 flex flex-col items-center hover:shadow-md transition-all relative ${isSelected ? 'border-[#6D5DF6] ring-1 ring-[#6D5DF6]' : 'border-slate-200'}`}>
+                            {isSelected && (
+                              <div className="absolute top-3 left-3 h-5 w-5 bg-[#6D5DF6] text-white rounded-full flex items-center justify-center shadow-sm">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                            {activeTab === "face" && (
+                              <div className="absolute top-3 right-3 bg-emerald-50 text-emerald-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-100">
+                                {res.match}% Match
+                              </div>
+                            )}
+                            <img src={res.avatar} alt="Avatar" className="h-14 w-14 rounded-full object-cover border border-slate-100 mb-2" />
+                            <div className="text-sm font-bold text-slate-800">{res.username}</div>
+                            <div className="text-xs text-slate-500 mb-3">{res.followers} followers • {res.engagement} ER</div>
+                            <div className="flex flex-wrap justify-center gap-1 mb-4">
+                              {res.category.map(c => <span key={c} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">{c}</span>)}
+                              {res.persona.map(c => <span key={c} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">{c}</span>)}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                if (isSelected) {
+                                  updateReferences(data.referenceInfluencers.filter(r => r.id !== res.id));
+                                } else {
+                                  updateReferences([...(data.referenceInfluencers || []), { ...res, source: activeTab }]);
+                                }
+                              }} 
+                              className={`mt-auto w-full rounded-lg py-1.5 text-xs font-semibold transition-colors ${isSelected ? 'bg-violet-50 text-[#6D5DF6]' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                            >
+                              {isSelected ? "Added" : "Add Reference"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Empty State */}
+                  {!isSearchingUsername && !isSearchingFace && (activeTab === "username" ? usernameResults.length === 0 && searchQuery : faceResults.length === 0 && faceImagePreview) && (
+                    <div className="text-center py-10">
+                      <div className="text-sm text-slate-500">No matching influencers found.</div>
+                    </div>
+                  )}
+                </div>
           </div>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-100 p-4 bg-slate-50">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200">Cancel</button>
-          <button type="button" onClick={() => { onSave(data); onClose(); }} className="rounded-lg bg-[#6D5DF6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5b4df0]">Save</button>
+
+        <div className="flex justify-end gap-3 border-t border-slate-100 p-4 bg-white shrink-0">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="button" onClick={() => { onSave(data); onClose(); }} className="rounded-lg bg-[#6D5DF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#5b4df0] shadow-sm">Save Details</button>
         </div>
       </div>
     </div>
@@ -226,6 +670,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
     productValue: "",
     productReceiveMethod: "",
     logisticsPerInfluencer: "",
+    logisticBrandToBuddy: "",
+    logisticInfluencerToBuddy: "",
     reimbursement: "",
     requireTravel: "ไม่ต้อง (Remote / ถ่ายทำที่ไหนก็ได้)",
     reviewerTravelExpense: "",
@@ -583,9 +1029,9 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs">1</span> 
                   Client & Project Details
                 </h3>
-                <div className="mb-6">
-                  <h4 className="mb-4 font-semibold text-slate-900">Client</h4>
-                  <div className="flex flex-col gap-4">
+                <div className="mb-6 rounded-xl bg-slate-50 p-4 border border-slate-200">
+                  <h4 className="mb-3 text-sm font-semibold text-slate-900">Client</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700">Sales Owner *</label>
                       <input type="text" value={salesOwner} onChange={e => setSalesOwner(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
@@ -616,12 +1062,12 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700">Client Status *</label>
                       <div className="flex items-center gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="clientStatus" value="New" checked={clientStatus === "New"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                        <label className="flex items-center gap-2 cursor-not-allowed opacity-60">
+                          <input type="radio" name="clientStatus" value="New" checked={clientStatus === "New"} disabled className="h-4 w-4 text-[#6D5DF6]" />
                           <span className="text-sm text-slate-700">New</span>
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="clientStatus" value="Existing" checked={clientStatus === "Existing"} onChange={e => setClientStatus(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                        <label className="flex items-center gap-2 cursor-not-allowed opacity-60">
+                          <input type="radio" name="clientStatus" value="Existing" checked={clientStatus === "Existing"} disabled className="h-4 w-4 text-[#6D5DF6]" />
                           <span className="text-sm text-slate-700">Existing</span>
                         </label>
                       </div>
@@ -629,12 +1075,12 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700">Customer Type</label>
                       <div className="flex items-center gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="customerType" value="Key Account" checked={customerType === "Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                        <label className="flex items-center gap-2 cursor-not-allowed opacity-60">
+                          <input type="radio" name="customerType" value="Key Account" checked={customerType === "Key Account"} disabled className="h-4 w-4 text-[#6D5DF6]" />
                           <span className="text-sm text-slate-700">Key Account</span>
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="customerType" value="Non-Key Account" checked={customerType === "Non-Key Account"} onChange={e => setCustomerType(e.target.value)} className="h-4 w-4 text-[#6D5DF6]" />
+                        <label className="flex items-center gap-2 cursor-not-allowed opacity-60">
+                          <input type="radio" name="customerType" value="Non-Key Account" checked={customerType === "Non-Key Account"} disabled className="h-4 w-4 text-[#6D5DF6]" />
                           <span className="text-sm text-slate-700">Non-Key Account</span>
                         </label>
                       </div>
@@ -643,10 +1089,11 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                 </div>
 
                 <div className="border-t border-slate-200 pt-6">
-                  <h4 className="mb-4 font-semibold text-slate-900">Project Details</h4>
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">Project Name *</label>
+                  <div className="mb-6 rounded-xl bg-slate-50 p-4 border border-slate-200">
+                    <h4 className="mb-3 text-sm font-semibold text-slate-900">Project Details</h4>
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Project Name *</label>
                       <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                     </div>
                       <div>
@@ -675,22 +1122,19 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
                         <p className="text-xs text-slate-500 mt-2">*Remark : 11:00 = Half Day / 16:00 = Next Day</p>
                       </div>
+
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Campaign Period *</label>
-                        <div className="flex items-center gap-2">
-                          <input type="date" value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                          <span className="text-slate-400">-</span>
-                          <input type="date" value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Brand / Product Name *</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">Product Name *</label>
                         <input type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
                       </div>
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">Product Detail *</label>
                         <SimpleHtmlEditor value={product} onChange={setProduct} />
                       </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 flex flex-col gap-4">
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">Objective *</label>
                         <div className="flex flex-wrap items-center gap-6">
@@ -709,6 +1153,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         <label className="mb-2 block text-sm font-medium text-slate-700">Objective Note</label>
                         <textarea rows={2} value={objectiveNote} onChange={e => setObjectiveNote(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#6D5DF6]"></textarea>
                       </div>
+                    </div>
                       
                       <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
                         <h5 className="mb-3 text-sm font-semibold text-slate-900">Target Audience Campaign</h5>
@@ -756,17 +1201,30 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                         </div>
                       </div>
 
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Previous Campaign / Work Reference</label>
-                        <SimpleHtmlEditor value={previousCampaign} onChange={setPreviousCampaign} />
+                      <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 flex flex-col gap-4">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Campaign Period *</label>
+                          <div className="flex items-center gap-2">
+                            <input type="date" value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                            <span className="text-slate-400">-</span>
+                            <input type="date" value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Competitor Info</label>
-                        <SimpleHtmlEditor value={competitor} onChange={setCompetitor} />
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Additional Info</label>
-                        <SimpleHtmlEditor value={additionalInfo} onChange={setAdditionalInfo} />
+
+                      <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 flex flex-col gap-4">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Previous Campaign / Work Reference</label>
+                          <SimpleHtmlEditor value={previousCampaign} onChange={setPreviousCampaign} />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Competitor Info</label>
+                          <SimpleHtmlEditor value={competitor} onChange={setCompetitor} />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Additional Info</label>
+                          <SimpleHtmlEditor value={additionalInfo} onChange={setAdditionalInfo} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -996,18 +1454,31 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                     const getAvailableContentTypes = (plats) => {
                       const allTypes = new Set();
                       plats.forEach(p => {
-                        if (p === "TikTok") { allTypes.add("Video (TikTok)"); allTypes.add("Photo Carousel"); }
-                        else if (p === "Instagram") { allTypes.add("Photo"); allTypes.add("Reel"); allTypes.add("Story"); allTypes.add("Carousel"); }
-                        else if (p === "YouTube") { allTypes.add("Long Video"); allTypes.add("Short"); }
-                        else if (p === "Facebook" || p === "Facebook Page") { allTypes.add("Photo"); allTypes.add("Video"); allTypes.add("Link"); allTypes.add("Album"); }
-                        else if (p === "X") { allTypes.add("Text"); allTypes.add("Photo"); allTypes.add("Video"); }
-                        else if (p === "Lemon8") { allTypes.add("Photo"); allTypes.add("Carousel"); }
+                        if (p === "Facebook" || p === "Facebook Page") {
+                          ["Text Post", "Photos", "Reels", "Story", "Live", "Event", "Share", "Like", "Seeding Comment", "Seeding Comment Photo"].forEach(t => allTypes.add(t));
+                        } else if (p === "Instagram") {
+                          ["Photos", "Reels", "Story", "Live", "Note", "Repost", "Like", "Save", "Share", "Seeding Comment", "Seeding Comment Photo"].forEach(t => allTypes.add(t));
+                        } else if (p === "TikTok") {
+                          ["Video", "Photos", "Text Post", "Story", "Live", "Repost", "Like", "Save", "Share", "Seeding Comment", "Seeding Comment Photo"].forEach(t => allTypes.add(t));
+                        } else if (p === "YouTube") {
+                          ["Video", "Shorts", "Live", "Like", "Share", "Save", "Seeding Comment", "Seeding Comment Photo", "Podcast", "Text Community Post", "Photos Community Post", "Poll", "Quiz"].forEach(t => allTypes.add(t));
+                        } else if (p === "Threads") {
+                          ["Text Post", "Photos", "Video", "Reply", "Repost", "Quote", "Like"].forEach(t => allTypes.add(t));
+                        } else if (p === "X") {
+                          ["Text Post", "Photos", "Video", "Repost", "Reply", "Quote", "Like", "Poll"].forEach(t => allTypes.add(t));
+                        } else if (p === "Application") {
+                          ["Download App", "Rating App", "Seeding Comment", "Seeding Comment Photo"].forEach(t => allTypes.add(t));
+                        } else if (p === "E-COMMERCE App") {
+                          ["Download App", "Rating App", "Photos", "Seeding Comment", "Seeding Comment Photo"].forEach(t => allTypes.add(t));
+                        } else if (p === "Lemon8") {
+                          allTypes.add("Photo"); allTypes.add("Carousel");
+                        }
                       });
                       if (plats.includes("Others")) allTypes.add("Custom");
                       return Array.from(allTypes);
                     };
                     const getAvailableViaOptions = (plats) => {
-                      const allPlatforms = ["TikTok", "Instagram", "YouTube", "Facebook", "Facebook Page", "X", "Lemon8"];
+                      const allPlatforms = ["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "Threads", "X", "Lemon8", "Application", "E-COMMERCE App"];
                       const currentPlat = plats?.[0] || "";
                       return allPlatforms.filter(p => p !== currentPlat);
                     };
@@ -1032,8 +1503,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                       <div className="grid gap-6 md:grid-cols-2 mb-8">
                         <div className="md:col-span-2">
                           <label className="mb-2 block text-sm font-medium text-slate-700">Platform *</label>
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                            {["TikTok", "Instagram", "YouTube", "Facebook", "Facebook Page", "X", "Lemon8", "Others"].map(plat => (
+                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+                            {["Facebook", "Facebook Page", "Instagram", "TikTok", "YouTube", "Threads", "X", "Lemon8", "Application", "E-COMMERCE App", "Others"].map(plat => (
                               <label key={plat} className="flex items-center gap-2 cursor-pointer">
                                 <input 
                                   type="radio" 
@@ -1370,14 +1841,18 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                     </button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-xs">
                                   <div>
                                     <div className="text-slate-400 mb-1">Influencers</div>
                                     <div className="font-semibold text-slate-700">{detail.numInfluencers || "-"}</div>
                                   </div>
                                   <div>
                                     <div className="text-slate-400 mb-1">Followers</div>
-                                    <div className="font-semibold text-slate-700">{detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom || "0"} - ${detail.followerReqTo || "Any"}` : "-"}</div>
+                                    <div className="font-semibold text-slate-700">
+                                      {detail.followerReqFrom || detail.followerReqTo 
+                                        ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` 
+                                        : "-"}
+                                    </div>
                                   </div>
                                   <div>
                                     <div className="text-slate-400 mb-1">Demographic</div>
@@ -1387,7 +1862,57 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                     <div className="text-slate-400 mb-1">Location</div>
                                     <div className="font-semibold text-slate-700 truncate">{detail.persona?.location || "-"}</div>
                                   </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Occupation</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.occupation || "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Persona</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.persona || "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Content Category</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.contentCategory || "-"}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-1">Story Telling</div>
+                                    <div className="font-semibold text-slate-700 truncate">{detail.persona?.storyTelling || "-"}</div>
+                                  </div>
                                 </div>
+
+                                {/* Reference Influencers Display in Group Card */}
+                                {detail.referenceInfluencers && detail.referenceInfluencers.length > 0 && (
+                                  <div className="mt-4 pt-4 border-t border-slate-100">
+                                    <div className="text-slate-400 mb-3 text-xs font-semibold uppercase tracking-wider">Reference Influencers</div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      {detail.referenceInfluencers.map(ref => (
+                                        <div key={ref.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                          <img src={ref.avatar} alt={ref.username} className="h-10 w-10 rounded-full object-cover border border-slate-200 mt-1" />
+                                          <div className="flex-1 min-w-0 space-y-1">
+                                            <div className="flex items-center justify-between">
+                                              <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-800 hover:text-[#6D5DF6] text-sm flex items-center gap-1 transition-colors">
+                                                {ref.username} <ExternalLink className="h-3 w-3" />
+                                              </a>
+                                              <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">{ref.platform}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-slate-500 pb-1">
+                                              <span><strong className="text-slate-700">Folls:</strong> {ref.followers}</span>
+                                              <span><strong className="text-slate-700">ER:</strong> {ref.engagement}</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {ref.category && ref.category.map(c => (
+                                                <span key={c} className="text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-md">{c}</span>
+                                              ))}
+                                              {ref.persona && ref.persona.map(p => (
+                                                <span key={p} className="text-[10px] font-semibold bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-md">{p}</span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))
                           ) : (
@@ -1406,7 +1931,7 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                           <div className="md:col-span-2">
                             <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">Brand Support Type</label>
                             <div className="flex items-center gap-6 py-1">
-                              {["No Sponsor", "Brand Sponsor", "Other"].map(opt => (
+                              {["No Sponsor", "Brand Sponsor"].map(opt => (
                                 <label key={opt} className="flex items-center gap-2 cursor-pointer">
                                   <input 
                                     type="radio" 
@@ -1424,18 +1949,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 </label>
                               ))}
                             </div>
-                            {(scope.brandSupportType === "Other") && (
-                              <div className="mt-2">
-                                <textarea 
-                                  value={scope.brandSupportTypeOther || ""} 
-                                  onChange={e => handleUpdateScope(scope.id, 'brandSupportTypeOther', e.target.value)} 
-                                  placeholder="โปรดระบุรายละเอียด..." 
-                                  rows={2} 
-                                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#6D5DF6]" 
-                                />
-                              </div>
-                            )}
                           </div>
+
 
                           <div>
                             <label className="mb-2 block text-sm font-medium text-slate-700">วิธีการรับสินค้า/บริการ</label>
@@ -1449,8 +1964,8 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                               }} 
                               options={
                                 (scope.brandSupportType || "No Sponsor") === "No Sponsor" ? ["Buddy Review ซื้อและจัดส่งให้ Influencer", "Influencer ซื้อเอง"] :
-                                scope.brandSupportType === "Brand Sponsor" ? ["Sponsor สินค้า (Buddy Review จัดส่ง)", "Sponsor สินค้า (แบรนด์จัดส่ง)"] :
-                                ["อื่นๆ (โปรดระบุ)"]
+                                scope.brandSupportType === "Brand Sponsor" ? ["Sponsor สินค้า (Buddy Review จัดส่ง)", "Sponsor สินค้า (แบรนด์จัดส่ง)", "สินค้าเวียน/ยืม (Borrowed/Rotated)"] :
+                                []
                               } 
                             />
                           </div>
@@ -1463,6 +1978,32 @@ function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialSt
                                 <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
                               </div>
                             </div>
+                          )}
+
+                          {scope.productReceiveMethod === "สินค้าเวียน/ยืม (Borrowed/Rotated)" && (
+                            <>
+                              <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Logistic Brand to Buddy</label>
+                                <div className="relative">
+                                  <input type="number" value={scope.logisticBrandToBuddy || ""} onChange={e => handleUpdateScope(scope.id, 'logisticBrandToBuddy', e.target.value)} placeholder="ระบุค่าจัดส่ง Brand to Buddy" className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">ค่าจัดส่งต่อ Influencer</label>
+                                <div className="relative">
+                                  <input type="number" value={scope.logisticsPerInfluencer || ""} onChange={e => handleUpdateScope(scope.id, 'logisticsPerInfluencer', e.target.value)} placeholder="ระบุค่าจัดส่งต่อ Influencer" className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-700">Logistic Influencer to Buddy</label>
+                                <div className="relative">
+                                  <input type="number" value={scope.logisticInfluencerToBuddy || ""} onChange={e => handleUpdateScope(scope.id, 'logisticInfluencerToBuddy', e.target.value)} placeholder="ระบุค่าจัดส่ง Influencer to Buddy" className="w-full rounded-lg border border-slate-200 bg-white pl-4 pr-12 py-2.5 text-sm outline-none focus:border-[#6D5DF6]" />
+                                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">THB</span>
+                                </div>
+                              </div>
+                            </>
                           )}
 
                           {(scope.brandSupportType || "No Sponsor") === "No Sponsor" && scope.productReceiveMethod === "Influencer ซื้อเอง" && (
@@ -2374,25 +2915,85 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                             <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
                               <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer details
                             </h5>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                              <div><span className="text-slate-400">KOL Qty:</span> <span className="font-semibold text-slate-800">{sow.numInfluencers || "-"}</span></div>
-                              <div>
-                                <span className="text-slate-400">Followers:</span> <span className="font-semibold text-slate-800">
-                                  {sow.followerReqFrom || sow.followerReqTo ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}` : (sow.followerReq || "-")}
-                                </span>
+                            
+                            {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                              <div className="space-y-4">
+                                {sow.influencerDetails.map((detail, dIdx) => (
+                                  <div key={detail.id || dIdx} className="bg-white p-4 rounded-xl border border-slate-200">
+                                    <h6 className="text-sm font-bold text-slate-800 mb-3">Group {dIdx + 1}</h6>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                      <div><span className="text-slate-400 block mb-1 text-xs">KOL Qty</span> <span className="font-semibold text-slate-800">{detail.numInfluencers || "-"}</span></div>
+                                      <div>
+                                        <span className="text-slate-400 block mb-1 text-xs">Followers</span> <span className="font-semibold text-slate-800">
+                                          {detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` : "-"}
+                                        </span>
+                                      </div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Demographic</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.demographic)}</span></div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Location</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.location)}</span></div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Occupation</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.occupation)}</span></div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Tone</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.persona)}</span></div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Content Category</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.contentCategory)}</span></div>
+                                      <div><span className="text-slate-400 block mb-1 text-xs">Storytelling</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.storyTelling)}</span></div>
+                                    </div>
+                                    
+                                    {/* Reference Influencers Display */}
+                                    {detail.referenceInfluencers && detail.referenceInfluencers.length > 0 && (
+                                      <div className="mt-4 pt-4 border-t border-slate-100">
+                                        <div className="text-slate-400 mb-3 text-xs font-semibold uppercase tracking-wider">Reference Influencers</div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          {detail.referenceInfluencers.map(ref => (
+                                            <div key={ref.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                              <img src={ref.avatar} alt={ref.username} className="h-10 w-10 rounded-full object-cover border border-slate-200 mt-1" />
+                                              <div className="flex-1 min-w-0 space-y-1">
+                                                <div className="flex items-center justify-between">
+                                                  <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-800 hover:text-[#6D5DF6] text-sm flex items-center gap-1 transition-colors">
+                                                    {ref.username} <ExternalLink className="h-3 w-3" />
+                                                  </a>
+                                                  <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">{ref.platform}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs text-slate-500 pb-1">
+                                                  <span><strong className="text-slate-700">Folls:</strong> {ref.followers}</span>
+                                                  <span><strong className="text-slate-700">ER:</strong> {ref.engagement}</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                  {ref.category && ref.category.map(c => (
+                                                    <span key={c} className="text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-md">{c}</span>
+                                                  ))}
+                                                  {ref.persona && ref.persona.map(p => (
+                                                    <span key={p} className="text-[10px] font-semibold bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-md">{p}</span>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                              <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{sow.persona?.demographic || sow.persona?.infDemographic || "-"}</span></div>
-                              <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{sow.persona?.location || sow.persona?.infLocation || "-"}</span></div>
-                              <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{sow.persona?.occupation || sow.persona?.infOccupation || "-"}</span></div>
-                              <div><span className="text-slate-400">Tone:</span> <span className="font-semibold text-slate-800">{sow.persona?.persona || sow.persona?.infPersona || "-"}</span></div>
-                              <div className="col-span-2"><span className="text-slate-400">Content Category:</span> <span className="font-semibold text-slate-800">{sow.persona?.contentCategory || sow.persona?.infContent || "-"}</span></div>
-                              <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{sow.persona?.storyTelling || sow.persona?.infStoryTelling || "-"}</span></div>
-                              {sow.persona?.specialConditions && sow.persona.specialConditions.length > 0 && (
-                                <div className="col-span-2">
-                                  <span className="text-slate-400">Special Condition:</span> <span className="font-semibold text-slate-800">{sow.persona.specialConditions.join(', ')}</span>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                <div><span className="text-slate-400">KOL Qty:</span> <span className="font-semibold text-slate-800">{sow.numInfluencers || "-"}</span></div>
+                                <div>
+                                  <span className="text-slate-400">Followers:</span> <span className="font-semibold text-slate-800">
+                                    {sow.followerReqFrom || sow.followerReqTo ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}` : (sow.followerReq || "-")}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
+                                <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.demographic || sow.persona?.infDemographic)}</span></div>
+                                <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.location || sow.persona?.infLocation)}</span></div>
+                                <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.occupation || sow.persona?.infOccupation)}</span></div>
+                                <div><span className="text-slate-400">Tone:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.persona || sow.persona?.infPersona)}</span></div>
+                                <div className="col-span-2"><span className="text-slate-400">Content Category:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.contentCategory || sow.persona?.infContent)}</span></div>
+                                <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.storyTelling || sow.persona?.infStoryTelling)}</span></div>
+                                {sow.persona?.specialConditions && sow.persona.specialConditions.length > 0 && (
+                                  <div className="col-span-2">
+                                    <span className="text-slate-400">Special Condition:</span> <span className="font-semibold text-slate-800">{sow.persona.specialConditions.join(', ')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
                             {sow.persona?.infPreference && (
                               <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
                                 <span className="text-xs text-slate-400 font-bold block mb-1.5 uppercase">Influencer Preferences</span>
@@ -2558,6 +3159,26 @@ function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                             </div>
                           </div>
                         </div>
+
+                        {/* Reference Influencers Display */}
+                        {sow.referenceInfluencers && sow.referenceInfluencers.length > 0 && (
+                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 mt-4">
+                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                              <Users className="h-4 w-4 text-[#6D5DF6]" /> Reference Influencers
+                            </h5>
+                            <div className="flex flex-wrap gap-3">
+                              {sow.referenceInfluencers.map(ref => (
+                                <a key={ref.id} href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-slate-200 hover:border-[#6D5DF6] rounded-full py-1.5 pl-1.5 pr-4 transition-colors">
+                                  <img src={ref.avatar} alt={ref.username} className="h-8 w-8 rounded-full object-cover border border-slate-100" />
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-slate-800 leading-tight">{ref.username}</span>
+                                    <span className="text-[10px] text-slate-500 leading-tight">{ref.platform}</span>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                       </div>
                     ))
