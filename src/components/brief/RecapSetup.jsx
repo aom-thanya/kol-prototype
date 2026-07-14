@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Edit2, ExternalLink } from "lucide-react";
+import EmptyState from "../common/EmptyState";
 import MultiSelect from "../common/MultiSelect";
 import SimpleHtmlEditor from "../common/SimpleHtmlEditor";
 import { generateScopeName } from "../../utils/briefHelpers";
@@ -543,10 +544,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                                   ))}
                                 </div>
                                 ) : (
-                                  <div className="text-center py-6 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
-                                    <p className="text-slate-400 font-semibold text-sm">No reference influencers added yet.</p>
-                                    <p className="text-slate-400 text-xs mt-1">Click "Add Reference" to include example creators for this scope.</p>
-                                  </div>
+                                  <EmptyState title="No reference influencers added yet." description='Click "Add Reference" to include example creators for this scope.' className="py-6 rounded-xl" />
                                 );
                               })()}
                             </div>
@@ -562,7 +560,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                       </div>
                     ))}
                     {group.sows.length === 0 && (
-                      <p className="text-xs text-slate-400 italic">No SOWs added to this group yet.</p>
+                      <EmptyState title="No SOWs added to this group yet." className="py-4 border-none bg-transparent shadow-none italic" />
                     )}
                   </div>
                 </div>
@@ -571,9 +569,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
             </div>
           ))}
           {groups.length === 0 && (
-            <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
-              <p className="text-slate-400 font-semibold">No groups created yet. Add a group to get started.</p>
-            </div>
+            <EmptyState title="No groups created yet. Add a group to get started." className="py-12" />
           )}
         </div>
       </div>
