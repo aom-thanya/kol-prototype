@@ -292,11 +292,7 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                 <Button 
                   className="w-full" 
                   onClick={() => {
-                    if (hasStandard) {
-                      window.open("https://docs.google.com/spreadsheets/d/18ns-87lEe4Ct2qzfQ0nsEYrb4WdpJlmqoRSnP2J_UF0/edit?usp=sharing", "_blank");
-                    } else {
-                      showToast && showToast("download dealsheet soon");
-                    }
+                    window.open("https://docs.google.com/spreadsheets/d/1RhYMgVvT3N3hrZflC0QqwtteFYs6YFZO/edit?usp=sharing&ouid=106210278425034632604&rtpof=true&sd=true", "_blank");
                   }}
                 >
                   <Download className="mr-2 h-4 w-4" /> Export Dealsheet
