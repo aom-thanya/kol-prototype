@@ -8,7 +8,7 @@ import {
   RefreshCw, Users, FileText, Image, Video, Calendar,
   MoreVertical, ExternalLink, Link as LinkIcon, Download,
   MessageCircle, Send, Check, GripVertical, Paperclip,
-  CheckCircle, Loader2, Info
+  CheckCircle, Loader2, Info, Sparkles, UploadCloud
 } from "lucide-react";
 import { formatCurrency, formatNumber, cn } from "../../../utils/helpers";
 import { defaultPillars, platformOptions } from "../../../constants/appConstants";
@@ -220,7 +220,7 @@ export default function InfluencerDetailModal({ open, onClose, onSave, initialDa
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
       <div className="w-full max-w-6xl h-[90vh] flex flex-col rounded-2xl bg-white shadow-xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 p-4 shrink-0">
           <h2 className="text-lg font-bold text-slate-800">Influencer Details</h2>
