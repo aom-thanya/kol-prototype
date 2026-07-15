@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, GripVertical, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, GripVertical, ExternalLink, ChevronUp, ChevronDown, Copy, CheckCircle2 } from "lucide-react";
 import Button from "../common/Button";
 import MultiSelect from "../common/MultiSelect";
 import { cn } from "../../utils/cn";
+import { customersSeed } from "../../data/mockData";
 
 export default function TrackerTable({
   group,
@@ -21,7 +22,9 @@ export default function TrackerTable({
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [copiedGreetingId, setCopiedGreetingId] = useState(null);
+  const [copiedCelebGreetingId, setCopiedCelebGreetingId] = useState(null);
   const canReorder = allowReorder !== null ? allowReorder : !readOnly;
   const influencers = trackerData.influencers || [];
   const allSOWs = group?.sows?.length > 0
@@ -188,6 +191,119 @@ export default function TrackerTable({
   // requiredServices.push({ key: "Affiliate", label: "Affiliate" }); // Not in serviceScope list currently.  
   const brandSupports = [];
   const hasCompetitor = brief.competitor && brief.competitor.length > 0 && brief.competitor !== "<p><br></p>";
+
+  const generateGreeting = (inf) => {
+    const buyerName = brief.salesOwner || "Buyer";
+    const stripHtml = (html) => {
+      if (!html) return "";
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    };
+    const productName = stripHtml(brief.product || brief.brand || "");
+    
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    };
+    const periodFrom = formatDate(brief.campaignStartDate);
+    const periodTo = formatDate(brief.campaignEndDate);
+    const periodStr = periodFrom && periodTo ? `${periodFrom} - ${periodTo}` : periodFrom || periodTo || "";
+
+    const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork) || {};
+    const sowName = matchingSow.name || matchingSow.contentType || "";
+    const sowPriceLabel = String(sowName).replace(/^Create\s+/i, "");
+    
+    const isPhoto = typeof matchingSow.contentType === 'string' 
+      ? matchingSow.contentType.toLowerCase().includes("photo")
+      : Array.isArray(matchingSow.contentType) && matchingSow.contentType.some(c => String(c).toLowerCase().includes("photo"));
+
+    const pricingLines = [];
+    pricingLines.push(`>> ขอราคา ${sowPriceLabel} = `);
+    if (isPhoto) {
+      pricingLines.push(`>> โพสต์ได้สูงสุดกี่ภาพ = `);
+    }
+    
+    if (requiredServices && requiredServices.length > 0) {
+      pricingLines.push(""); // empty line
+      requiredServices.forEach(srv => {
+        pricingLines.push(`>> ขอราคา ${srv.label} = `);
+      });
+    }
+
+    if (group && group.questions && group.questions.length > 0) {
+      pricingLines.push(""); // empty line
+      group.questions.forEach(q => {
+        const qText = typeof q === 'object' ? q.text : q;
+        pricingLines.push(`>> ${qText} = `);
+      });
+    }
+    
+    const pricingText = pricingLines.join("\n");
+
+    const conditionText = inf.condition || "";
+
+    return `สวัสดีค่ะ ${buyerName} จาก Buddy Review นะคะ
+ทางเรามีงานนำเสนอลูกค้า อยากขอทราบเรทราคาคะ
+
+Product : ${productName}
+Period Campaign : ${periodStr}
+ 
+Scope of Work : ${sowName}
+
+${pricingText}
+
+—--------------------------------------------------------------------------------------------------
+
+เงื่อนไขการจ่ายเงิน
+>> จ่ายก่อนส่งงาน / จ่ายหลังส่งงาน
+>> Credit term: วัน
+>> ชำระเงินในนาม: บุคคล/บริษัท
+
+—--------------------------------------------------------------------------------------------------
+
+เงื่อนไขอื่นๆเพิ่มเติม 
+${conditionText}
+
+*สำคัญ : หากมีเงื่อนไขอื่นๆ ในการรับงานของทางเพจ รบกวนแจ้งกลับมาได้เลยนะคะ
+
+*ช่องทางในการติดต่อกลับเพิ่มเติม
+ชื่อ. : 
+Tel. : 
+Line ID :
+Email :`;
+  };
+
+  const generateCelebrityGreeting = (inf) => {
+    const customer = customersSeed.find(c => c.id === brief.customerId);
+    const clientName = customer ? customer.name : brief.brand || "Client";
+    const artistName = inf.name || "";
+
+    return `Client : ${clientName}
+Artist : ${artistName}
+
+Shooting : 
+Post Date : 
+SOW : 
+ศิลปินทำคลิปวิดิโอไม่เกิน 1 นาที ลงช่องทาง Tiktok หรือ IG ของศิลปิน จำนวน 1 โพสต์
+ศิลปินถ่ายภาพ จำนวน 1-5 ภาพ ลงช่องทาง IG ของศิลปิน จำนวน 1 โพสต์
+ศิลปินถ่ายทำเอง / ทางแบรนด์มี Production ให้ 
+ศิลปินรีวิวผลิตภัณฑ์ xx จำนวน 1 SKU โดยทำ xxxxxxxxxxx พร้อมสื่อสาร Key Message หรือ โปรโมชั่นของแบรนด์ 
+เดินทางไปร่วมงาน Event จำนวน 2 ชั่วโมง (ไม่รวมเวลาแต่งหน้าทำผม) + แจ้งกิจกรรมที่ต้องทำในงาน Event (พูดคุยบนเวที / เล่นเกมส์ / ถ่ายภาพกับผู้บริหาร / ร้องเพลง 1-3 เพลง) 
+ระยะเวลาโพสต์คลิป : 
+
+ขอราคาแยกสำหรับ
+Gen code
+Buy out นำคลิปไปใช้ต่อในช่องทางของแบรนด์ (ระบุ : offline/online)`;
+  };
+
+  const handleCopyGreeting = (inf) => {
+    navigator.clipboard.writeText(generateGreeting(inf));
+    setCopiedGreetingId(inf.id);
+    setTimeout(() => setCopiedGreetingId(null), 2000);
+  };
 
   if (isDealsheetView) {
     return (
@@ -372,7 +488,8 @@ export default function TrackerTable({
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Contact</th>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW</th>
-                <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Cost</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">คำทัก</th>
+                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Cost</th>
                 {requiredServices.length > 0 && <th colSpan={requiredServices.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Service Scope</th>}
                 {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Questions</th>}
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Brand Support</th>}
@@ -388,7 +505,10 @@ export default function TrackerTable({
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[80px] text-center">Lot</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Influencer</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Celebrity</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Raw Cost</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[150px]">เรทนี้ใช้ได้ถึง</th>
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 {(group.questions || []).map((q, idx) => (
                   <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{typeof q === 'object' ? q.text : q}</th>
@@ -735,11 +855,91 @@ export default function TrackerTable({
                         </select>
                       )}
                     </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] align-top bg-slate-50">
+                      {(() => {
+                        const currentGreeting = inf.greetingText !== undefined ? inf.greetingText : generateGreeting(inf);
+                        return readOnly ? (
+                          <div className="whitespace-pre-wrap">{currentGreeting || "-"}</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 w-full">
+                            <textarea 
+                              rows={15}
+                              value={currentGreeting}
+                              onChange={(e) => updateInf(inf.id, "greetingText", e.target.value)}
+                              className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px] bg-white leading-relaxed"
+                            ></textarea>
+                            <div className="flex justify-end">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(currentGreeting);
+                                  setCopiedGreetingId(inf.id);
+                                  setTimeout(() => setCopiedGreetingId(null), 2000);
+                                }}
+                                className="text-[10px] py-1 px-2 border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-1 w-fit h-auto"
+                              >
+                                {copiedGreetingId === inf.id ? (
+                                  <><CheckCircle2 className="w-3 h-3 text-emerald-500" /> <span className="text-emerald-600">Copied</span></>
+                                ) : (
+                                  <><Copy className="w-3 h-3 text-slate-400" /> <span className="text-slate-600">Copy</span></>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] align-top bg-slate-50">
+                      {(() => {
+                        const currentCelebGreeting = inf.celebGreetingText !== undefined ? inf.celebGreetingText : generateCelebrityGreeting(inf);
+                        return readOnly ? (
+                          <div className="whitespace-pre-wrap">{currentCelebGreeting || "-"}</div>
+                        ) : (
+                          <div className="flex flex-col gap-2 w-full">
+                            <textarea 
+                              rows={15}
+                              value={currentCelebGreeting}
+                              onChange={(e) => updateInf(inf.id, "celebGreetingText", e.target.value)}
+                              className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] resize-y text-[10px] bg-white leading-relaxed"
+                            ></textarea>
+                            <div className="flex justify-end">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(currentCelebGreeting);
+                                  setCopiedCelebGreetingId(inf.id);
+                                  setTimeout(() => setCopiedCelebGreetingId(null), 2000);
+                                }}
+                                className="text-[10px] py-1 px-2 border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-1 w-fit h-auto"
+                              >
+                                {copiedCelebGreetingId === inf.id ? (
+                                  <><CheckCircle2 className="w-3 h-3 text-emerald-500" /> <span className="text-emerald-600">Copied</span></>
+                                ) : (
+                                  <><Copy className="w-3 h-3 text-slate-400" /> <span className="text-slate-600">Copy</span></>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
                       {readOnly ? (
                         <span>{inf.rawCost || "-"}</span>
                       ) : (
                         <input type="text" value={inf.rawCost || ""} disabled={readOnly} onChange={e => updateInf(inf.id, "rawCost", e.target.value)} className="w-24 rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white" />
+                      )}
+                    </td>
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs text-center">
+                      {readOnly ? (
+                        <span>{inf.rateValidUntil ? new Date(inf.rateValidUntil).toLocaleDateString('en-GB') : "-"}</span>
+                      ) : (
+                        <input 
+                          type="date" 
+                          value={inf.rateValidUntil || ""} 
+                          onChange={e => updateInf(inf.id, "rateValidUntil", e.target.value)} 
+                          className="w-fit rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white text-slate-600" 
+                        />
                       )}
                     </td>
                     {requiredServices.map(srv => {
