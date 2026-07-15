@@ -102,15 +102,16 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800">Recap & Group Setup</h3>
-          <p className="text-sm text-slate-500 mt-1">Review and modify groups, pillars, and scopes of work.</p>
+    <div className="flex flex-col lg:flex-row gap-6 relative items-start">
+      <div className="w-full lg:w-3/4 min-w-0 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-8">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Recap & Group Setup</h3>
+            <p className="text-sm text-slate-500 mt-1">Review and modify groups, pillars, and scopes of work.</p>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-6">
+        <div className="space-y-6">
         {groups.map((group, gIndex) => {
           const isCollapsed = collapsedGroups[group.id];
           return (
@@ -187,22 +188,31 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
             )}
           </div>
         )})}
+        </div>
       </div>
 
-      <div className="flex items-center justify-end gap-4 pt-4 border-t border-slate-100 mt-8">
-        {isNextDisabled() && (
-          <span className="text-sm font-medium text-rose-500">
-            * Please fill required duration fields
-          </span>
-        )}
-        <Button 
-          onClick={onNext} 
-          disabled={isNextDisabled()} 
-          className={isNextDisabled() ? "bg-slate-300 text-slate-500 cursor-not-allowed px-8" : "bg-[#6D5DF6] hover:bg-[#5b4dcc] text-white px-8"}
-        >
-          Continue
-        </Button>
+      {/* Right Column (Actions Sidebar) */}
+      <div className="w-full lg:w-1/4 shrink-0 text-sm">
+        <div className="sticky top-6 space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
+            <div className="flex flex-col gap-3">
+              {isNextDisabled() && (
+                <span className="text-xs font-medium text-rose-500 text-center bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-100">
+                  * Please fill required duration fields
+                </span>
+              )}
+              <Button 
+                onClick={onNext} 
+                className="w-full py-3 text-base font-bold bg-[#6D5DF6] hover:bg-[#5b4dcc] text-white"
+              >
+                Start Example List
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
+
 
       {/* Edit Group Influencer Details Modal */}
       {editingGroupDetailsId && (

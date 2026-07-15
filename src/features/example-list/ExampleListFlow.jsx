@@ -85,16 +85,14 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
         )}
         
         {activeTab === "recap" && (
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-            <RecapSetup 
-              brief={currentBrief}
-              onUpdateBrief={(updated) => {
-                setCurrentBrief(updated);
-                showToast("Recap updates saved locally.");
-              }}
-              onNext={() => setActiveTab("brief")}
-            />
-          </div>
+          <RecapSetup 
+            brief={currentBrief}
+            onUpdateBrief={(updated) => {
+              setCurrentBrief(updated);
+              showToast("Recap updates saved locally.");
+            }}
+            onNext={() => setActiveTab("brief")}
+          />
         )}
       </div>
     </div>
