@@ -789,6 +789,34 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return refer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        let cont = grossNum;
+                        if (grossNum < 5000) cont = 1000;
+                        else if (grossNum <= 49999) cont = grossNum * 0.2;
+                        else cont = grossNum * 0.1;
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) selectedPrice = grossNum * 2.3;
+                        else if (grossNum <= 49999) selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        else selectedPrice = grossNum * 1.15;
+                        const influPrice = cont + selectedPrice;
+                        const sellingPrice = Math.ceil(influPrice / 1000) * 1000;
+                        const refer = sellingPrice * 0.05;
+                        
+                        let rowSumOther = 0;
+                        requiredServices.forEach(srv => {
+                          let srvData = inf.services?.[srv.key];
+                          if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                            const p = typeof srvData === 'object' ? srvData.price : srvData;
+                            if (p) rowSumOther += Number(p);
+                          }
+                        });
+                        
                         const tp = sellingPrice + rowSumOther + refer;
                         return tp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
