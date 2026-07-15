@@ -1,9 +1,79 @@
- 
+import { useState } from "react";
+import { Plus, X } from "lucide-react";
+import SowDetailsDisplay from "./shared/SowDetailsDisplay";
+import AddExampleCreatorModal from "../../example-list/components/AddExampleCreatorModal";
 
-
-
-export default function BriefExampleListView({ brief }) {
+export default function BriefExampleListView({ brief, onUpdateBrief }) {
   const cn = (...classes) => classes.filter(Boolean).join(" ");
+  const [activeModalSow, setActiveModalSow] = useState(null);
+
+  const handleAddQuestion = (groupIndex) => {
+    if (!onUpdateBrief) return;
+    const newGroups = [...brief.groups];
+    if (!newGroups[groupIndex].questions) newGroups[groupIndex].questions = [];
+    newGroups[groupIndex].questions.push({ id: `q_${groupIndex}_${newGroups[groupIndex].questions.length}`, text: "" });
+    onUpdateBrief({ ...brief, groups: newGroups });
+  };
+
+  const handleUpdateQuestion = (groupIndex, qIndex, text) => {
+    if (!onUpdateBrief) return;
+    const newGroups = [...brief.groups];
+    newGroups[groupIndex].questions[qIndex].text = text;
+    onUpdateBrief({ ...brief, groups: newGroups });
+  };
+
+  const handleRemoveQuestion = (groupIndex, qIndex) => {
+    if (!onUpdateBrief) return;
+    const newGroups = [...brief.groups];
+    newGroups[groupIndex].questions.splice(qIndex, 1);
+    onUpdateBrief({ ...brief, groups: newGroups });
+  };
+
+  const handleSaveCreators = (creators) => {
+    if (!activeModalSow || !onUpdateBrief) return;
+    const { groupIndex, sowIndex } = activeModalSow;
+    const newGroups = [...brief.groups];
+    
+    if (!newGroups[groupIndex].sows[sowIndex].exampleCreators) {
+      newGroups[groupIndex].sows[sowIndex].exampleCreators = [];
+    }
+    
+    // Merge new creators avoiding duplicates
+    const existingIds = newGroups[groupIndex].sows[sowIndex].exampleCreators.map(c => c.id);
+    const newUniqueCreators = creators.filter(c => !existingIds.includes(c.id));
+    
+    newGroups[groupIndex].sows[sowIndex].exampleCreators.push(...newUniqueCreators);
+    onUpdateBrief({ ...brief, groups: newGroups });
+    setActiveModalSow(null);
+  };
+
+  const handleRemoveExampleCreator = (groupIndex, sowIndex, creatorId) => {
+    if (!onUpdateBrief) return;
+    const newGroups = [...brief.groups];
+    newGroups[groupIndex].sows[sowIndex].exampleCreators = newGroups[groupIndex].sows[sowIndex].exampleCreators.filter(c => c.id !== creatorId);
+    onUpdateBrief({ ...brief, groups: newGroups });
+  };
+
+  const renderTags = (value, fallbackValue) => {
+    const rawVal = value || fallbackValue;
+    if (!rawVal) return <span className="text-slate-400">-</span>;
+    
+    const tags = Array.isArray(rawVal) ? rawVal : (typeof rawVal === 'string' ? rawVal.split(',').map(s => s.trim()) : [rawVal]);
+    const validTags = tags.filter(Boolean);
+    
+    if (validTags.length === 0) return <span className="text-slate-400">-</span>;
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {validTags.map((tag, i) => (
+          <span key={i} className="px-3 py-1.5 rounded-lg bg-slate-50/80 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs">
+            {tag}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -74,7 +144,7 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Demographic</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.demographic) ? group.persona.demographic.join(", ") : (group.persona?.demographic || group.sows?.[0]?.persona?.demographic || "-")}
+                    {renderTags(group.persona?.demographic, group.sows?.[0]?.persona?.demographic)}
                   </td>
                 </tr>
 
@@ -82,7 +152,7 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Location</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.location) ? group.persona.location.join(", ") : (group.persona?.location || group.sows?.[0]?.persona?.location || "-")}
+                    {renderTags(group.persona?.location, group.sows?.[0]?.persona?.location)}
                   </td>
                 </tr>
 
@@ -90,7 +160,7 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Occupation</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.occupation) ? group.persona.occupation.join(", ") : (group.persona?.occupation || group.sows?.[0]?.persona?.occupation || "-")}
+                    {renderTags(group.persona?.occupation, group.sows?.[0]?.persona?.occupation)}
                   </td>
                 </tr>
 
@@ -98,7 +168,7 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Tone / Persona</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.persona) ? group.persona.persona.join(", ") : (group.persona?.persona || group.sows?.[0]?.persona?.persona || "-")}
+                    {renderTags(group.persona?.persona, group.sows?.[0]?.persona?.persona)}
                   </td>
                 </tr>
 
@@ -106,7 +176,7 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Content Category</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.contentCategory) ? group.persona.contentCategory.join(", ") : (group.persona?.contentCategory || group.sows?.[0]?.persona?.contentCategory || "-")}
+                    {renderTags(group.persona?.contentCategory, group.sows?.[0]?.persona?.contentCategory)}
                   </td>
                 </tr>
 
@@ -114,7 +184,81 @@ export default function BriefExampleListView({ brief }) {
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Storytelling</td>
                   <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
-                    {Array.isArray(group.persona?.storyTelling) ? group.persona.storyTelling.join(", ") : (group.persona?.storyTelling || group.sows?.[0]?.persona?.storyTelling || "-")}
+                    {renderTags(group.persona?.storyTelling, group.sows?.[0]?.persona?.storyTelling)}
+                  </td>
+                </tr>
+
+                {/* Reference Influencers */}
+                {(group.referenceInfluencers && group.referenceInfluencers.length > 0) && (
+                  <tr className="border-b border-slate-100">
+                    <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Reference Influencers</td>
+                    <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                      <div className="flex flex-wrap gap-2">
+                        {group.referenceInfluencers.map(ref => (
+                          <div key={ref.id} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
+                            <img src={ref.avatar} alt={ref.username} className="w-5 h-5 rounded-full object-cover" />
+                            <span className="text-xs font-semibold text-slate-700">{ref.username}</span>
+                          </div>
+                        ))}
+                        <span className="text-xs text-slate-400 self-center ml-2">{group.referenceInfluencers.length} References Selected</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {/* Scope of Work Details */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Scope of Work Details</td>
+                  {group.sows?.map((sow, idx) => (
+                    <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 bg-white">
+                      <SowDetailsDisplay sow={sow} index={idx} initialCollapsed={true} />
+                    </td>
+                  ))}
+                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                </tr>
+
+                {/* Questions */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Questions</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    <div className="flex flex-col gap-3">
+                      {(group.questions || []).map((q, qIndex) => (
+                        <div key={q.id} className="flex items-center gap-3">
+                          <span className="text-xs font-semibold text-slate-400 w-4 text-right shrink-0">{qIndex + 1}.</span>
+                          {onUpdateBrief ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input 
+                                type="text" 
+                                className="flex-1 text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-shadow"
+                                placeholder="Enter question..."
+                                value={q.text}
+                                onChange={(e) => handleUpdateQuestion(groupIndex, qIndex, e.target.value)}
+                              />
+                              <button onClick={() => handleRemoveQuestion(groupIndex, qIndex)} className="text-slate-400 hover:text-rose-500 transition-colors p-1 shrink-0">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex-1 text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700">
+                              {q.text || "Untitled Question"}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {onUpdateBrief && (
+                        <div className="flex items-center gap-3 mt-1">
+                          <div className="w-4 shrink-0"></div>
+                          <button 
+                            onClick={() => handleAddQuestion(groupIndex)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 border border-dashed border-indigo-300 rounded-lg px-3 py-2 hover:bg-indigo-50 hover:border-indigo-400 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add Question
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
 
@@ -126,27 +270,45 @@ export default function BriefExampleListView({ brief }) {
                     return (
                       <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 space-y-3 bg-white">
                         <div className="flex flex-col gap-1.5">
+                          {/* Selected Creators (Original functionality) */}
                           {selectedCreators.map((creator) => (
                             <div key={creator.id} className="flex items-center justify-between border border-slate-200/60 rounded-lg p-1.5 pr-2 bg-white shadow-xs">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <img 
                                   src={creator.avatar || "https://i.pravatar.cc/160"} 
-                                  alt={creator.name} 
+                                  alt={creator.name || creator.username} 
                                   className="w-6 h-6 rounded-full object-cover bg-slate-100 flex-shrink-0" 
                                 />
                                 <div className="flex flex-col min-w-0">
                                   <span className="text-[11px] font-semibold truncate leading-tight text-slate-800">
-                                    {creator.name}
+                                    {creator.name || creator.username}
                                   </span>
-                                  <span className="text-[9px] text-slate-450 leading-tight truncate">
-                                    {creator.username}
-                                  </span>
+                                  {creator.name && creator.username && (
+                                    <span className="text-[9px] text-slate-450 leading-tight truncate">
+                                      {creator.username}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
+                              {onUpdateBrief && (
+                                <button onClick={() => handleRemoveExampleCreator(groupIndex, idx, creator.id)} className="text-slate-300 hover:text-rose-500 flex-shrink-0 ml-1 p-0.5">
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           ))}
                           {selectedCreators.length === 0 && (
-                            <span className="text-slate-400 italic text-[10px]">ไม่มีรายชื่อที่เลือก</span>
+                            <span className="text-slate-400 italic text-[10px]">No creators selected</span>
+                          )}
+
+                          {onUpdateBrief && (
+                            <button 
+                              onClick={() => setActiveModalSow({ groupIndex, sowIndex: idx, pillar: group.pillar, group, initialCreators: selectedCreators })}
+                              className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 py-1.5 rounded-lg transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                              Add Example List
+                            </button>
                           )}
                         </div>
                       </td>
@@ -159,6 +321,17 @@ export default function BriefExampleListView({ brief }) {
           </div>
         </div>
       ))}
+      
+      {activeModalSow && (
+        <AddExampleCreatorModal
+          open={true}
+          onClose={() => setActiveModalSow(null)}
+          pillar={activeModalSow.pillar}
+          group={activeModalSow.group}
+          initialCreators={activeModalSow.initialCreators}
+          onSave={handleSaveCreators}
+        />
+      )}
     </div>
   );
 }

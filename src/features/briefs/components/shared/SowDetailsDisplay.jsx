@@ -8,8 +8,8 @@ const renderList = (arr) => {
   return String(arr);
 };
 
-export default function SowDetailsDisplay({ sow, index, children, onEdit }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export default function SowDetailsDisplay({ sow, index, children, onEdit, initialCollapsed = false }) {
+  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs transition">
