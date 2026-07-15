@@ -131,7 +131,11 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
       }
     });
     setGroupTrackers(newGroupTrackers);
-    onUpdateBrief({ ...brief, groupTrackers: newGroupTrackers });
+    
+    const lotSubmitTimes = brief.lotSubmitTimes || {};
+    lotSubmitTimes[`Lot ${nextLotNumber}`] = new Date().toISOString();
+
+    onUpdateBrief({ ...brief, groupTrackers: newGroupTrackers, lotSubmitTimes });
     setIsSubmitLotModalOpen(false);
   };
 
@@ -364,15 +368,6 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                 </div>
               )}
 
-              {!setHeaderActions && readOnly && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button 
-                    onClick={() => onUpdateBrief({ ...brief, activeTab: "dealsheet" })}
-                  >
-                    เริ่มสร้าง Dealsheet
-                  </Button>
-                </div>
-              )}
             </div>
 
             {activeGroups.length === 0 ? (
@@ -381,12 +376,95 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
               </div>
             ) : (
               <div className="space-y-8">
-                {activeGroups.map(grp => {
+                {readOnly ? (() => {
+                  const lotsData = {};
+                  activeGroups.forEach(grp => {
+                    const tracker = groupTrackers[grp.id] || { influencers: [] };
+                    tracker.influencers.forEach(inf => {
+                      if (inf.lot) {
+                        const lotKey = inf.lot;
+                        if (!lotsData[lotKey]) {
+                          lotsData[lotKey] = { influencers: [] };
+                        }
+                        lotsData[lotKey].influencers.push({ ...inf, _originalGroupId: grp.id, _groupName: grp.name });
+                      }
+                    });
+                  });
+
+                  const sortedLots = Object.keys(lotsData).sort((a, b) => {
+                    const timeA = brief.lotSubmitTimes?.[a] ? new Date(brief.lotSubmitTimes[a]).getTime() : 0;
+                    const timeB = brief.lotSubmitTimes?.[b] ? new Date(brief.lotSubmitTimes[b]).getTime() : 0;
+                    if (timeA !== timeB) return timeA - timeB;
+                    return a.localeCompare(b, undefined, { numeric: true });
+                  });
+
+                  if (sortedLots.length === 0) {
+                    return (
+                      <div className="text-center py-16 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                        <p className="text-slate-600">No Rate cards have been submitted yet.</p>
+                      </div>
+                    );
+                  }
+
+                  return sortedLots.map(lotKey => {
+                    const submitTime = brief.lotSubmitTimes?.[lotKey];
+                    const timeString = submitTime ? new Date(submitTime).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown time";
+                    const lotTitle = `${lotKey} (Submitted: ${timeString})`;
+                    
+                    const mockGroup = { 
+                      sows: brief.groups?.flatMap(g => g.sows || []) || [], 
+                      questions: Array.from(new Set(brief.groups?.flatMap(g => g.questions || []) || [])) 
+                    };
+
+                    const isCreated = brief.lotDealsheetCreated?.[lotKey];
+                    const headerAction = (
+                      <Button 
+                        variant={isCreated ? "outline" : "primary"}
+                        disabled={isCreated}
+                        onClick={() => {
+                          const newLotDealsheetCreated = { ...(brief.lotDealsheetCreated || {}), [lotKey]: true };
+                          onUpdateBrief({ ...brief, lotDealsheetCreated: newLotDealsheetCreated, activeTab: "dealsheet" });
+                        }}
+                        className={isCreated ? "border-slate-200 text-slate-500 bg-slate-50" : ""}
+                      >
+                        {isCreated ? "สร้าง Dealsheet แล้ว" : "เริ่มสร้าง Dealsheet"}
+                      </Button>
+                    );
+
+                    return (
+                      <TrackerTable 
+                        key={lotKey}
+                        groupName={lotTitle}
+                        group={mockGroup}
+                        headerAction={headerAction}
+                        brief={brief}
+                        trackerData={lotsData[lotKey]}
+                        onUpdateTracker={(newData) => {
+                          const newTrackers = JSON.parse(JSON.stringify(groupTrackers));
+                          newData.influencers.forEach(inf => {
+                            const grpId = inf._originalGroupId;
+                            if (grpId && newTrackers[grpId]) {
+                              const idx = newTrackers[grpId].influencers.findIndex(i => i.id === inf.id);
+                              if (idx !== -1) {
+                                const { _originalGroupId, _groupName, ...cleanInf } = inf;
+                                newTrackers[grpId].influencers[idx] = cleanInf;
+                              }
+                            }
+                          });
+                          setGroupTrackers(newTrackers);
+                          onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+                        }}
+                        onAddClick={() => {}}
+                        hideAddButton={true}
+                        readOnly={true}
+                        replaceStatusWithGroup={true}
+                        isBriefManagement={isBriefManagement}
+                      />
+                    );
+                  });
+                })() : activeGroups.map(grp => {
                   const grpData = groupTrackers[grp.id] || { influencers: [] };
-                  const displayInfluencers = readOnly 
-                    ? grpData.influencers.filter(inf => inf.lot)
-                    : grpData.influencers;
-                  const displayTrackerData = { ...grpData, influencers: displayInfluencers };
+                  const displayTrackerData = { ...grpData };
 
                   return (
                     <TrackerTable 
@@ -396,12 +474,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                       brief={brief}
                       trackerData={displayTrackerData}
                       onUpdateTracker={(newData) => {
-                        let updatedInfluencers = newData.influencers;
-                        if (readOnly) {
-                          const hiddenInfluencers = grpData.influencers.filter(inf => !inf.lot);
-                          updatedInfluencers = [...updatedInfluencers, ...hiddenInfluencers];
-                        }
-                        const newTrackers = { ...groupTrackers, [grp.id]: { ...newData, influencers: updatedInfluencers } };
+                        const newTrackers = { ...groupTrackers, [grp.id]: newData };
                         setGroupTrackers(newTrackers);
                         onUpdateBrief({ ...brief, groupTrackers: newTrackers });
                       }}

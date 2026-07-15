@@ -18,7 +18,9 @@ export default function TrackerTable({
   allowStatusEdit = false,
   isDealsheetView = false,
   allowReorder = null,
-  isBriefManagement = false
+  isBriefManagement = false,
+  headerAction = null,
+  replaceStatusWithGroup = false
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragAllowedIndex, setDragAllowedIndex] = useState(null);
@@ -468,6 +470,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
           <p className="text-sm text-slate-500 mt-1">Influencers in this group</p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
+          {headerAction}
           {!hideAddButton && (
             <Button onClick={() => onAddClick(groupName)}><Plus className="h-4 w-4" /> Add Influencer</Button>
           )}
@@ -486,7 +489,11 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
               <tr>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100 sticky left-0 z-20 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer Detail</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Contact</th>
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
+                {replaceStatusWithGroup ? (
+                  <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Group</th>
+                ) : (
+                  <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Status & Lot</th>
+                )}
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">SOW</th>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">คำทัก</th>
                 <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Cost</th>
@@ -502,8 +509,14 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 <th className="px-3 py-3 border-r border-slate-200 w-[50px] min-w-[50px] sticky left-0 z-20 bg-[#F8FAFC]">No.</th>
                 <th className="px-5 py-3 border-r border-slate-200 w-[280px] min-w-[280px] sticky left-[50px] z-20 bg-[#F8FAFC] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[280px]">Contact</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[80px] text-center">Lot</th>
+                {replaceStatusWithGroup ? (
+                  <th className="px-3 py-2 border-r border-slate-200 min-w-[150px] text-center bg-indigo-50/50">Group</th>
+                ) : (
+                  <>
+                    <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Status</th>
+                    <th className="px-3 py-2 border-r border-slate-200 min-w-[80px] text-center">Lot</th>
+                  </>
+                )}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Influencer</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Celebrity</th>
@@ -798,39 +811,47 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
-                      <select 
-                        value={inf.contactStatus || ""} 
-                        disabled={readOnly && !allowStatusEdit} 
-                        onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
-                        className={cn(
-                          "w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none",
-                          getStatusColor(inf.contactStatus)
-                        )}
-                      >
-                        {(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).map(opt => (
-                          <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
-                        ))}
-                        {inf.contactStatus && !(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).some(o => o.value === inf.contactStatus) && (
-                          <option value={inf.contactStatus} className="bg-white text-slate-900 font-normal">{inf.contactStatus}</option>
-                        )}
-                      </select>
-                      {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
-                        <button 
-                          onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
-                          className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
-                        >
-                          Replace
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
-                      {inf.lot ? (
-                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold tracking-wider">{inf.lot}</span>
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
+                    {replaceStatusWithGroup ? (
+                      <td className="px-3 py-2 border-r border-slate-100 text-center align-middle bg-indigo-50/20 text-slate-700 font-medium whitespace-normal">
+                        {inf._groupName || "-"}
+                      </td>
+                    ) : (
+                      <>
+                        <td className="px-3 py-2 border-r border-slate-100 text-center align-middle relative">
+                          <select 
+                            value={inf.contactStatus || ""} 
+                            disabled={readOnly && !allowStatusEdit} 
+                            onChange={e => updateInf(inf.id, "contactStatus", e.target.value)}
+                            className={cn(
+                              "w-full rounded-full border px-2 py-1 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#6D5DF6]/50 text-[11px] text-center cursor-pointer appearance-none",
+                              getStatusColor(inf.contactStatus)
+                            )}
+                          >
+                            {(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).map(opt => (
+                              <option key={opt.value} value={opt.value} className="bg-white text-slate-900 font-normal">{opt.label}</option>
+                            ))}
+                            {inf.contactStatus && !(isBriefManagement ? BRIEF_STATUS_OPTIONS : STATUS_OPTIONS).some(o => o.value === inf.contactStatus) && (
+                              <option value={inf.contactStatus} className="bg-white text-slate-900 font-normal">{inf.contactStatus}</option>
+                            )}
+                          </select>
+                          {inf.contactStatus === "Selected" && !readOnly && onReplaceClick && (
+                            <button 
+                              onClick={() => onReplaceClick(groupName, inf.id, inf.accountName || "Unknown")}
+                              className="mt-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 underline block w-full text-center"
+                            >
+                              Replace
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 border-r border-slate-100 text-center align-middle">
+                          {inf.lot ? (
+                            <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold tracking-wider">{inf.lot}</span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
+                      </>
+                    )}
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] max-w-[280px] whitespace-normal">
                       {readOnly || submittedSows.length <= 1 ? (
                         <div className="text-slate-600 font-medium leading-relaxed">
