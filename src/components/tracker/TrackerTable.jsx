@@ -325,6 +325,15 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 <th className="px-6 py-3.5 min-w-[180px]">Scope of Work</th>
                 <th className="px-6 py-3.5 text-right min-w-[120px]">Raw Cost</th>
                 <th className="px-6 py-3.5 text-right min-w-[150px]">Raw Cost (/0.97 กรณีรับ net)</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Contingencies</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Price x 2.3</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +30%</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +8,000</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +15%</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Selected Price</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Influ Price</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Sum Price</th>
+                <th className="px-6 py-3.5 text-right min-w-[120px]">Selling Price</th>
                 <th className="px-6 py-3.5 min-w-[200px]">Service details & Costs</th>
                 {brandSupports.length > 0 && <th className="px-6 py-3.5 min-w-[155px]">Brand Support</th>}
                 <th className="px-6 py-3.5 min-w-[200px]">Note</th>
@@ -381,7 +390,13 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                       {sowText}
                     </td>
                     <td className="px-6 py-4.5 text-right font-bold text-slate-900 text-sm">
-                      {inf.rawCost ? inf.rawCost : "-"}
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return inf.rawCost;
+                        return rawNum.toLocaleString('en-US');
+                      })()}
                     </td>
                     <td className="px-6 py-4.5 text-right font-bold text-emerald-700 text-sm bg-emerald-50/30">
                       {(() => {
@@ -391,6 +406,181 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         if (isNaN(rawNum)) return "-";
                         const grossNum = rawNum / 0.97;
                         return grossNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-amber-600 text-sm bg-amber-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        let cont = grossNum;
+                        if (grossNum < 5000) {
+                          cont = 1000;
+                        } else if (grossNum >= 5000 && grossNum <= 49999) {
+                          cont = grossNum * 0.2;
+                        } else if (grossNum >= 50000) {
+                          cont = grossNum * 0.1;
+                        }
+                        return cont.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-blue-600 text-sm bg-blue-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        const priceMultiplied = grossNum * 2.3;
+                        return priceMultiplied.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-indigo-600 text-sm bg-indigo-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        const pricePlus30 = grossNum * 1.3;
+                        return pricePlus30.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-violet-600 text-sm bg-violet-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        const pricePlus8k = grossNum + 8000;
+                        return pricePlus8k.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-fuchsia-600 text-sm bg-fuchsia-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        const pricePlus15 = grossNum * 1.15;
+                        return pricePlus15.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-rose-600 text-sm bg-rose-50/30 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.1)]">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) {
+                          selectedPrice = grossNum * 2.3;
+                        } else if (grossNum <= 49999) {
+                          selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        } else {
+                          selectedPrice = grossNum * 1.15;
+                        }
+                        
+                        return selectedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-teal-700 text-sm bg-teal-50/30 shadow-[inset_0_0_0_1px_rgba(15,118,110,0.1)]">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        
+                        let cont = grossNum;
+                        if (grossNum < 5000) {
+                          cont = 1000;
+                        } else if (grossNum >= 5000 && grossNum <= 49999) {
+                          cont = grossNum * 0.2;
+                        } else if (grossNum >= 50000) {
+                          cont = grossNum * 0.1;
+                        }
+                        
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) {
+                          selectedPrice = grossNum * 2.3;
+                        } else if (grossNum <= 49999) {
+                          selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        } else {
+                          selectedPrice = grossNum * 1.15;
+                        }
+                        
+                        const influPrice = cont + selectedPrice;
+                        return influPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-slate-800 text-sm bg-slate-100/50">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        
+                        let cont = grossNum;
+                        if (grossNum < 5000) {
+                          cont = 1000;
+                        } else if (grossNum >= 5000 && grossNum <= 49999) {
+                          cont = grossNum * 0.2;
+                        } else if (grossNum >= 50000) {
+                          cont = grossNum * 0.1;
+                        }
+                        
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) {
+                          selectedPrice = grossNum * 2.3;
+                        } else if (grossNum <= 49999) {
+                          selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        } else {
+                          selectedPrice = grossNum * 1.15;
+                        }
+                        
+                        const influPrice = cont + selectedPrice;
+                        const sumPrice = influPrice;
+                        return sumPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-[#6D5DF6] text-sm bg-[#6D5DF6]/5 shadow-[inset_0_0_0_1px_rgba(109,93,246,0.1)]">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        
+                        let cont = grossNum;
+                        if (grossNum < 5000) {
+                          cont = 1000;
+                        } else if (grossNum >= 5000 && grossNum <= 49999) {
+                          cont = grossNum * 0.2;
+                        } else if (grossNum >= 50000) {
+                          cont = grossNum * 0.1;
+                        }
+                        
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) {
+                          selectedPrice = grossNum * 2.3;
+                        } else if (grossNum <= 49999) {
+                          selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        } else {
+                          selectedPrice = grossNum * 1.15;
+                        }
+                        
+                        const influPrice = cont + selectedPrice;
+                        const sumPrice = influPrice;
+                        const sellingPrice = Math.ceil(sumPrice / 1000) * 1000;
+                        return sellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
                     <td className="px-6 py-4.5 text-xs text-slate-700">
