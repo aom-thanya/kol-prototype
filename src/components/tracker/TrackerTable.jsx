@@ -413,8 +413,8 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
               <tr>
                 <th rowSpan={2} className="px-4 py-3.5 text-center w-[60px] border-b border-slate-200">No.</th>
                 <th rowSpan={2} className="px-6 py-3.5 min-w-[280px] border-b border-slate-200">Influencer</th>
-                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Reach</th>
                 <th rowSpan={2} className="px-6 py-3.5 min-w-[180px] border-b border-slate-200">Scope of Work</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Reach</th>
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Raw Cost</th>
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[150px] border-b border-slate-200">Raw Cost (/0.97 กรณีรับ net)</th>
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Contingencies</th>
@@ -440,6 +440,8 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Sum Refer</th>
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Total Price</th>
                 <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Total Selling Price</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-center min-w-[120px] border-b border-slate-200">เรทนี้ใช้ได้ถึง</th>
+                <th rowSpan={2} className="px-6 py-3.5 min-w-[200px] border-b border-slate-200 text-left">Condition</th>
                 
                 {brandSupports.length > 0 && <th rowSpan={2} className="px-6 py-3.5 min-w-[155px] border-b border-slate-200">Brand Support</th>}
                 <th rowSpan={2} className="px-6 py-3.5 min-w-[200px] border-b border-slate-200">Note</th>
@@ -499,6 +501,9 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4.5 text-slate-700 text-xs font-medium">
+                      {sowText}
+                    </td>
                     <td className="px-6 py-4.5 text-right font-medium text-slate-700">
                       {(() => {
                         let followerNum = 0;
@@ -516,9 +521,6 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         const reach = followerNum * 0.08;
                         return reach > 0 ? Math.round(reach).toLocaleString('en-US') : "-";
                       })()}
-                    </td>
-                    <td className="px-6 py-4.5 text-slate-700 text-xs font-medium">
-                      {sowText}
                     </td>
                     <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
@@ -821,7 +823,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return tp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
+                    <td className="px-6 py-4.5 text-right font-bold text-[#FF5A5F] text-sm bg-[#FF5A5F]/10 shadow-[inset_0_0_0_1px_rgba(255,90,95,0.2)]">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -854,6 +856,12 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return tsp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
+                    <td className="px-6 py-4.5 text-center text-slate-500 text-xs font-medium">
+                      {inf.rateValidUntil ? new Date(inf.rateValidUntil).toLocaleDateString('en-GB') : "-"}
+                    </td>
+                    <td className="px-6 py-4.5 text-slate-500 text-xs min-w-[200px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
+                      {inf.condition || "-"}
+                    </td>
                     
                     {brandSupports.length > 0 && (
                       <td className="px-6 py-4.5 text-slate-700 text-xs">
@@ -871,8 +879,15 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         </div>
                       </td>
                     )}
-                    <td className="px-6 py-4.5 text-slate-500 text-xs min-w-[200px] max-w-[300px] whitespace-pre-wrap leading-relaxed">
-                      {inf.note || inf.detail || "-"}
+                    <td className="px-6 py-4.5 text-slate-500 text-xs min-w-[200px] max-w-[300px]">
+                      <textarea 
+                        rows={3} 
+                        value={inf.note || inf.detail || ""} 
+                        disabled={readOnly} 
+                        onChange={e => updateInf(inf.id, "note", e.target.value)} 
+                        className="w-full min-w-[200px] rounded border border-slate-200 px-2 py-1.5 outline-none focus:border-[#6D5DF6] resize-y text-xs bg-white text-slate-700"
+                        placeholder="Add note..."
+                      />
                     </td>
                   </tr>
                 );
@@ -881,8 +896,8 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
             <tfoot className="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
               <tr>
                 <td colSpan="2" className="px-6 py-4 text-right">Total</td>
-                <td className="px-6 py-4 text-right">{sumReach > 0 ? Math.round(sumReach).toLocaleString('en-US') : "-"}</td>
                 <td className="px-6 py-4"></td>
+                <td className="px-6 py-4 text-right">{sumReach > 0 ? Math.round(sumReach).toLocaleString('en-US') : "-"}</td>
                 <td className="px-6 py-4 text-right font-normal text-slate-500">{sumRaw.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                 <td className="px-6 py-4 text-right font-normal text-slate-500">{sumGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="px-6 py-4 text-right font-normal text-slate-500">{sumCont.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -913,7 +928,9 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 <td className="px-6 py-4 text-right font-normal text-slate-500">{sumRefer > 0 ? sumRefer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
                 <td className="px-6 py-4 text-right font-bold text-indigo-700 bg-indigo-50/80 shadow-[inset_0_0_0_1px_rgba(67,56,202,0.2)]">{sumSumRefer > 0 ? sumSumRefer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
                 <td className="px-6 py-4 text-right font-normal text-slate-500">{sumTotalPrice > 0 ? sumTotalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
-                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumTotalSellingPrice > 0 ? sumTotalSellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                <td className="px-6 py-4 text-right font-bold text-[#FF5A5F] bg-[#FF5A5F]/10 shadow-[inset_0_0_0_1px_rgba(255,90,95,0.2)]">{sumTotalSellingPrice > 0 ? sumTotalSellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                <td className="px-6 py-4"></td>
+                <td className="px-6 py-4"></td>
                 
                 {brandSupports.length > 0 && <td className="px-6 py-4"></td>}
                 <td className="px-6 py-4"></td>
