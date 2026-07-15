@@ -56,23 +56,66 @@ export default function BriefExampleListView({ brief }) {
                 {/* Follower */}
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Follower Requirement</td>
-                  {group.sows?.map((sow, idx) => (
-                    <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
-                      {sow.followerReqFrom && sow.followerReqTo ? `${Number(sow.followerReqFrom).toLocaleString()} - ${Number(sow.followerReqTo).toLocaleString()}` : (sow.followerReqFrom || sow.followerReqTo || sow.followerReq || "-")}
-                    </td>
-                  ))}
-                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {group.followerReqFrom && group.followerReqTo ? `${Number(group.followerReqFrom).toLocaleString()} - ${Number(group.followerReqTo).toLocaleString()}` : 
+                     (group.sows?.[0]?.followerReqFrom && group.sows?.[0]?.followerReqTo ? `${Number(group.sows[0].followerReqFrom).toLocaleString()} - ${Number(group.sows[0].followerReqTo).toLocaleString()}` : (group.followerReqFrom || group.followerReqTo || group.sows?.[0]?.followerReqFrom || "-"))}
+                  </td>
                 </tr>
                 
                 {/* Num Influencers */}
                 <tr className="border-b border-slate-100">
                   <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Number of Influencers</td>
-                  {group.sows?.map((sow, idx) => (
-                    <td key={sow.id || idx} className="p-4 align-top border-r border-slate-200 last:border-r-0 text-sm text-slate-700 bg-white">
-                      {sow.numInfluencers || "-"}
-                    </td>
-                  ))}
-                  {(!group.sows || group.sows.length === 0) && <td className="p-4 text-slate-400 italic bg-white">N/A</td>}
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {group.numInfluencers || group.sows?.[0]?.numInfluencers || "-"}
+                  </td>
+                </tr>
+
+                {/* Demographic */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Demographic</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.demographic) ? group.persona.demographic.join(", ") : (group.persona?.demographic || group.sows?.[0]?.persona?.demographic || "-")}
+                  </td>
+                </tr>
+
+                {/* Location */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Location</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.location) ? group.persona.location.join(", ") : (group.persona?.location || group.sows?.[0]?.persona?.location || "-")}
+                  </td>
+                </tr>
+
+                {/* Occupation */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Occupation</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.occupation) ? group.persona.occupation.join(", ") : (group.persona?.occupation || group.sows?.[0]?.persona?.occupation || "-")}
+                  </td>
+                </tr>
+
+                {/* Persona */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Tone / Persona</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.persona) ? group.persona.persona.join(", ") : (group.persona?.persona || group.sows?.[0]?.persona?.persona || "-")}
+                  </td>
+                </tr>
+
+                {/* Content Category */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Content Category</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.contentCategory) ? group.persona.contentCategory.join(", ") : (group.persona?.contentCategory || group.sows?.[0]?.persona?.contentCategory || "-")}
+                  </td>
+                </tr>
+
+                {/* Storytelling */}
+                <tr className="border-b border-slate-100">
+                  <td className="p-4 font-bold bg-slate-50/50 text-slate-700 align-top border-r border-slate-200">Storytelling</td>
+                  <td colSpan={Math.max(1, group.sows?.length || 1)} className="p-4 align-top text-sm text-slate-700 bg-white">
+                    {Array.isArray(group.persona?.storyTelling) ? group.persona.storyTelling.join(", ") : (group.persona?.storyTelling || group.sows?.[0]?.persona?.storyTelling || "-")}
+                  </td>
                 </tr>
 
                 {/* Example List row */}

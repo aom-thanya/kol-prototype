@@ -5,6 +5,7 @@ import BriefListingPage from "../../components/brief/BriefListingPage";
 import BriefDetailPage from "../briefs/components/BriefDetailPage";
 import BriefStepProgress from "../../components/brief/BriefStepProgress";
 import RecapSetup from "../../components/brief/RecapSetup";
+import BriefExampleListView from "../briefs/components/BriefExampleListView";
 
 export default function ExampleListFlow({ briefs, showToast }) {
   const navigate = useNavigate();
@@ -66,9 +67,10 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
         brief={currentBrief}
         customSteps={[
           { id: "brief", label: "Brief Details" },
-          { id: "recap", label: "Recap" }
+          { id: "recap", label: "Recap" },
+          { id: "exampleList", label: "Example List" }
         ]}
-        customProgressIdx={activeTab === "brief" ? 0 : 1}
+        customProgressIdx={activeTab === "brief" ? 0 : activeTab === "recap" ? 1 : 2}
       />
       
       <div className="mt-6">
@@ -91,8 +93,14 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
               setCurrentBrief(updated);
               showToast("Recap updates saved locally.");
             }}
-            onNext={() => setActiveTab("brief")}
+            onNext={() => setActiveTab("exampleList")}
           />
+        )}
+
+        {activeTab === "exampleList" && (
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+            <BriefExampleListView brief={currentBrief} />
+          </div>
         )}
       </div>
     </div>
