@@ -3,6 +3,8 @@ import { useParams, useNavigate, Routes, Route } from "react-router-dom";
 
 import BriefListingPage from "../../components/brief/BriefListingPage";
 import BriefDetailPage from "../briefs/components/BriefDetailPage";
+import BriefStepProgress from "../../components/brief/BriefStepProgress";
+import RecapSetup from "../../components/brief/RecapSetup";
 
 export default function ExampleListFlow({ briefs, showToast }) {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function ExampleListFlow({ briefs, showToast }) {
 function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
   const { id } = useParams();
   const [currentBrief, setCurrentBrief] = useState(null);
+  const [activeTab, setActiveTab] = useState("brief");
 
   useEffect(() => {
     if (id) {
@@ -55,15 +58,45 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
   );
 
   return (
-    <div className="w-full">
-      <BriefDetailPage 
-        brief={currentBrief}
+    <div className="w-full pb-20">
+      <BriefStepProgress 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onBack={onBack}
-        onUpdateBrief={(updated) => {
-          setCurrentBrief(updated);
-          showToast("Updates applied locally (Example List view).");
-        }}
+        brief={currentBrief}
+        customSteps={[
+          { id: "brief", label: "Brief Details" },
+          { id: "recap", label: "Recap" }
+        ]}
+        customProgressIdx={activeTab === "brief" ? 0 : 1}
       />
+      
+      <div className="mt-6">
+        {activeTab === "brief" && (
+          <BriefDetailPage 
+            brief={currentBrief}
+            onBack={onBack}
+            onStartRecap={() => setActiveTab("recap")}
+            onUpdateBrief={(updated) => {
+              setCurrentBrief(updated);
+              showToast("Updates applied locally (Example List view).");
+            }}
+          />
+        )}
+        
+        {activeTab === "recap" && (
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+            <RecapSetup 
+              brief={currentBrief}
+              onUpdateBrief={(updated) => {
+                setCurrentBrief(updated);
+                showToast("Recap updates saved locally.");
+              }}
+              onNext={() => setActiveTab("brief")}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

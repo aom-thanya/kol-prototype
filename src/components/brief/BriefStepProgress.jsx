@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 
-export default function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief }) {
+export default function BriefStepProgress({ activeTab, onTabChange, onBack, status, brief, customSteps, customProgressIdx }) {
   const hasStandard = brief && (
     Array.isArray(brief.packageType) 
       ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
@@ -21,24 +21,29 @@ export default function BriefStepProgress({ activeTab, onTabChange, onBack, stat
 
   const isStandardKpi = hasStandard && hasKpi;
 
-  const steps = [
+  let steps = [
     { id: "brief", label: "Brief" }
   ];
   
-  if (!hasStandard) {
-    steps.push({ id: "exampleList", label: "Example list" });
-    steps.push({ id: "rateCardList", label: "Rate card list" });
-  }
-  
-  steps.push({ id: "dealsheet", label: "Dealsheet" });
-  
-  if (!isStandardKpi) {
-    steps.push({ id: "proposal", label: "Proposal" });
+  if (customSteps) {
+    steps = customSteps;
+  } else {
+    if (!hasStandard) {
+      steps.push({ id: "exampleList", label: "Example list" });
+      steps.push({ id: "rateCardList", label: "Rate card list" });
+    }
+    
+    steps.push({ id: "dealsheet", label: "Dealsheet" });
+    
+    if (!isStandardKpi) {
+      steps.push({ id: "proposal", label: "Proposal" });
+    }
   }
 
   const activeIdx = steps.findIndex(s => s.id === activeTab);
   
   const getProgressIdx = () => {
+    if (customProgressIdx !== undefined) return customProgressIdx;
     if (!status || status === "Draft") return 0; // Brief
     
     if (hasStandard) {

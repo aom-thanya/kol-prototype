@@ -18,7 +18,7 @@ import ActivityTimeline from "../../../components/common/ActivityTimeline";
 import RateCardListPage from "../../../components/brief/RateCardListPage";
 import RecapSetup from "../../../components/brief/RecapSetup";
 
-export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
+export default function BriefDetailPage({ brief, onBack, onUpdateBrief, onStartRecap }) {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentEditStep, setCurrentEditStep] = useState(1);
@@ -1050,19 +1050,28 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
 
               <div className="flex flex-col gap-3">
-                {(!brief.internalStatus || brief.internalStatus === "Draft") && (
+                {onStartRecap ? (
                   <Button
-                    className="w-full py-3 text-base font-bold"
-                    onClick={() => {
-                      if (hasStandard) {
-                        handleSubmitToTraffic();
-                      } else {
-                        setSubmitModalOpen(true);
-                      }
-                    }}
+                    className="w-full py-3 text-base font-bold bg-[#6D5DF6] hover:bg-[#5b4dcc] text-white"
+                    onClick={onStartRecap}
                   >
-                    {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
+                    Start Recap
                   </Button>
+                ) : (
+                  (!brief.internalStatus || brief.internalStatus === "Draft") && (
+                    <Button
+                      className="w-full py-3 text-base font-bold"
+                      onClick={() => {
+                        if (hasStandard) {
+                          handleSubmitToTraffic();
+                        } else {
+                          setSubmitModalOpen(true);
+                        }
+                      }}
+                    >
+                      {hasStandard ? "Create Dealsheet" : "Submit to Traffic"}
+                    </Button>
+                  )
                 )}
                 <Button variant="secondary" className="w-full py-3 text-base font-bold cursor-pointer">
                   <Copy className="mr-2 h-5 w-5" /> Duplicate Brief
