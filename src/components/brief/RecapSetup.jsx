@@ -9,7 +9,30 @@ import SowDetails from "../../features/briefs/components/shared/SowDetails";
 
 export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   const [groups, setGroups] = useState(() => {
-    if (brief.groups && brief.groups.length > 0) return brief.groups;
+    const getArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+
+    if (brief.groups && brief.groups.length > 0) {
+      return brief.groups.map(g => {
+        const defaultDemo = [];
+        if (brief.gender?.length) defaultDemo.push(...brief.gender);
+        if (brief.ageRange?.length) defaultDemo.push(...brief.ageRange);
+        if (!defaultDemo.length && brief.demographic) defaultDemo.push(...getArray(brief.demographic));
+
+        return {
+          ...g,
+          totalInfluencers: g.totalInfluencers || brief.totalInfluencers || "",
+          followerRequirement: g.followerRequirement || brief.followerRequirement || "",
+          persona: {
+            demographic: getArray(g.persona?.demographic?.length ? g.persona.demographic : defaultDemo),
+            location: getArray(g.persona?.location?.length ? g.persona.location : (brief.province ? [brief.province] : brief.location)),
+            occupation: getArray(g.persona?.occupation?.length ? g.persona.occupation : (brief.infOccupation ? [brief.infOccupation] : brief.occupation)),
+            persona: getArray(g.persona?.persona?.length ? g.persona.persona : (brief.infPersona ? [brief.infPersona] : brief.persona)),
+            contentCategory: getArray(g.persona?.contentCategory?.length ? g.persona.contentCategory : (brief.infContent ? [brief.infContent] : brief.contentCategory)),
+            storyTelling: getArray(g.persona?.storyTelling?.length ? g.persona.storyTelling : brief.storyTelling)
+          }
+        };
+      });
+    }
     
     // Auto-transform Brief's SOW -> Group into Recap's Group -> SOW hierarchy
     const sows = brief.budgetOptions?.[0]?.scopeOfWorks || [];
@@ -78,6 +101,45 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
     });
     setGroups(updatedGroups);
     onUpdateBrief({ ...brief, groups: updatedGroups });
+  };
+
+  const handleAddGroup = () => {
+    const newGroup = {
+      id: `group_${Date.now()}`,
+      name: `New Group ${groups.length + 1}`,
+      sows: [],
+      persona: {
+        demographic: [],
+        location: [],
+        occupation: [],
+        persona: [],
+        contentCategory: [],
+        storyTelling: []
+      }
+    };
+    const updatedGroups = [...groups, newGroup];
+    setGroups(updatedGroups);
+    onUpdateBrief({ ...brief, groups: updatedGroups });
+    setEditingGroupDetailsId(newGroup.id);
+  };
+
+  const handleAddSow = (groupId) => {
+    const newSow = {
+      id: `sow_${Date.now()}`,
+      name: `New Scope`,
+      contentType: [],
+      platforms: [],
+      serviceScope: {}
+    };
+    const updatedGroups = groups.map(g => {
+      if (g.id === groupId) {
+        return { ...g, sows: [...(g.sows || []), newSow] };
+      }
+      return g;
+    });
+    setGroups(updatedGroups);
+    onUpdateBrief({ ...brief, groups: updatedGroups });
+    setEditingSow({ groupId, sowId: newSow.id });
   };
 
   const isNextDisabled = () => {
@@ -179,15 +241,36 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                         editable={false}
                         onChange={() => {}}
                         onEdit={() => setEditingSow({ groupId: group.id, sowId: sow.id })}
+                        initialCollapsed={true}
                       />
                     </div>
                   ))}
+                  <div className="mt-4 flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      className="text-sm font-medium border-dashed border-slate-300 text-slate-500 hover:text-[#6D5DF6] hover:border-[#6D5DF6] hover:bg-[#6D5DF6]/5 py-2 px-4"
+                      onClick={() => handleAddSow(group.id)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Scope of Work
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
             )}
           </div>
         )})}
+        <div className="mt-6 flex justify-center">
+          <Button 
+            variant="outline" 
+            className="w-full py-4 text-sm font-bold border-dashed border-2 border-slate-300 text-slate-500 hover:text-[#6D5DF6] hover:border-[#6D5DF6] hover:bg-[#6D5DF6]/5"
+            onClick={handleAddGroup}
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Group
+          </Button>
+        </div>
         </div>
       </div>
 

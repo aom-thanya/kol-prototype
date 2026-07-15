@@ -6,8 +6,9 @@ import BriefDetailPage from "../briefs/components/BriefDetailPage";
 import BriefStepProgress from "../../components/brief/BriefStepProgress";
 import RecapSetup from "../../components/brief/RecapSetup";
 import BriefExampleListView from "../briefs/components/BriefExampleListView";
+import PlannerTrackerPage from "../../components/tracker/PlannerTrackerPage";
 
-export default function ExampleListFlow({ briefs, showToast }) {
+export default function ExampleListFlow({ briefs, onUpdateBriefs, showToast }) {
   const navigate = useNavigate();
 
   return (
@@ -31,6 +32,7 @@ export default function ExampleListFlow({ briefs, showToast }) {
         element={
           <ExampleListDetailWrapper 
             briefs={briefs} 
+            onUpdateBriefs={onUpdateBriefs}
             showToast={showToast} 
             onBack={() => navigate("/example-list")} 
           />
@@ -40,7 +42,7 @@ export default function ExampleListFlow({ briefs, showToast }) {
   );
 }
 
-function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
+function ExampleListDetailWrapper({ briefs, onUpdateBriefs, showToast, onBack }) {
   const { id } = useParams();
   const [currentBrief, setCurrentBrief] = useState(null);
   const [activeTab, setActiveTab] = useState("brief");
@@ -82,7 +84,10 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
             onStartRecap={() => setActiveTab("recap")}
             onUpdateBrief={(updated) => {
               setCurrentBrief(updated);
-              showToast("Updates applied locally (Example List view).");
+              if (onUpdateBriefs) {
+                onUpdateBriefs(briefs.map(b => b.id === updated.id ? updated : b));
+              }
+              showToast("Updates applied (Example List view).");
             }}
           />
         )}
@@ -92,7 +97,10 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
             brief={currentBrief}
             onUpdateBrief={(updated) => {
               setCurrentBrief(updated);
-              showToast("Recap updates saved locally.");
+              if (onUpdateBriefs) {
+                onUpdateBriefs(briefs.map(b => b.id === updated.id ? updated : b));
+              }
+              showToast("Recap updates saved.");
             }}
             onNext={() => setActiveTab("exampleList")}
           />
@@ -106,6 +114,9 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
                   brief={currentBrief} 
                   onUpdateBrief={(updated) => {
                     setCurrentBrief(updated);
+                    if (onUpdateBriefs) {
+                      onUpdateBriefs(briefs.map(b => b.id === updated.id ? updated : b));
+                    }
                     showToast("Example list updated.");
                   }}
                 />
@@ -130,15 +141,17 @@ function ExampleListDetailWrapper({ briefs, showToast, onBack }) {
         )}
 
         {activeTab === "rateCardList" && (
-          <div className="flex h-[60vh] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm p-10">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-800">Rate Card List</h2>
-            <p className="mt-2 text-slate-500 text-center max-w-md">
-              This step will allow you to request and review rate cards for the selected example creators.
-            </p>
-          </div>
+          <PlannerTrackerPage 
+            brief={currentBrief}
+            onUpdateBrief={(updated) => {
+              setCurrentBrief(updated);
+              if (onUpdateBriefs) {
+                onUpdateBriefs(briefs.map(b => b.id === updated.id ? updated : b));
+              }
+              showToast("Rate card list updated.");
+            }}
+            isBriefManagement={true}
+          />
         )}
       </div>
     </div>

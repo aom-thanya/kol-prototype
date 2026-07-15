@@ -961,6 +961,100 @@ export const briefsSeed = [
     "buddyReviewSupport": "",
     "condition": "1. Brand สามารถเลือก Influencer ได้จำนวน ... ครั้ง\n2. Brand สามารถตรวจ Content Idea ได้ ... ครั้ง\n3. Brand สามารถตรวจ Draft ได้จำนวน ... ครั้ง (แก้ไขได้เฉพาะการตัดต่อและแคปชั่นในกรณีที่ทำออกมาไม่ตรงตาม Final Brief เท่านั้น)\n4. Buddy Review เป็นผู้ประสานงานกับ Influencer\n5. Recheck คิวและราคาอีกครั้ง ก่อน Confirm งาน\n6. ราคานำเสนอดังกล่าว สามารถใช้ได้ถึง .........",
     "createdAt": "2025-01-09",
+    "groups": [
+      {
+        "id": "Tiktok Review",
+        "name": "Tiktok Group",
+        "pillar": "Awareness",
+        "referenceInfluencers": [
+          {
+            "id": 1,
+            "username": "@soundtiss",
+            "platform": "TikTok",
+            "profileUrl": "https://tiktok.com/@soundtiss",
+            "followers": "2.1M",
+            "engagement": "8.5%",
+            "avatar": "https://ui-avatars.com/api/?name=Soundtiss&background=fdf4ff&color=c026d3"
+          }
+        ],
+        "sows": [
+          {
+            "id": "1",
+            "name": "Tiktok VDO",
+            "contentType": "VDO content (Short Clip)",
+            "platforms": ["TikTok"],
+            "exampleCreators": [
+              {
+                "id": 1,
+                "username": "@soundtiss",
+                "platform": "TikTok",
+                "profileUrl": "https://tiktok.com/@soundtiss",
+                "followers": "2.1M",
+                "engagement": "8.5%",
+                "avatar": "https://ui-avatars.com/api/?name=Soundtiss&background=fdf4ff&color=c026d3",
+                "selected": true
+              },
+              {
+                "id": 2,
+                "username": "@icepadie",
+                "platform": "TikTok",
+                "profileUrl": "https://tiktok.com/@icepadie",
+                "followers": "850K",
+                "engagement": "6.1%",
+                "avatar": "https://ui-avatars.com/api/?name=Icepadie&background=fdf4ff&color=c026d3",
+                "selected": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "IG Reel Review",
+        "name": "IG Group",
+        "pillar": "Interest",
+        "referenceInfluencers": [
+          {
+            "id": 3,
+            "username": "@fahsarika",
+            "platform": "Instagram",
+            "profileUrl": "https://instagram.com/fahsarika",
+            "followers": "980K",
+            "engagement": "4.8%",
+            "avatar": "https://ui-avatars.com/api/?name=Fahsarika&background=fdf4ff&color=c026d3"
+          }
+        ],
+        "sows": [
+          {
+            "id": "2",
+            "name": "IG Reel Review",
+            "contentType": "VDO content (Short Clip)",
+            "platforms": ["Instagram"],
+            "exampleCreators": [
+              {
+                "id": 3,
+                "username": "@fahsarika",
+                "platform": "Instagram",
+                "profileUrl": "https://instagram.com/fahsarika",
+                "followers": "980K",
+                "engagement": "4.8%",
+                "avatar": "https://ui-avatars.com/api/?name=Fahsarika&background=fdf4ff&color=c026d3",
+                "selected": true
+              },
+              {
+                "id": 4,
+                "username": "@vvalentines",
+                "platform": "Instagram",
+                "profileUrl": "https://instagram.com/vvalentines",
+                "followers": "450K",
+                "engagement": "5.2%",
+                "avatar": "https://ui-avatars.com/api/?name=Vvalentines&background=fdf4ff&color=c026d3",
+                "selected": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "groupTrackers": {
       "Tiktok Review": {
         "influencers": [

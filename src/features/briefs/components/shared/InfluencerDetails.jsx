@@ -32,9 +32,9 @@ export default function InfluencerDetails({ value, onChange, editable = true, sh
   };
 
   const data = {
-    numInfluencers: value?.numInfluencers || value?.sows?.[0]?.numInfluencers || "",
-    followerReqFrom: value?.followerReqFrom || value?.sows?.[0]?.followerReqFrom || "",
-    followerReqTo: value?.followerReqTo || value?.sows?.[0]?.followerReqTo || "",
+    numInfluencers: value?.numInfluencers || value?.totalInfluencers || value?.sows?.[0]?.numInfluencers || "",
+    followerReqFrom: value?.followerReqFrom || (value?.followerRequirement ? value.followerRequirement.split('-')[0]?.trim() : (value?.sows?.[0]?.followerReqFrom || "")),
+    followerReqTo: value?.followerReqTo || (value?.followerRequirement ? value.followerRequirement.split('-')[1]?.trim() : (value?.sows?.[0]?.followerReqTo || "")),
     persona: { 
       demographic: getPillar("demographic"), 
       location: getPillar("location"), 

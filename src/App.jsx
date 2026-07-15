@@ -32,7 +32,7 @@ export default function App() {
         <Route path="/standard-pricing" element={<StandardPricingFlow />} />
         <Route path="/rate-card" element={<RateCardListPage briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />} />
         
-        <Route path="/example-list/*" element={<ExampleListFlow briefs={briefs} showToast={showToast} />} />
+        <Route path="/example-list/*" element={<ExampleListFlow briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />} />
       </Routes>
     </AppShell>
   );

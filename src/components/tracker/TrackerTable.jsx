@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, GripVertical, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import Button from "../common/Button";
+import MultiSelect from "../common/MultiSelect";
 import { cn } from "../../utils/cn";
 
 export default function TrackerTable({
@@ -326,9 +327,9 @@ export default function TrackerTable({
                         {sow.followerReqTo ? ` - ${Number(sow.followerReqTo).toLocaleString()}` : ''} Followers
                       </span>
                     )}
-                    {sow.contentType?.length > 0 && (
+                    {sow.contentType && (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        {sow.contentType.join(', ')}
+                        {Array.isArray(sow.contentType) ? sow.contentType.join(', ') : sow.contentType}
                       </span>
                     )}
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
@@ -376,7 +377,7 @@ export default function TrackerTable({
                 {group.questions && group.questions.length > 0 && <th colSpan={group.questions.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Questions</th>}
                 {brandSupports.length > 0 && <th colSpan={brandSupports.length} className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Brand Support</th>}
                 {hasCompetitor && <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Competitor</th>}
-                <th colSpan="2" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment Details</th>
+                <th colSpan="3" className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Payment Details</th>
                 <th className="border-b border-r border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Condition</th>
                 <th colSpan="2" className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-700 text-center bg-slate-100">Note</th>
               </tr>
@@ -390,10 +391,11 @@ export default function TrackerTable({
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Raw Cost</th>
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
                 {(group.questions || []).map((q, idx) => (
-                  <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{q}</th>
+                  <th key={idx} className="px-3 py-2 border-r border-slate-200 min-w-[200px] whitespace-normal leading-relaxed">{typeof q === 'object' ? q.text : q}</th>
                 ))}
                 {brandSupports.map(bs => <th key={bs} className="px-3 py-2 border-r border-slate-200">{bs}</th>)}
                 {hasCompetitor && <th className="px-3 py-2 border-r border-slate-200">Competitor Note</th>}
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[250px]">Payment Term</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Credit Term (Days)</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[150px]">ชำระเงินในนาม</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[400px]">Condition</th>
@@ -829,6 +831,72 @@ export default function TrackerTable({
                         )}
                       </td>
                     )}
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs align-top">
+                      {readOnly ? (
+                        <div className="flex flex-col gap-1">
+                          {inf.paymentTerm?.main === "1" && <span>1. จ่ายก่อนส่งงานทั้งหมด: {Array.isArray(inf.paymentTerm?.sub1) ? inf.paymentTerm?.sub1.join(', ') : inf.paymentTerm?.sub1}</span>}
+                          {inf.paymentTerm?.main === "2" && (
+                            <>
+                              <span>2.1 จ่ายก่อนส่งงาน: {Array.isArray(inf.paymentTerm?.sub1) ? inf.paymentTerm?.sub1.join(', ') : inf.paymentTerm?.sub1}</span>
+                              <span>2.2 จ่ายหลังส่งงาน: {Array.isArray(inf.paymentTerm?.sub2) ? inf.paymentTerm?.sub2.join(', ') : inf.paymentTerm?.sub2}</span>
+                            </>
+                          )}
+                          {inf.paymentTerm?.main === "3" && <span>3. จ่ายหลังส่งงานทั้งหมด: {Array.isArray(inf.paymentTerm?.sub1) ? inf.paymentTerm?.sub1.join(', ') : inf.paymentTerm?.sub1}</span>}
+                          {!inf.paymentTerm?.main && <span>-</span>}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          <select 
+                            value={inf.paymentTerm?.main || ""} 
+                            onChange={e => updateInf(inf.id, "paymentTerm", { ...inf.paymentTerm, main: e.target.value, sub1: "", sub2: "" })}
+                            className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white text-xs"
+                          >
+                            <option value="">Select Option...</option>
+                            <option value="1">1. จ่ายก่อนส่งงานทั้งหมด</option>
+                            <option value="2">2. จ่ายก่อนและหลังส่งงาน</option>
+                            <option value="3">3. จ่ายหลังส่งงานทั้งหมด</option>
+                          </select>
+                          
+                          {inf.paymentTerm?.main === "1" && (
+                            <MultiSelect 
+                              value={inf.paymentTerm?.sub1 || []} 
+                              onChange={val => updateInf(inf.id, "paymentTerm", { ...inf.paymentTerm, sub1: val })} 
+                              options={["จ่ายก่อนส่ง Content Idea", "จ่ายก่อนส่ง Draft", "จ่ายก่อนส่ง Post"]} 
+                              placeholder="Select Detail..."
+                            />
+                          )}
+                          
+                          {inf.paymentTerm?.main === "2" && (
+                            <div className="flex flex-col gap-1.5 pl-2 border-l-2 border-slate-200 mt-1">
+                              <span className="text-[10px] text-slate-500 font-medium">2.1 จ่ายก่อนส่งงาน</span>
+                              <MultiSelect 
+                                value={inf.paymentTerm?.sub1 || []} 
+                                onChange={val => updateInf(inf.id, "paymentTerm", { ...inf.paymentTerm, sub1: val })} 
+                                options={["จ่ายก่อนส่ง Content Idea", "จ่ายก่อนส่ง Draft", "จ่ายก่อนส่ง Post"]} 
+                                placeholder="Select..."
+                              />
+                              
+                              <span className="text-[10px] text-slate-500 font-medium mt-1">2.2 จ่ายหลังส่งงาน</span>
+                              <MultiSelect 
+                                value={inf.paymentTerm?.sub2 || []} 
+                                onChange={val => updateInf(inf.id, "paymentTerm", { ...inf.paymentTerm, sub2: val })} 
+                                options={["จ่ายหลัง Content Idea Approved", "จ่ายหลัง Draft Approved", "จ่ายหลัง Verify Post"]} 
+                                placeholder="Select..."
+                              />
+                            </div>
+                          )}
+                          
+                          {inf.paymentTerm?.main === "3" && (
+                            <MultiSelect 
+                              value={inf.paymentTerm?.sub1 || []} 
+                              onChange={val => updateInf(inf.id, "paymentTerm", { ...inf.paymentTerm, sub1: val })} 
+                              options={["จ่ายหลัง Content Idea Approved", "จ่ายหลัง Draft Approved", "จ่ายหลัง Verify Post"]} 
+                              placeholder="Select Detail..."
+                            />
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
                       {readOnly ? (
                         <span>{inf.creditTerm ? `${inf.creditTerm} วัน` : "-"}</span>

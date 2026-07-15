@@ -1233,7 +1233,7 @@ export default function BriefFormModal({ open, onClose, onSubmit, initialData = 
                                       }}
                                       className="p-1.5 text-slate-400 hover:text-[#6D5DF6] hover:bg-slate-50 rounded-lg"
                                     >
-                                      <Edit className="h-4 w-4" />
+                                      <Edit2 className="h-4 w-4" />
                                     </button>
                                     <button 
                                       type="button"

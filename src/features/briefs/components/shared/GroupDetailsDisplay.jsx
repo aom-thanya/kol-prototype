@@ -16,15 +16,15 @@ export default function GroupDetailsDisplay({ group, index }) {
       </h6>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <div>
-          <span className="text-slate-400 block mb-1 text-xs uppercase font-semibold">KOL Qty</span>
-          <span className="font-semibold text-slate-800">{group.numInfluencers || "-"}</span>
+          <span className="text-slate-400 block mb-1 text-xs uppercase font-semibold">Number of Influencers</span>
+          <span className="font-semibold text-slate-800">{group.numInfluencers || group.totalInfluencers || "-"}</span>
         </div>
         <div>
-          <span className="text-slate-400 block mb-1 text-xs uppercase font-semibold">Followers</span>
+          <span className="text-slate-400 block mb-1 text-xs uppercase font-semibold">Follower Requirement</span>
           <span className="font-semibold text-slate-800">
             {group.followerReqFrom || group.followerReqTo 
               ? `${group.followerReqFrom ? Number(group.followerReqFrom).toLocaleString() : "0"} - ${group.followerReqTo ? Number(group.followerReqTo).toLocaleString() : "Any"}` 
-              : "-"}
+              : (group.followerRequirement || "-")}
           </span>
         </div>
         <div>
@@ -52,6 +52,26 @@ export default function GroupDetailsDisplay({ group, index }) {
           <span className="font-semibold text-slate-800">{renderList(group.pillars?.storyTelling || group.persona?.storyTelling)}</span>
         </div>
       </div>
+      
+      {group.referenceInfluencers && group.referenceInfluencers.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-slate-100">
+          <span className="text-slate-400 block mb-3 text-xs uppercase font-semibold">Reference Influencers</span>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {group.referenceInfluencers.map(ref => (
+              <a 
+                key={ref.id} 
+                href={ref.profileUrl} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 hover:bg-slate-100 transition whitespace-nowrap shrink-0"
+              >
+                {ref.avatar && <img src={ref.avatar} alt={ref.username} className="w-5 h-5 rounded-full object-cover" />}
+                <span className="font-bold text-slate-700 text-sm">{ref.username}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

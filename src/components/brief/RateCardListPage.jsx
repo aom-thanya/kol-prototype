@@ -476,7 +476,7 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                           </span>
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                          <span className="text-slate-400 font-bold block mb-1">KOL Qty</span>
+                          <span className="text-slate-400 font-bold block mb-1">Number of Influencers</span>
                           <span className="font-bold text-slate-800 text-base">
                             {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
                               sow.influencerDetails.reduce((sum, d) => sum + (Number(d.numInfluencers) || 0), 0)
@@ -506,10 +506,10 @@ function BriefDetailPageReadOnly({ brief, handleUpdateStatus }) {
                              <div key={detail.id || idx} className="bg-white p-4 rounded-xl border border-slate-200">
                                <h6 className="text-sm font-bold text-slate-800 mb-3">Group {idx + 1}</h6>
                                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                                 <div><span className="text-slate-400 block mb-1 text-xs">KOL Qty</span> <span className="font-semibold text-slate-800 text-sm">{detail.numInfluencers || "-"}</span></div>
+                                 <div><span className="text-slate-400 block mb-1 text-xs">Number of Influencers</span> <span className="font-semibold text-slate-800 text-sm">{detail.numInfluencers || detail.totalInfluencers || "-"}</span></div>
                                  <div>
-                                   <span className="text-slate-400 block mb-1 text-xs">Followers</span> <span className="font-semibold text-slate-800 text-sm">
-                                     {detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` : "-"}
+                                   <span className="text-slate-400 block mb-1 text-xs">Follower Requirement</span> <span className="font-semibold text-slate-800 text-sm">
+                                     {detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` : (detail.followerRequirement || "-")}
                                    </span>
                                  </div>
                                  <div><span className="text-slate-400 block mb-1 text-xs">Demographics</span> <span className="font-semibold text-slate-850 text-sm">{renderList(detail.persona?.demographic)}</span></div>
