@@ -2,7 +2,7 @@ import { useState } from "react";
  
 
 import {
-  X
+  X, Sparkles
 } from "lucide-react";
 
 export default function TagInput({ value, onChange, label, suggested, onManualEdit }) {
