@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "../../../../utils/helpers";
-import { Coins, MapPin } from "lucide-react";
+import { Coins, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 
 const renderList = (arr) => {
   if (!arr) return "-";
@@ -9,14 +9,19 @@ const renderList = (arr) => {
 };
 
 export default function SowDetailsDisplay({ sow, index, children }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs space-y-4.5 hover:shadow-2xs transition">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs transition">
       {/* Scope Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-        <span className="font-bold text-slate-900 text-base">
+      <div 
+        className={cn("flex items-center justify-between cursor-pointer group", !isCollapsed && "border-b border-slate-100 pb-3.5")}
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <span className="font-bold text-slate-900 text-base group-hover:text-[#6D5DF6] transition-colors">
           Scope {index !== undefined ? index + 1 : ""}: {sow.name || "Unnamed Scope"}
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {(sow.platforms || []).map(plat => (
             <span key={plat} className={cn(
               "text-xs font-bold px-2.5 py-0.5 rounded-full border",
@@ -31,10 +36,15 @@ export default function SowDetailsDisplay({ sow, index, children }) {
               {plat}
             </span>
           ))}
+          <button className="text-slate-400 hover:text-slate-600 ml-1">
+            {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
-      {/* Deliverables Overview */}
+      {!isCollapsed && (
+        <div className="space-y-4.5 pt-4.5 animate-in slide-in-from-top-2 fade-in duration-200">
+          {/* Deliverables Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
           <span className="text-slate-400 font-bold block mb-1">Content Type</span>
@@ -224,6 +234,8 @@ export default function SowDetailsDisplay({ sow, index, children }) {
           </div>
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }

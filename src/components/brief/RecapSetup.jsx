@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, ChevronDown, ChevronUp } from "lucide-react";
 import Button from "../common/Button";
 import Modal from "../common/Modal";
 import { transformBriefSowsToRecapGroups } from "../../utils/briefHelpers";
@@ -19,7 +19,12 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [editingGroupDetailsId, setEditingGroupDetailsId] = useState(null);
   const [editingSow, setEditingSow] = useState(null);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
   const packageType = brief.packageType ? (Array.isArray(brief.packageType) ? brief.packageType[0] : brief.packageType) : "";
+
+  const toggleGroup = (groupId) => {
+    setCollapsedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   useEffect(() => {
     if (!brief.groups || brief.groups.length === 0) {
@@ -106,9 +111,14 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
       </div>
 
       <div className="space-y-6">
-        {groups.map((group, gIndex) => (
-          <div key={group.id} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+        {groups.map((group, gIndex) => {
+          const isCollapsed = collapsedGroups[group.id];
+          return (
+          <div key={group.id} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-200">
+            <div 
+              className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => toggleGroup(group.id)}
+            >
               <div className="flex items-center gap-3">
                 {editingGroupId === group.id ? (
                   <input
@@ -116,21 +126,29 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                     value={group.name}
                     onChange={(e) => handleUpdateGroup(group.id, { name: e.target.value })}
                     onBlur={() => setEditingGroupId(null)}
+                    onClick={(e) => e.stopPropagation()}
                     autoFocus
                     className="border border-[#6D5DF6] rounded px-2 py-1 text-sm outline-none font-bold"
                   />
                 ) : (
                   <h4 className="text-md font-bold text-slate-800 flex items-center gap-2">
                     {group.name}
-                    <button onClick={() => setEditingGroupId(group.id)} className="text-slate-400 hover:text-[#6D5DF6]">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setEditingGroupId(group.id); }} 
+                      className="text-slate-400 hover:text-[#6D5DF6]"
+                    >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                   </h4>
                 )}
               </div>
+              <button className="text-slate-400 hover:text-slate-600">
+                {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+              </button>
             </div>
 
-            <div className="p-6 space-y-8">
+            {!isCollapsed && (
+              <div className="p-6 space-y-8 animate-in slide-in-from-top-2 fade-in duration-200">
               {/* Group Influencer Details */}
               <div>
                 <h5 className="text-sm font-bold text-slate-700 mb-3 border-l-4 border-[#6D5DF6] pl-2 uppercase flex justify-between items-center">
@@ -170,17 +188,23 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                 </div>
               </div>
             </div>
+            )}
           </div>
-        ))}
+        )})}
       </div>
 
-      <div className="flex justify-end pt-4 border-t border-slate-100 mt-8">
+      <div className="flex items-center justify-end gap-4 pt-4 border-t border-slate-100 mt-8">
+        {isNextDisabled() && (
+          <span className="text-sm font-medium text-rose-500">
+            * Please fill required duration fields
+          </span>
+        )}
         <Button 
           onClick={onNext} 
           disabled={isNextDisabled()} 
           className={isNextDisabled() ? "bg-slate-300 text-slate-500 cursor-not-allowed px-8" : "bg-[#6D5DF6] hover:bg-[#5b4dcc] text-white px-8"}
         >
-          {isNextDisabled() ? "Please fill required duration fields" : "Continue"}
+          Continue
         </Button>
       </div>
 

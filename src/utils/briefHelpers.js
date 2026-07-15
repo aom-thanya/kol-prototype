@@ -135,7 +135,7 @@ export function transformBriefSowsToRecapGroups(briefSows = []) {
       if (!groupedMap.has(gId)) {
         groupedMap.set(gId, {
           id: gId,
-          name: grp.groupName || sow.name || `Group ${groupedMap.size + 1}`,
+          name: grp.groupName || (sow.influencerDetails?.length > 0 ? `Group ${gIdx + 1}` : sow.name) || `Group ${groupedMap.size + 1}`,
           numInfluencers: grp.numInfluencers || sow.numInfluencers,
           followerReqFrom: grp.followerReqFrom || sow.followerReqFrom,
           followerReqTo: grp.followerReqTo || sow.followerReqTo,
