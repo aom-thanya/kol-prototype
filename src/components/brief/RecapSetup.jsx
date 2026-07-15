@@ -50,7 +50,7 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   };
 
   useEffect(() => {
-    if (!brief.groups || brief.groups.length === 0) {
+    if (JSON.stringify(brief.groups) !== JSON.stringify(groups)) {
       onUpdateBrief({ ...brief, groups });
     }
   }, [groups, brief, onUpdateBrief]);

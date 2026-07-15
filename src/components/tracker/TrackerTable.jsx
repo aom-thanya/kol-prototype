@@ -712,13 +712,28 @@ export default function TrackerTable({
                       )}
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[200px] max-w-[280px] whitespace-normal">
-                      <div className="text-slate-600 font-medium leading-relaxed">
-                        {(() => {
-                          const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
-                          const idx = submittedSows.indexOf(matchingSow);
-                          return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name}` : "-";
-                        })()}
-                      </div>
+                      {readOnly || submittedSows.length <= 1 ? (
+                        <div className="text-slate-600 font-medium leading-relaxed">
+                          {(() => {
+                            const matchingSow = submittedSows.find(s => s.id === inf.scopeOfWork);
+                            const idx = submittedSows.indexOf(matchingSow);
+                            return matchingSow ? `Scope ${idx + 1}: ${matchingSow.name || matchingSow.contentType}` : "-";
+                          })()}
+                        </div>
+                      ) : (
+                        <select
+                          value={inf.scopeOfWork || ""}
+                          onChange={(e) => updateInf(inf.id, "scopeOfWork", e.target.value)}
+                          className="w-full rounded border border-slate-200 px-2 py-1 outline-none focus:border-[#6D5DF6] bg-white text-xs text-slate-700 cursor-pointer"
+                        >
+                          <option value="">Select Scope...</option>
+                          {submittedSows.map((s, sIdx) => (
+                            <option key={s.id} value={s.id}>
+                              Scope {sIdx + 1}: {s.name || s.contentType}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs">
                       {readOnly ? (

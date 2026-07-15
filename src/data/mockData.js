@@ -980,6 +980,14 @@ export const briefsSeed = [
             "avatar": "https://ui-avatars.com/api/?name=Soundtiss&background=fdf4ff&color=c026d3"
           }
         ],
+        "persona": {
+          "demographic": ["18-24 Female", "Gen Z Skincare users"],
+          "location": ["Bangkok & Metropolitan cities"],
+          "occupation": ["University Students", "Beauty Bloggers"],
+          "persona": ["Energetic", "Authentic", "Fun storytelling"],
+          "contentCategory": ["Skincare", "Makeup tutorials"],
+          "storyTelling": ["Genuine unboxing and 7-day challenge results"]
+        },
         "sows": [
           {
             "id": "1",
@@ -1029,6 +1037,14 @@ export const briefsSeed = [
             "avatar": "https://ui-avatars.com/api/?name=Fahsarika&background=fdf4ff&color=c026d3"
           }
         ],
+        "persona": {
+          "demographic": ["25-34 Female", "Modern Working Women"],
+          "location": ["Bangkok and major cities (Chiang Mai, Phuket)"],
+          "occupation": ["Office workers", "Professionals", "Freelancers"],
+          "persona": ["Elegant", "Minimalist", "Trustworthy", "Aspirational"],
+          "contentCategory": ["Premium beauty products", "Self-care"],
+          "storyTelling": ["Aesthetic morning routine and texture close-ups"]
+        },
         "sows": [
           {
             "id": "2",
