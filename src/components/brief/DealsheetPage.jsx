@@ -204,65 +204,7 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
              showToast={showToast} 
              activeOptId={activeOptId} 
              setActiveOptId={setActiveOptId} 
-          >
-            {!hasStandard && (
-              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8 mt-6">
-                <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Influencer List</h1>
-                    <p className="text-slate-500 mt-1">Trackers separated by Lot</p>
-                  </div>
-                </div>
-
-                {totalDoneCount === 0 ? (
-                  <div className="text-center py-16 text-slate-550 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
-                    <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
-                      <CheckCircle2 className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
-                    <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Selected" in Rate card list to view them here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                  {sortedLots.map(lotKey => {
-                    const lotTitle = lotKey === "Unassigned Lot" ? "Unassigned Lot" : `Lot ${lotKey}`;
-                    const mockGroup = { 
-                      sows: brief.groups?.flatMap(g => g.sows || []) || [], 
-                      questions: Array.from(new Set(brief.groups?.flatMap(g => g.questions || []) || [])) 
-                    };
-                    return (
-                      <TrackerTable 
-                        key={lotKey}
-                        groupName={lotTitle}
-                        group={mockGroup}
-                        brief={brief}
-                        trackerData={lotsData[lotKey]}
-                        onUpdateTracker={(updatedTracker) => {
-                          const newTrackers = JSON.parse(JSON.stringify(brief.groupTrackers));
-                          updatedTracker.influencers.forEach(inf => {
-                            const grpId = inf._originalGroupId;
-                            if (grpId && newTrackers[grpId]) {
-                              const idx = newTrackers[grpId].influencers.findIndex(i => i.id === inf.id);
-                              if (idx !== -1) {
-                                const { _originalGroupId, _groupName, ...cleanInf } = inf;
-                                newTrackers[grpId].influencers[idx] = cleanInf;
-                              }
-                            }
-                          });
-                          onUpdateBrief({ ...brief, groupTrackers: newTrackers });
-                        }}
-                        onAddClick={() => {}}
-                        hideAddButton={true}
-                        readOnly={true}
-                        isDealsheetView={true}
-                      />
-                    );
-                  })}
-                </div>
-                )}
-              </div>
-            )}
-          </DealsheetStandardView>
+          />
         </div>
 
         <div className="w-full lg:w-1/4 shrink-0">
@@ -394,6 +336,65 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
           </div>
         </div>
       </div>
+
+      {/* Full-width Influencer List for Non-Standard */}
+      {!hasStandard && (
+        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
+          <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Influencer List</h1>
+              <p className="text-slate-500 mt-1">Trackers separated by Lot</p>
+            </div>
+          </div>
+
+          {totalDoneCount === 0 ? (
+            <div className="text-center py-16 text-slate-550 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+              <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
+                <CheckCircle2 className="h-8 w-8 text-slate-300" />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
+              <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Selected" in Rate card list to view them here.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sortedLots.map(lotKey => {
+                const lotTitle = lotKey === "Unassigned Lot" ? "Unassigned Lot" : `Lot ${lotKey}`;
+                const mockGroup = { 
+                  sows: brief.groups?.flatMap(g => g.sows || []) || [], 
+                  questions: Array.from(new Set(brief.groups?.flatMap(g => g.questions || []) || [])) 
+                };
+                return (
+                  <TrackerTable 
+                    key={lotKey}
+                    groupName={lotTitle}
+                    group={mockGroup}
+                    brief={brief}
+                    trackerData={lotsData[lotKey]}
+                    onUpdateTracker={(updatedTracker) => {
+                      const newTrackers = JSON.parse(JSON.stringify(brief.groupTrackers));
+                      updatedTracker.influencers.forEach(inf => {
+                        const grpId = inf._originalGroupId;
+                        if (grpId && newTrackers[grpId]) {
+                          const idx = newTrackers[grpId].influencers.findIndex(i => i.id === inf.id);
+                          if (idx !== -1) {
+                            const { _originalGroupId, _groupName, ...cleanInf } = inf;
+                            newTrackers[grpId].influencers[idx] = cleanInf;
+                          }
+                        }
+                      });
+                      onUpdateBrief({ ...brief, groupTrackers: newTrackers });
+                    }}
+                    onAddClick={() => {}}
+                    hideAddButton={true}
+                    readOnly={true}
+                    isDealsheetView={true}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }

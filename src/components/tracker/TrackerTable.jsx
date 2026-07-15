@@ -323,8 +323,9 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 <th className="px-4 py-3.5 text-center w-[60px]">No.</th>
                 <th className="px-6 py-3.5 min-w-[280px]">Influencer</th>
                 <th className="px-6 py-3.5 min-w-[180px]">Scope of Work</th>
-                <th className="px-6 py-3.5 min-w-[200px]">Service details & Costs</th>
                 <th className="px-6 py-3.5 text-right min-w-[120px]">Raw Cost</th>
+                <th className="px-6 py-3.5 text-right min-w-[150px]">Raw Cost (/0.97 กรณีรับ net)</th>
+                <th className="px-6 py-3.5 min-w-[200px]">Service details & Costs</th>
                 {brandSupports.length > 0 && <th className="px-6 py-3.5 min-w-[155px]">Brand Support</th>}
                 <th className="px-6 py-3.5 min-w-[200px]">Note</th>
               </tr>
@@ -379,6 +380,19 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                     <td className="px-6 py-4.5 text-slate-700 text-xs font-medium">
                       {sowText}
                     </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-slate-900 text-sm">
+                      {inf.rawCost ? inf.rawCost : "-"}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-emerald-700 text-sm bg-emerald-50/30">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        return grossNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
                     <td className="px-6 py-4.5 text-xs text-slate-700">
                       {activeServices.length > 0 ? (
                         <div className="space-y-1.5">
@@ -392,9 +406,6 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                       ) : (
                         <span className="text-slate-400">-</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-slate-900 text-sm">
-                      {inf.rawCost ? inf.rawCost : "-"}
                     </td>
                     {brandSupports.length > 0 && (
                       <td className="px-6 py-4.5 text-slate-700 text-xs">

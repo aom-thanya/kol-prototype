@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
 
-export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId, children }) {
+export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId }) {
 
   const calc = getCampaignCalculations(brief, activeOptId);
 
@@ -868,8 +868,6 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
       </div>
       </>
       )}
-
-      {children}
     </div>
   );
 }
