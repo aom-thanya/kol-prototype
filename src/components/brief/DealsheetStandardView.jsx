@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { formatCurrency } from "../../utils/formatHelpers";
 import { getCampaignCalculations } from "../../utils/campaignCalculations";
 
-export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId }) {
+export default function DealsheetStandardView({ brief, onUpdateBrief, showToast, activeOptId, setActiveOptId, children }) {
 
   const calc = getCampaignCalculations(brief, activeOptId);
 
@@ -577,7 +577,8 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
                           "ค่า Studio",
                           "ค่าตากล้อง",
                           "Refer",
-                          "กันค่าแอลกอฮอล์"
+                          "กันค่าแอลกอฮอล์",
+                          "Logistic Brand to Buddy"
                         ];
                         const isPreset = !service.isCustom && (presetServiceTypes.includes(service.name) || service.name === "");
 
@@ -746,8 +747,10 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
         </div>
       </div>
 
-      {/* Channel Breakdown Card */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      {hasStandard && (
+        <>
+          {/* Channel Breakdown Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
         <div className="bg-[#e9f0fc] px-6 py-4 border-b border-slate-200">
           <h2 className="text-[15px] font-semibold text-slate-800">Channel Breakdown</h2>
         </div>
@@ -863,6 +866,10 @@ export default function DealsheetStandardView({ brief, onUpdateBrief, showToast,
           </div>
         </div>
       </div>
+      </>
+      )}
+
+      {children}
     </div>
   );
 }

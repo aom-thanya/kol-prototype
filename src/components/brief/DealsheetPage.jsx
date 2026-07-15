@@ -198,33 +198,32 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
       
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-3/4 space-y-6 min-w-0">
-          {hasStandard ? (
-            <DealsheetStandardView 
-               brief={brief} 
-               onUpdateBrief={onUpdateBrief} 
-               showToast={showToast} 
-               activeOptId={activeOptId} 
-               setActiveOptId={setActiveOptId} 
-            />
-          ) : (
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8">
-              <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dealsheet Preview</h1>
-                  <p className="text-slate-500 mt-1">{brief.campaignName} • {brief.id}</p>
-                </div>
-              </div>
-
-              {totalDoneCount === 0 ? (
-                <div className="text-center py-16 text-slate-550 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
-                  <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
-                    <CheckCircle2 className="h-8 w-8 text-slate-300" />
+          <DealsheetStandardView 
+             brief={brief} 
+             onUpdateBrief={onUpdateBrief} 
+             showToast={showToast} 
+             activeOptId={activeOptId} 
+             setActiveOptId={setActiveOptId} 
+          >
+            {!hasStandard && (
+              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm p-6 lg:p-8 mt-6">
+                <div className="mb-6 border-b border-slate-100 pb-6 flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Influencer List</h1>
+                    <p className="text-slate-500 mt-1">Trackers separated by Lot</p>
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
-                  <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Selected" in Rate card list to view them here.</p>
                 </div>
-              ) : (
-                <div className="space-y-8">
+
+                {totalDoneCount === 0 ? (
+                  <div className="text-center py-16 text-slate-550 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                    <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200">
+                      <CheckCircle2 className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900">No Influencers Ready</h3>
+                    <p className="mb-4 text-sm text-slate-500 mt-1">Change influencer status to "Selected" in Rate card list to view them here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
                   {sortedLots.map(lotKey => {
                     const lotTitle = lotKey === "Unassigned Lot" ? "Unassigned Lot" : `Lot ${lotKey}`;
                     const mockGroup = { 
@@ -260,9 +259,10 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                     );
                   })}
                 </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </DealsheetStandardView>
         </div>
 
         <div className="w-full lg:w-1/4 shrink-0">
@@ -287,6 +287,7 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
             </div>
 
             {/* Summary Section */}
+            {hasStandard && (
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200 px-5 py-4 flex items-center gap-2">
                 <Calculator className="h-4 w-4 text-blue-600" />
@@ -335,6 +336,7 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Campaign KPI Section */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
