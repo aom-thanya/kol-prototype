@@ -5,7 +5,7 @@ import BrandSupportFormFields from "./forms/BrandSupportFormFields";
 import TravelDetailsFormFields from "./forms/TravelDetailsFormFields";
 import SowDetailsDisplay from "./SowDetailsDisplay";
 
-export default function SowDetails({ sow, index, packageType, onChange, editable = true }) {
+export default function SowDetails({ sow, index, packageType, onChange, editable = true, onEdit }) {
   const handleUpdateSow = (field, val) => {
     onChange("sow", field, val);
   };
@@ -15,7 +15,7 @@ export default function SowDetails({ sow, index, packageType, onChange, editable
   };
 
   if (!editable) {
-    return <SowDetailsDisplay sow={sow} index={index} />;
+    return <SowDetailsDisplay sow={sow} index={index} onEdit={onEdit} />;
   }
 
   return (

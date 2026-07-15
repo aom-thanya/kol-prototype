@@ -170,18 +170,14 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                 <h5 className="text-sm font-bold text-slate-700 border-l-4 border-emerald-500 pl-2 mb-3">Scope of Work Details</h5>
                 <div className="space-y-6">
                   {group.sows && group.sows.map((sow, index) => (
-                    <div key={sow.id} className="relative">
-                      <div className="absolute right-4 top-4 z-10">
-                        <button onClick={() => setEditingSow({ groupId: group.id, sowId: sow.id })} className="text-slate-400 hover:text-[#6D5DF6] bg-white p-1 rounded-full shadow-xs border border-slate-100">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <div key={sow.id}>
                       <SowDetails 
                         sow={sow}
                         index={index}
                         packageType={packageType}
                         editable={false}
                         onChange={() => {}}
+                        onEdit={() => setEditingSow({ groupId: group.id, sowId: sow.id })}
                       />
                     </div>
                   ))}

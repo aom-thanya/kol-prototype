@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { cn } from "../../../../utils/helpers";
-import { Coins, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { Coins, MapPin, ChevronDown, ChevronUp, Edit2 } from "lucide-react";
 
 const renderList = (arr) => {
   if (!arr) return "-";
@@ -8,7 +8,7 @@ const renderList = (arr) => {
   return String(arr);
 };
 
-export default function SowDetailsDisplay({ sow, index, children }) {
+export default function SowDetailsDisplay({ sow, index, children, onEdit }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -36,6 +36,15 @@ export default function SowDetailsDisplay({ sow, index, children }) {
               {plat}
             </span>
           ))}
+          {onEdit && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+              className="text-slate-400 hover:text-[#6D5DF6] bg-white p-1 rounded-full shadow-xs border border-slate-100 ml-2"
+              title="Edit Scope"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
           <button className="text-slate-400 hover:text-slate-600 ml-1">
             {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
           </button>
