@@ -363,6 +363,16 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                   )}
                 </div>
               )}
+
+              {!setHeaderActions && readOnly && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button 
+                    onClick={() => onUpdateBrief({ ...brief, activeTab: "dealsheet" })}
+                  >
+                    เริ่มสร้าง Dealsheet
+                  </Button>
+                </div>
+              )}
             </div>
 
             {activeGroups.length === 0 ? (
