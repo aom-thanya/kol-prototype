@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import Button from "../common/Button";
+import Modal from "../common/Modal";
 import { transformBriefSowsToRecapGroups } from "../../utils/briefHelpers";
-import GroupFormFields from "../../features/briefs/components/shared/forms/GroupFormFields";
-import SowFormFields from "../../features/briefs/components/shared/forms/SowFormFields";
-import ServiceScopeFormFields from "../../features/briefs/components/shared/forms/ServiceScopeFormFields";
-import BrandSupportFormFields from "../../features/briefs/components/shared/forms/BrandSupportFormFields";
-import TravelDetailsFormFields from "../../features/briefs/components/shared/forms/TravelDetailsFormFields";
+import InfluencerDetails from "../../features/briefs/components/shared/InfluencerDetails";
+import InfluencerDetailModal from "../../features/briefs/components/InfluencerDetailModal";
+import SowDetails from "../../features/briefs/components/shared/SowDetails";
 
 export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   const [groups, setGroups] = useState(() => {
@@ -18,6 +17,8 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
   });
 
   const [editingGroupId, setEditingGroupId] = useState(null);
+  const [editingGroupDetailsId, setEditingGroupDetailsId] = useState(null);
+  const [editingSow, setEditingSow] = useState(null);
   const packageType = brief.packageType ? (Array.isArray(brief.packageType) ? brief.packageType[0] : brief.packageType) : "";
 
   useEffect(() => {
@@ -130,12 +131,19 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
             </div>
 
             <div className="p-6 space-y-8">
-              {/* Group Pillars */}
+              {/* Group Influencer Details */}
               <div>
-                <h5 className="text-sm font-bold text-slate-700 mb-3 border-l-4 border-[#6D5DF6] pl-2 uppercase">Group Pillars & Details</h5>
-                <GroupFormFields 
-                  pillars={group.pillars} 
-                  onChange={(field, val) => handleUpdatePillars(group.id, field, val)} 
+                <h5 className="text-sm font-bold text-slate-700 mb-3 border-l-4 border-[#6D5DF6] pl-2 uppercase flex justify-between items-center">
+                  <span>Influencer Details</span>
+                  <button onClick={() => setEditingGroupDetailsId(group.id)} className="text-slate-400 hover:text-[#6D5DF6]">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                </h5>
+                <InfluencerDetails 
+                  value={group} 
+                  onChange={() => {}} 
+                  editable={false} 
+                  showSuggestionSource={true} 
                 />
               </div>
 
@@ -144,30 +152,18 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
                 <h5 className="text-sm font-bold text-slate-700 border-l-4 border-emerald-500 pl-2 mb-3">Scope of Work Details</h5>
                 <div className="space-y-6">
                   {group.sows && group.sows.map((sow, index) => (
-                    <div key={sow.id} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs bg-slate-50 p-6 relative">
-                      <h4 className="mb-6 text-base font-semibold text-slate-900 border-b border-slate-200 pb-2">Scope {index + 1}</h4>
-                      
-                      <SowFormFields 
-                        scope={sow} 
-                        onChange={(field, val) => handleUpdateSow(group.id, sow.id, field, val)} 
-                        onUpdateServiceScope={(field, val) => handleUpdateServiceScope(group.id, sow.id, field, val)} 
-                      />
-
-                      <ServiceScopeFormFields 
-                        scope={sow} 
-                        packageType={packageType} 
-                        onChange={(field, val) => handleUpdateServiceScope(group.id, sow.id, field, val)} 
-                      />
-
-                      <BrandSupportFormFields 
-                        scope={sow} 
-                        onChange={(field, val) => handleUpdateSow(group.id, sow.id, field, val)} 
-                      />
-
-                      <TravelDetailsFormFields 
-                        scope={sow} 
-                        packageType={packageType} 
-                        onChange={(field, val) => handleUpdateSow(group.id, sow.id, field, val)} 
+                    <div key={sow.id} className="relative">
+                      <div className="absolute right-4 top-4 z-10">
+                        <button onClick={() => setEditingSow({ groupId: group.id, sowId: sow.id })} className="text-slate-400 hover:text-[#6D5DF6] bg-white p-1 rounded-full shadow-xs border border-slate-100">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <SowDetails 
+                        sow={sow}
+                        index={index}
+                        packageType={packageType}
+                        editable={false}
+                        onChange={() => {}}
                       />
                     </div>
                   ))}
@@ -187,6 +183,52 @@ export default function RecapSetup({ brief, onUpdateBrief, onNext }) {
           {isNextDisabled() ? "Please fill required duration fields" : "Continue"}
         </Button>
       </div>
+
+      {/* Edit Group Influencer Details Modal */}
+      {editingGroupDetailsId && (
+        <InfluencerDetailModal 
+          open={true}
+          onClose={() => setEditingGroupDetailsId(null)}
+          initialData={groups.find(g => g.id === editingGroupDetailsId)}
+          onSave={(data) => {
+            handleUpdateGroup(editingGroupDetailsId, data);
+            setEditingGroupDetailsId(null);
+          }}
+        />
+      )}
+
+      {/* Edit SOW Details Modal */}
+      {editingSow && (
+        <Modal 
+          isOpen={true} 
+          onClose={() => setEditingSow(null)}
+          title="Edit Scope of Work"
+          maxWidth="max-w-4xl"
+        >
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+            {(() => {
+              const activeGroup = groups.find(g => g.id === editingSow.groupId);
+              const activeSow = activeGroup?.sows?.find(s => s.id === editingSow.sowId);
+              if (!activeSow) return null;
+              
+              return (
+                <SowDetails 
+                  sow={activeSow}
+                  packageType={packageType}
+                  editable={true}
+                  onChange={(category, field, val) => {
+                    if (category === "sow") handleUpdateSow(editingSow.groupId, editingSow.sowId, field, val);
+                    else if (category === "serviceScope") handleUpdateServiceScope(editingSow.groupId, editingSow.sowId, field, val);
+                  }}
+                />
+              );
+            })()}
+          </div>
+          <div className="flex justify-end gap-3 border-t border-slate-100 p-4 bg-white shrink-0">
+            <button type="button" onClick={() => setEditingSow(null)} className="rounded-lg bg-[#6D5DF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#5b4df0] shadow-sm">Done</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

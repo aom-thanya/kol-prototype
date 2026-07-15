@@ -135,11 +135,11 @@ export function transformBriefSowsToRecapGroups(briefSows = []) {
       if (!groupedMap.has(gId)) {
         groupedMap.set(gId, {
           id: gId,
-          name: grp.groupName || `Group ${gId}`,
+          name: grp.groupName || sow.name || `Group ${groupedMap.size + 1}`,
           numInfluencers: grp.numInfluencers || sow.numInfluencers,
           followerReqFrom: grp.followerReqFrom || sow.followerReqFrom,
           followerReqTo: grp.followerReqTo || sow.followerReqTo,
-          pillars: {
+          persona: {
             demographic: getArray(grp.persona?.demographic || sow.persona?.demographic),
             location: getArray(grp.persona?.location || sow.persona?.location),
             occupation: getArray(grp.persona?.occupation || sow.persona?.occupation),
