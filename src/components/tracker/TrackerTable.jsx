@@ -308,6 +308,97 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
   };
 
   if (isDealsheetView) {
+    let sumRaw = 0;
+    let sumGross = 0;
+    let sumCont = 0;
+    let sumPx23 = 0;
+    let sumPp30 = 0;
+    let sumPp8k = 0;
+    let sumPp15 = 0;
+    let sumSelected = 0;
+    let sumInflu = 0;
+    let sumSum = 0;
+    let sumSelling = 0;
+    let sumServices = {};
+    requiredServices.forEach(srv => sumServices[srv.key] = 0);
+    let sumSumOtherCost = 0;
+    let sumReach = 0;
+    let sumRefer = 0;
+    let sumSumRefer = 0;
+    let sumTotalPrice = 0;
+    let sumTotalSellingPrice = 0;
+
+    influencers.forEach(inf => {
+      if (!inf.rawCost) return;
+      const rawNum = parseFloat(inf.rawCost.toString().replace(/,/g, ''));
+      if (isNaN(rawNum)) return;
+      
+      sumRaw += rawNum;
+      
+      const grossNum = rawNum / 0.97;
+      sumGross += grossNum;
+      
+      let cont = grossNum;
+      if (grossNum < 5000) cont = 1000;
+      else if (grossNum <= 49999) cont = grossNum * 0.2;
+      else cont = grossNum * 0.1;
+      sumCont += cont;
+      
+      sumPx23 += grossNum * 2.3;
+      sumPp30 += grossNum * 1.3;
+      sumPp8k += grossNum + 8000;
+      sumPp15 += grossNum * 1.15;
+      
+      let selected = 0;
+      if (grossNum < 10000) selected = grossNum * 2.3;
+      else if (grossNum <= 49999) selected = Math.max(grossNum * 1.3, grossNum + 8000);
+      else selected = grossNum * 1.15;
+      sumSelected += selected;
+      
+      const influ = cont + selected;
+      sumInflu += influ;
+      sumSum += influ;
+      const sellingPrice = Math.ceil(influ / 1000) * 1000;
+      sumSelling += sellingPrice;
+      
+      let infSumOther = 0;
+      requiredServices.forEach(srv => {
+        let srvData = inf.services?.[srv.key];
+        if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+          const price = typeof srvData === 'object' ? srvData.price : srvData;
+          if (price) {
+            sumServices[srv.key] += Number(price);
+            infSumOther += Number(price);
+          }
+        }
+      });
+      sumSumOtherCost += infSumOther;
+      
+      let followerNum = 0;
+      if (inf.follower) {
+        let fStr = String(inf.follower).replace(/,/g, '').replace(/followers?/i, '').trim();
+        if (fStr.toLowerCase().endsWith('m')) {
+           followerNum = parseFloat(fStr) * 1000000;
+        } else if (fStr.toLowerCase().endsWith('k')) {
+           followerNum = parseFloat(fStr) * 1000;
+        } else {
+           followerNum = parseFloat(fStr);
+        }
+        if (isNaN(followerNum)) followerNum = 0;
+      }
+      const reach = followerNum * 0.08;
+      sumReach += reach;
+      
+      const refer = sellingPrice * 0.05;
+      sumRefer += refer;
+      const sr = refer;
+      sumSumRefer += sr;
+      const tp = sellingPrice + infSumOther + sr;
+      sumTotalPrice += tp;
+      const tsp = Math.ceil(tp / 1000) * 1000;
+      sumTotalSellingPrice += tsp;
+    });
+
     return (
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 p-6 lg:px-8 bg-slate-50/50 gap-4">
@@ -320,24 +411,46 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
           <table className="w-full text-left text-sm whitespace-nowrap min-w-max">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3.5 text-center w-[60px]">No.</th>
-                <th className="px-6 py-3.5 min-w-[280px]">Influencer</th>
-                <th className="px-6 py-3.5 min-w-[180px]">Scope of Work</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Raw Cost</th>
-                <th className="px-6 py-3.5 text-right min-w-[150px]">Raw Cost (/0.97 กรณีรับ net)</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Contingencies</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Price x 2.3</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +30%</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +8,000</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Price +15%</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Selected Price</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Influ Price</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Sum Price</th>
-                <th className="px-6 py-3.5 text-right min-w-[120px]">Selling Price</th>
-                <th className="px-6 py-3.5 min-w-[200px]">Service details & Costs</th>
-                {brandSupports.length > 0 && <th className="px-6 py-3.5 min-w-[155px]">Brand Support</th>}
-                <th className="px-6 py-3.5 min-w-[200px]">Note</th>
+                <th rowSpan={2} className="px-4 py-3.5 text-center w-[60px] border-b border-slate-200">No.</th>
+                <th rowSpan={2} className="px-6 py-3.5 min-w-[280px] border-b border-slate-200">Influencer</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Reach</th>
+                <th rowSpan={2} className="px-6 py-3.5 min-w-[180px] border-b border-slate-200">Scope of Work</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Raw Cost</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[150px] border-b border-slate-200">Raw Cost (/0.97 กรณีรับ net)</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Contingencies</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Price x 2.3</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Price +30%</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Price +8,000</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Price +15%</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Selected Price</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Influ Price</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Sum Price</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Selling Price</th>
+                
+                {requiredServices.length > 0 ? (
+                  <>
+                    <th colSpan={requiredServices.length} className="px-6 py-2 text-center border-b border-slate-200 bg-slate-100">Other Costs</th>
+                    <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200 bg-slate-100">Sum Other Cost</th>
+                  </>
+                ) : (
+                  <th rowSpan={2} className="px-6 py-3.5 min-w-[200px] border-b border-slate-200">Service details & Costs</th>
+                )}
+                
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Refer (5%)</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Sum Refer</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Total Price</th>
+                <th rowSpan={2} className="px-6 py-3.5 text-right min-w-[120px] border-b border-slate-200">Total Selling Price</th>
+                
+                {brandSupports.length > 0 && <th rowSpan={2} className="px-6 py-3.5 min-w-[155px] border-b border-slate-200">Brand Support</th>}
+                <th rowSpan={2} className="px-6 py-3.5 min-w-[200px] border-b border-slate-200">Note</th>
               </tr>
+              {requiredServices.length > 0 && (
+                <tr>
+                  {requiredServices.map(srv => (
+                    <th key={srv.key} className="px-6 py-2 text-right min-w-[120px] border-b border-slate-200 text-xs bg-slate-50/50">{srv.label}</th>
+                  ))}
+                </tr>
+              )}
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {influencers.map((inf, idx) => {
@@ -386,10 +499,28 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4.5 text-right font-medium text-slate-700">
+                      {(() => {
+                        let followerNum = 0;
+                        if (inf.follower) {
+                          let fStr = String(inf.follower).replace(/,/g, '').replace(/followers?/i, '').trim();
+                          if (fStr.toLowerCase().endsWith('m')) {
+                             followerNum = parseFloat(fStr) * 1000000;
+                          } else if (fStr.toLowerCase().endsWith('k')) {
+                             followerNum = parseFloat(fStr) * 1000;
+                          } else {
+                             followerNum = parseFloat(fStr);
+                          }
+                          if (isNaN(followerNum)) followerNum = 0;
+                        }
+                        const reach = followerNum * 0.08;
+                        return reach > 0 ? Math.round(reach).toLocaleString('en-US') : "-";
+                      })()}
+                    </td>
                     <td className="px-6 py-4.5 text-slate-700 text-xs font-medium">
                       {sowText}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-slate-900 text-sm">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -398,7 +529,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return rawNum.toLocaleString('en-US');
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-emerald-700 text-sm bg-emerald-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -408,7 +539,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return grossNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-amber-600 text-sm bg-amber-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -426,7 +557,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return cont.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-blue-600 text-sm bg-blue-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -437,7 +568,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return priceMultiplied.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-indigo-600 text-sm bg-indigo-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -448,7 +579,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return pricePlus30.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-violet-600 text-sm bg-violet-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -459,7 +590,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return pricePlus8k.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-fuchsia-600 text-sm bg-fuchsia-50/30">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -470,7 +601,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return pricePlus15.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-rose-600 text-sm bg-rose-50/30 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.1)]">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -490,7 +621,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return selectedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-teal-700 text-sm bg-teal-50/30 shadow-[inset_0_0_0_1px_rgba(15,118,110,0.1)]">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -520,7 +651,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return influPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-slate-800 text-sm bg-slate-100/50">
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -551,7 +682,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return sumPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-right font-bold text-[#6D5DF6] text-sm bg-[#6D5DF6]/5 shadow-[inset_0_0_0_1px_rgba(109,93,246,0.1)]">
+                    <td className="px-6 py-4.5 text-right font-bold text-[#6D5DF6] text-sm bg-[#6D5DF6]/10 shadow-[inset_0_0_0_1px_rgba(109,93,246,0.2)]">
                       {(() => {
                         if (!inf.rawCost) return "-";
                         const rawStr = inf.rawCost.toString().replace(/,/g, '');
@@ -583,20 +714,119 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         return sellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                       })()}
                     </td>
-                    <td className="px-6 py-4.5 text-xs text-slate-700">
-                      {activeServices.length > 0 ? (
-                        <div className="space-y-1.5">
-                          {activeServices.map((as, asIdx) => (
-                            <div key={asIdx} className="flex items-center justify-between gap-4">
-                              <span className="text-slate-500">• {as.label}:</span>
-                              <span className="font-semibold text-slate-800">฿{Number(as.price || 0).toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
+                    {requiredServices.length > 0 ? (
+                      <>
+                        {requiredServices.map(srv => {
+                          let price = "-";
+                          let srvData = inf.services?.[srv.key];
+                          if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                            price = typeof srvData === 'object' ? srvData.price : srvData;
+                            if (price) price = Number(price).toLocaleString('en-US');
+                          }
+                          return (
+                            <td key={srv.key} className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
+                              {price}
+                            </td>
+                          );
+                        })}
+                        <td className="px-6 py-4.5 text-right font-bold text-slate-800 bg-slate-100 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.3)]">
+                          {(() => {
+                            let rowSumOther = 0;
+                            requiredServices.forEach(srv => {
+                              let srvData = inf.services?.[srv.key];
+                              if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                                const p = typeof srvData === 'object' ? srvData.price : srvData;
+                                if (p) rowSumOther += Number(p);
+                              }
+                            });
+                            return rowSumOther > 0 ? rowSumOther.toLocaleString('en-US') : "-";
+                          })()}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">-</td>
+                    )}
+                    
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        let cont = grossNum;
+                        if (grossNum < 5000) cont = 1000;
+                        else if (grossNum <= 49999) cont = grossNum * 0.2;
+                        else cont = grossNum * 0.1;
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) selectedPrice = grossNum * 2.3;
+                        else if (grossNum <= 49999) selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        else selectedPrice = grossNum * 1.15;
+                        const influPrice = cont + selectedPrice;
+                        const sellingPrice = Math.ceil(influPrice / 1000) * 1000;
+                        const refer = sellingPrice * 0.05;
+                        return refer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
                     </td>
+                    <td className="px-6 py-4.5 text-right font-bold text-indigo-700 text-sm bg-indigo-50/80 shadow-[inset_0_0_0_1px_rgba(67,56,202,0.2)]">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        let cont = grossNum;
+                        if (grossNum < 5000) cont = 1000;
+                        else if (grossNum <= 49999) cont = grossNum * 0.2;
+                        else cont = grossNum * 0.1;
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) selectedPrice = grossNum * 2.3;
+                        else if (grossNum <= 49999) selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        else selectedPrice = grossNum * 1.15;
+                        const influPrice = cont + selectedPrice;
+                        const sellingPrice = Math.ceil(influPrice / 1000) * 1000;
+                        const refer = sellingPrice * 0.05;
+                        return refer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                        const tp = sellingPrice + rowSumOther + refer;
+                        return tp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    <td className="px-6 py-4.5 text-right font-normal text-slate-500 text-sm">
+                      {(() => {
+                        if (!inf.rawCost) return "-";
+                        const rawStr = inf.rawCost.toString().replace(/,/g, '');
+                        const rawNum = parseFloat(rawStr);
+                        if (isNaN(rawNum)) return "-";
+                        const grossNum = rawNum / 0.97;
+                        let cont = grossNum;
+                        if (grossNum < 5000) cont = 1000;
+                        else if (grossNum <= 49999) cont = grossNum * 0.2;
+                        else cont = grossNum * 0.1;
+                        let selectedPrice = 0;
+                        if (grossNum < 10000) selectedPrice = grossNum * 2.3;
+                        else if (grossNum <= 49999) selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+                        else selectedPrice = grossNum * 1.15;
+                        const influPrice = cont + selectedPrice;
+                        const sellingPrice = Math.ceil(influPrice / 1000) * 1000;
+                        const refer = sellingPrice * 0.05;
+                        
+                        let rowSumOther = 0;
+                        requiredServices.forEach(srv => {
+                          let srvData = inf.services?.[srv.key];
+                          if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                            const p = typeof srvData === 'object' ? srvData.price : srvData;
+                            if (p) rowSumOther += Number(p);
+                          }
+                        });
+                        
+                        const tp = sellingPrice + rowSumOther + refer;
+                        const tsp = Math.ceil(tp / 1000) * 1000;
+                        return tsp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
+                    </td>
+                    
                     {brandSupports.length > 0 && (
                       <td className="px-6 py-4.5 text-slate-700 text-xs">
                         <div className="space-y-1 text-left">
@@ -620,6 +850,47 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                 );
               })}
             </tbody>
+            <tfoot className="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
+              <tr>
+                <td colSpan="2" className="px-6 py-4 text-right">Total</td>
+                <td className="px-6 py-4 text-right">{sumReach > 0 ? Math.round(sumReach).toLocaleString('en-US') : "-"}</td>
+                <td className="px-6 py-4"></td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumRaw.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumCont.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumPx23.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumPp30.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumPp8k.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumPp15.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumSelected.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumInflu.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right font-bold text-[#6D5DF6] bg-[#6D5DF6]/10 shadow-[inset_0_0_0_1px_rgba(109,93,246,0.2)]">{sumSelling.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                
+                {requiredServices.length > 0 ? (
+                  <>
+                    {requiredServices.map(srv => (
+                      <td key={srv.key} className="px-6 py-4 text-right font-normal text-slate-500 bg-slate-50/80">
+                        {sumServices[srv.key] ? sumServices[srv.key].toLocaleString('en-US') : "-"}
+                      </td>
+                    ))}
+                    <td className="px-6 py-4 text-right font-bold text-slate-800 bg-slate-200/60 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.3)]">
+                      {sumSumOtherCost > 0 ? sumSumOtherCost.toLocaleString('en-US') : "-"}
+                    </td>
+                  </>
+                ) : (
+                  <td className="px-6 py-4"></td>
+                )}
+                
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumRefer > 0 ? sumRefer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                <td className="px-6 py-4 text-right font-bold text-indigo-700 bg-indigo-50/80 shadow-[inset_0_0_0_1px_rgba(67,56,202,0.2)]">{sumSumRefer > 0 ? sumSumRefer.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumTotalPrice > 0 ? sumTotalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                <td className="px-6 py-4 text-right font-normal text-slate-500">{sumTotalSellingPrice > 0 ? sumTotalSellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
+                
+                {brandSupports.length > 0 && <td className="px-6 py-4"></td>}
+                <td className="px-6 py-4"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
