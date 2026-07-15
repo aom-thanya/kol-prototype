@@ -4,7 +4,15 @@ import { Plus, Search, ArrowUpDown, Eye, Copy } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { getBriefProgressStatus } from "../../utils/briefHelpers";
 
-export default function BriefListingPage({ briefs, onView, onCreate, listOnly }) {
+export default function BriefListingPage({ 
+  briefs, 
+  onView, 
+  onCreate, 
+  listOnly, 
+  title = "Brief Management",
+  description = "Manage all campaign briefs and requirements.",
+  excludePackageTypes = []
+}) {
   const [search, setSearch] = useState("");
   const [selectedSales, setSelectedSales] = useState("");
 
@@ -20,9 +28,19 @@ export default function BriefListingPage({ briefs, onView, onCreate, listOnly })
     return briefs.filter((b) => {
       const matchSearch = `${b.id} ${b.campaignName} ${b.brand}`.toLowerCase().includes(search.toLowerCase());
       const matchSales = !selectedSales || b.salesOwner === selectedSales;
-      return matchSearch && matchSales;
+      
+      let matchPackage = true;
+      if (excludePackageTypes.length > 0 && b.packageType) {
+        const pTypes = Array.isArray(b.packageType) ? b.packageType : [b.packageType];
+        const hasExcluded = pTypes.some(pt => 
+          excludePackageTypes.some(ex => ex.toLowerCase() === pt.toLowerCase())
+        );
+        if (hasExcluded) matchPackage = false;
+      }
+
+      return matchSearch && matchSales && matchPackage;
     });
-  }, [briefs, search, selectedSales]);
+  }, [briefs, search, selectedSales, excludePackageTypes]);
 
   const getStatusBadgeStyle = (status) => {
     switch (status) {
@@ -43,8 +61,8 @@ export default function BriefListingPage({ briefs, onView, onCreate, listOnly })
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-[28px]">Brief Management</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage all campaign briefs and requirements.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-[28px]">{title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
         </div>
         <button
           onClick={onCreate}

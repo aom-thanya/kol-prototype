@@ -2,13 +2,11 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 /* eslint-disable no-unused-vars */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, Edit2, Copy, Trash2, Search, ChevronRight, ChevronLeft,
-  X, CheckCircle2, History, AlertCircle, Save, Filter, Upload,
-  RefreshCw, Users, FileText, Image, Video, Calendar,
-  MoreVertical, ExternalLink, Link as LinkIcon, Download,
+import {
+  Copy, History, Users, FileText, Calendar, ExternalLink, Link as LinkIcon, Download,
   MessageCircle, Send, Check, GripVertical, Paperclip,
-  CheckCircle, Loader2, Info
+  CheckCircle, Loader2, Info, Folder, Coins, Edit,
+  Briefcase, Compass, Sparkles, ChevronUp, ChevronDown, MapPin
 } from "lucide-react";
 import { formatCurrency, formatNumber, cn } from "../../../utils/helpers";
 import { defaultPillars, platformOptions } from "../../../constants/appConstants";
@@ -25,7 +23,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentEditStep, setCurrentEditStep] = useState(1);
   const [activeSubTab, setActiveSubTab] = useState("overview");
-  
+
   const [expandedDocs, setExpandedDocs] = useState({
     product: true,
     previous: false,
@@ -37,20 +35,20 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     setExpandedDocs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0 
-    ? brief.budgetOptions 
+  const budgetOptions = brief.budgetOptions && brief.budgetOptions.length > 0
+    ? brief.budgetOptions
     : [{
-        id: "legacy",
-        name: "Option A",
-        budgetSpending: brief.budgetSpending,
-        vat: brief.vat,
-        budgetCondition: brief.budgetCondition,
-        estimatedBrandSpending: brief.estimatedBrandSpending,
-        budgetPerInfluencer: brief.budgetPerInfluencer,
-        expectedNumInfluencers: brief.expectedNumInfluencers,
-        expectedReach: brief.expectedReach,
-        scopeOfWorks: brief.scopeOfWorks || []
-      }];
+      id: "legacy",
+      name: "Option A",
+      budgetSpending: brief.budgetSpending,
+      vat: brief.vat,
+      budgetCondition: brief.budgetCondition,
+      estimatedBrandSpending: brief.estimatedBrandSpending,
+      budgetPerInfluencer: brief.budgetPerInfluencer,
+      expectedNumInfluencers: brief.expectedNumInfluencers,
+      expectedReach: brief.expectedReach,
+      scopeOfWorks: brief.scopeOfWorks || []
+    }];
 
   const [activeOptId, setActiveOptId] = useState(() => budgetOptions[0]?.id);
 
@@ -66,12 +64,12 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
   const activeOpt = budgetOptions.find(o => o.id === activeOptId) || budgetOptions[0];
   const allSowsWithOpt = budgetOptions.flatMap((opt, oIdx) => (opt.scopeOfWorks || []).map(s => ({ ...s, optionName: opt.name || `Option ${String.fromCharCode(65 + oIdx)}` })));
-  
+
   const handleEditSection = (step) => {
     setCurrentEditStep(step);
     setEditModalOpen(true);
   };
-  
+
   const handleEditSubmit = (updatedData) => {
     const fieldNames = {
       brand: "แบรนด์", clientStatus: "สถานะลูกค้า", customerType: "ประเภทลูกค้า", salesOwner: "เจ้าของโปรเจกต์ (Sales)",
@@ -81,7 +79,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       occupation: "อาชีพ", campaignStartDate: "วันที่เริ่มแคมเปญ", campaignEndDate: "วันที่สิ้นสุดแคมเปญ",
       platform: "แพลตฟอร์ม", platformOther: "แพลตฟอร์มอื่นๆ", previousCampaign: "แคมเปญที่ผ่านมา",
       competitor: "คู่แข่ง", additionalInfo: "ข้อมูลเพิ่มเติม", budgetSpending: "งบประมาณใช้จ่าย",
-      budgetBoostSpending: "งบประมาณ Boost by Page", isBuddyBoostRequired: "ต้องการ Buddy Boost", 
+      budgetBoostSpending: "งบประมาณ Boost by Page", isBuddyBoostRequired: "ต้องการ Buddy Boost",
       targetBoost: "Target Boost", buddyBoostDetail: "รายละเอียด Buddy Boost", vat: "ภาษี (VAT)", budgetCondition: "เงื่อนไขงบประมาณ",
       estimatedBrandSpending: "ประเมินค่าใช้จ่ายแบรนด์", budgetPerInfluencer: "งบประมาณต่อ Influencer",
       expectedNumInfluencers: "จำนวน Influencer ที่คาดหวัง", expectedReach: "Reach ที่คาดหวัง",
@@ -90,7 +88,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       paidPartnershipRequired: "ต้องการ Paid Partnership", paidPartnershipDuration: "ระยะเวลา Paid Partnership",
       genCodeRequired: "ต้องการ Gen Code", genCodeDuration: "ระยะเวลา Gen Code", tiktokShopRequired: "ต้องการ Tiktok Shop",
       tiktokShopDuration: "ระยะเวลา Tiktok Shop", crossPostingRequired: "ต้องการ Cross Posting",
-      crossPostingDuration: "ระยะเวลา Cross Posting", 
+      crossPostingDuration: "ระยะเวลา Cross Posting",
       youtubeDiscoveryRequired: "ต้องการ Youtube Discovery", youtubeDiscoveryDuration: "ระยะเวลา Youtube Discovery",
       fbBrandedContentRequired: "ต้องการ FB Branded Content", fbBrandedContentDuration: "ระยะเวลา FB Branded Content",
       xWhitelistingRequired: "ต้องการ X/Twitter Whitelisting", xWhitelistingDuration: "ระยะเวลา X/Twitter Whitelisting",
@@ -105,15 +103,15 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     const changes = [];
     Object.keys(updatedData).forEach(key => {
       if (key === 'scopeOfWorks') return;
-      
+
       const isOldEmpty = brief[key] === "" || brief[key] === undefined || brief[key] === null || (Array.isArray(brief[key]) && brief[key].length === 0);
       const isNewEmpty = updatedData[key] === "" || updatedData[key] === null || (Array.isArray(updatedData[key]) && updatedData[key].length === 0);
-      
+
       if (isOldEmpty && isNewEmpty) return; // Ignore if both are empty
 
       const oldStr = JSON.stringify(brief[key]);
       const newStr = JSON.stringify(updatedData[key]);
-      
+
       if (oldStr !== newStr) {
         const formatVal = (val) => {
           if (val === "" || val === undefined || val === null || (Array.isArray(val) && val.length === 0)) return "ว่างเปล่า";
@@ -140,7 +138,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     });
     setEditModalOpen(false);
   };
-  
+
   const [selectedSows, setSelectedSows] = useState([]);
 
   const renderList = (items) => {
@@ -157,7 +155,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
     return `฿${num.toLocaleString()}`;
   };
 
-  const hasStandard = Array.isArray(brief.packageType) 
+  const hasStandard = Array.isArray(brief.packageType)
     ? brief.packageType.some(p => p.toLowerCase().includes("standard"))
     : (typeof brief.packageType === "string" && brief.packageType.toLowerCase().includes("standard"));
 
@@ -195,7 +193,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-20 text-base">
-      
+
       {/* Top Breadcrumb & Back Row */}
       <div className="flex items-center justify-end mb-5">
         <div className="text-sm text-slate-400">
@@ -224,7 +222,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 lg:text-4xl">
               {brief.campaignName || "Unnamed Campaign"}
             </h1>
-            
+
             {/* Timeline Progress Row */}
             <div className="flex flex-wrap items-center gap-5 text-sm text-slate-500 mt-4">
               <div className="flex items-center gap-2">
@@ -236,7 +234,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => {
@@ -256,10 +254,10 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        
+
         {/* Left Column (Main content area with Tabbed Panels) */}
         <div className="w-full lg:w-3/4 space-y-6 min-w-0">
-          
+
           {/* Dashboard Tab Buttons Row */}
           <div className="flex border-b border-slate-200 bg-white px-2 pt-2 rounded-t-2xl shadow-3xs overflow-x-auto whitespace-nowrap scrollbar-none">
             {tabs.map((tab) => {
@@ -271,8 +269,8 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   onClick={() => setActiveSubTab(tab.id)}
                   className={cn(
                     "flex items-center gap-2.5 px-6 py-4.5 text-base font-semibold border-b-2 transition-all cursor-pointer relative",
-                    isActive 
-                      ? "border-[#6D5DF6] text-[#6D5DF6] font-bold" 
+                    isActive
+                      ? "border-[#6D5DF6] text-[#6D5DF6] font-bold"
                       : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
                   )}
                 >
@@ -293,19 +291,19 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
           {/* Active Tab Panel Content */}
           <div className="bg-white border border-slate-200 border-t-0 rounded-b-3xl p-6 lg:p-8 shadow-2xs">
-            
+
             {/* TAB 1: OVERVIEW */}
             {activeSubTab === "overview" && (
               <div className="space-y-8">
-                
+
                 {/* Visual Header & Edit Button */}
                 <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Project & Client Information</h3>
                     <p className="text-sm text-slate-400 mt-1">Key parameters, target brand specs, and targeted audiences.</p>
                   </div>
-                  <button 
-                    onClick={() => handleEditSection(1)} 
+                  <button
+                    onClick={() => handleEditSection(1)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-655 hover:bg-slate-55 transition cursor-pointer"
                   >
                     <Edit className="h-4 w-4" /> Edit Profile
@@ -313,7 +311,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
+
                   {/* Client Profile Box */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-4">
                     <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5">
@@ -365,17 +363,17 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                             <span key={plat} className={cn(
                               "text-xs font-semibold px-2.5 py-0.5 rounded-lg border",
                               plat === "TikTok" ? "bg-black text-white border-black" :
-                              plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-400" :
-                              plat === "YouTube" ? "bg-red-50 text-red-700 border-red-200" :
-                              plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                              "bg-slate-100 text-slate-700 border-slate-200"
+                                plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-400" :
+                                  plat === "YouTube" ? "bg-red-50 text-red-700 border-red-200" :
+                                    plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                      "bg-slate-100 text-slate-700 border-slate-200"
                             )}>
                               {plat === "Others" && brief.platformOther ? `Others (${brief.platformOther})` : plat}
                             </span>
                           ))}
                         </div>
                       </div>
-                      
+
                       {/* Buddy Boost specs */}
                       <div className="border-t border-slate-200/50 pt-3.5">
                         <div className="flex justify-between items-center">
@@ -438,8 +436,8 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                           return (
                             <span key={obj} className={cn(
                               "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold border transition",
-                              isSelected 
-                                ? "bg-violet-50 text-[#6D5DF6] border-violet-200 shadow-3xs" 
+                              isSelected
+                                ? "bg-violet-50 text-[#6D5DF6] border-violet-200 shadow-3xs"
                                 : "bg-white text-slate-300 border-slate-200 opacity-50 line-through"
                             )}>
                               {isSelected && <Check className="h-4 w-4 text-[#6D5DF6] stroke-[3]" />}
@@ -467,7 +465,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                     {/* Product Details Document */}
                     {brief.product && (
                       <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
-                        <button 
+                        <button
                           onClick={() => toggleDoc("product")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
@@ -485,7 +483,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                     {/* Previous Campaigns Document */}
                     {brief.previousCampaign && (
                       <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
-                        <button 
+                        <button
                           onClick={() => toggleDoc("previous")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
@@ -503,7 +501,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                     {/* Competitor Info Document */}
                     {brief.competitor && (
                       <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
-                        <button 
+                        <button
                           onClick={() => toggleDoc("competitor")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
@@ -521,7 +519,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                     {/* Additional Info Document */}
                     {brief.additionalInfo && (
                       <div className="border border-slate-200 rounded-xl overflow-hidden shadow-3xs bg-white">
-                        <button 
+                        <button
                           onClick={() => toggleDoc("additional")}
                           className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
                         >
@@ -545,15 +543,15 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             {/* TAB 2: BUDGET & SOW OPTIONS */}
             {activeSubTab === "budget" && (
               <div className="space-y-6">
-                
+
                 {/* Header Row */}
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Budget Packages & Scopes of Work</h3>
                     <p className="text-sm text-slate-400 mt-1">Option variations, budget details, and scope guidelines.</p>
                   </div>
-                  <button 
-                    onClick={() => handleEditSection(2)} 
+                  <button
+                    onClick={() => handleEditSection(2)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-55 transition cursor-pointer"
                   >
                     <Edit className="h-4 w-4" /> Edit Options
@@ -586,7 +584,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                 {/* Financial Metric Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-                  
+
                   {/* Budget Spending */}
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
                     <div>
@@ -654,11 +652,11 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                   <h4 className="text-sm font-bold text-slate-450 uppercase tracking-wider flex items-center justify-between">
                     <span>Scope of Work List ({activeOpt.scopeOfWorks?.length || 0})</span>
                   </h4>
-                  
+
                   {activeOpt.scopeOfWorks && activeOpt.scopeOfWorks.length > 0 ? (
                     activeOpt.scopeOfWorks.map((sow, idx) => (
                       <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs space-y-4.5 hover:shadow-2xs transition">
-                        
+
                         {/* Scope Header */}
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
                           <span className="font-bold text-slate-900 text-base">
@@ -669,12 +667,12 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                               <span key={plat} className={cn(
                                 "text-xs font-bold px-2.5 py-0.5 rounded-full border",
                                 plat === "TikTok" ? "bg-black text-white border-black" :
-                                plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-500" :
-                                plat === "YouTube" ? "bg-red-50 text-red-750 border-red-200" :
-                                plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-750 border-blue-200" :
-                                plat === "X" ? "bg-slate-900 text-white border-slate-900" :
-                                plat === "Lemon8" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
-                                "bg-slate-100 text-slate-700 border-slate-200"
+                                  plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-500" :
+                                    plat === "YouTube" ? "bg-red-50 text-red-750 border-red-200" :
+                                      plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-750 border-blue-200" :
+                                        plat === "X" ? "bg-slate-900 text-white border-slate-900" :
+                                          plat === "Lemon8" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
+                                            "bg-slate-100 text-slate-700 border-slate-200"
                               )}>
                                 {plat}
                               </span>
@@ -714,13 +712,13 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
                         {/* Columns split for Persona and Active services */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          
+
                           {/* Influencer Persona */}
                           <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 text-sm">
                             <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
                               <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer details
                             </h5>
-                            
+
                             {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
                               <div className="space-y-4">
                                 {sow.influencerDetails.map((detail, dIdx) => (
@@ -740,7 +738,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                                       <div><span className="text-slate-400 block mb-1 text-xs">Content Category</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.contentCategory)}</span></div>
                                       <div><span className="text-slate-400 block mb-1 text-xs">Storytelling</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.storyTelling)}</span></div>
                                     </div>
-                                    
+
                                     {/* Reference Influencers Display */}
                                     {detail.referenceInfluencers && detail.referenceInfluencers.length > 0 && (
                                       <div className="mt-4 pt-4 border-t border-slate-100">
@@ -798,7 +796,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                                 )}
                               </div>
                             )}
-                            
+
                             {sow.persona?.infPreference && (
                               <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
                                 <span className="text-xs text-slate-400 font-bold block mb-1.5 uppercase">Influencer Preferences</span>
@@ -858,19 +856,19 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                                   whitelisting: {renderList(sow.serviceScope?.whitelistingDuration || sow.serviceScope?.xWhitelistingDuration)}
                                 </span>
                               )}
-                              
+
                               {/* Empty State for services */}
-                              {!sow.serviceScope?.buyoutRequired && 
-                               !sow.serviceScope?.boostPostRequired && !sow.serviceScope?.boostRequired &&
-                               !sow.serviceScope?.addAdsRequired && 
-                               !sow.serviceScope?.paidPartnershipRequired && 
-                               !sow.serviceScope?.genCodeRequired && 
-                               !sow.serviceScope?.tiktokShopRequired && 
-                               !sow.serviceScope?.brandedContentRequired && !sow.serviceScope?.fbBrandedContentRequired &&
-                               !sow.serviceScope?.discoveryRequired && !sow.serviceScope?.youtubeDiscoveryRequired &&
-                               !sow.serviceScope?.whitelistingRequired && !sow.serviceScope?.xWhitelistingRequired && (
-                                <span className="text-slate-400 italic font-semibold">No special rights or whitelisting requested.</span>
-                              )}
+                              {!sow.serviceScope?.buyoutRequired &&
+                                !sow.serviceScope?.boostPostRequired && !sow.serviceScope?.boostRequired &&
+                                !sow.serviceScope?.addAdsRequired &&
+                                !sow.serviceScope?.paidPartnershipRequired &&
+                                !sow.serviceScope?.genCodeRequired &&
+                                !sow.serviceScope?.tiktokShopRequired &&
+                                !sow.serviceScope?.brandedContentRequired && !sow.serviceScope?.fbBrandedContentRequired &&
+                                !sow.serviceScope?.discoveryRequired && !sow.serviceScope?.youtubeDiscoveryRequired &&
+                                !sow.serviceScope?.whitelistingRequired && !sow.serviceScope?.xWhitelistingRequired && (
+                                  <span className="text-slate-400 italic font-semibold">No special rights or whitelisting requested.</span>
+                                )}
                             </div>
                           </div>
 
@@ -1000,15 +998,15 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
             {/* TAB 3: CONDITION */}
             {activeSubTab === "logistics" && (
               <div className="space-y-6">
-                
+
                 {/* Header Row */}
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Campaign Conditions</h3>
                     <p className="text-sm text-slate-400 mt-1">General terms, notes, and conditions for this campaign.</p>
                   </div>
-                  <button 
-                    onClick={() => handleEditSection(3)} 
+                  <button
+                    onClick={() => handleEditSection(3)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-655 hover:bg-slate-50 transition cursor-pointer"
                   >
                     <Edit className="h-4 w-4" /> Edit Conditions
@@ -1046,15 +1044,15 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
         {/* Right Column (Actions Sidebar) */}
         <div className="w-full lg:w-1/4 shrink-0 text-sm">
           <div className="sticky top-6 space-y-6">
-            
+
             {/* Actions Panel */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-3xs p-5 space-y-4">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Brief Status & Actions</h3>
 
               <div className="flex flex-col gap-3">
                 {(!brief.internalStatus || brief.internalStatus === "Draft") && (
-                  <Button 
-                    className="w-full py-3 text-base font-bold" 
+                  <Button
+                    className="w-full py-3 text-base font-bold"
                     onClick={() => {
                       if (hasStandard) {
                         handleSubmitToTraffic();
@@ -1097,18 +1095,18 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                   {allSowsWithOpt && allSowsWithOpt.length > 0 ? (
                     allSowsWithOpt.map((sow, idx) => (
-                      <label 
-                        key={idx} 
+                      <label
+                        key={idx}
                         className={cn(
                           "flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition",
-                          selectedSows.includes(sow.id) 
-                            ? 'border-[#6D5DF6] bg-violet-50/50' 
+                          selectedSows.includes(sow.id)
+                            ? 'border-[#6D5DF6] bg-violet-50/50'
                             : 'border-slate-200 hover:border-slate-300'
                         )}
                       >
                         <div className="mt-1 flex h-4 w-4 items-center justify-center rounded border border-slate-300 bg-white relative">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="h-full w-full opacity-0 cursor-pointer absolute inset-0 z-10"
                             checked={selectedSows.includes(sow.id)}
                             onChange={() => toggleSowSelection(sow.id)}
@@ -1117,7 +1115,7 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
                         </div>
                         <div className="flex-1">
                           <div className="font-semibold text-sm text-slate-900">
-                            Scope {idx + 1}: {sow.name || sow.contentType || "Unnamed SOW"} 
+                            Scope {idx + 1}: {sow.name || sow.contentType || "Unnamed SOW"}
                             <span className="ml-2 inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-[#6D5DF6]">
                               {sow.optionName}
                             </span>
@@ -1147,13 +1145,13 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief }) {
 
       <AnimatePresence>
         {editModalOpen && (
-          <BriefFormModal 
-            key={brief.id} 
-            open={editModalOpen} 
-            onClose={() => setEditModalOpen(false)} 
-            onSubmit={handleEditSubmit} 
-            initialData={brief} 
-            initialStep={currentEditStep} 
+          <BriefFormModal
+            key={brief.id}
+            open={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            onSubmit={handleEditSubmit}
+            initialData={brief}
+            initialStep={currentEditStep}
           />
         )}
       </AnimatePresence>
