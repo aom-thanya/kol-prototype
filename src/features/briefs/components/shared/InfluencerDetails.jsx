@@ -212,7 +212,9 @@ export default function InfluencerDetails({ value, onChange, editable = true, sh
               </div>
             ) : (
               <div className="font-semibold text-slate-900">
-                {data.followerReqFrom || "-"} to {data.followerReqTo || "-"}
+                {data.followerReqFrom || data.followerReqTo 
+                  ? `${data.followerReqFrom ? Number(data.followerReqFrom).toLocaleString() : "0"} to ${data.followerReqTo ? Number(data.followerReqTo).toLocaleString() : "Any"}`
+                  : "-"}
               </div>
             )}
           </div>

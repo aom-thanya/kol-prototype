@@ -966,6 +966,9 @@ export const briefsSeed = [
         "id": "Tiktok Review",
         "name": "Tiktok Group",
         "pillar": "Awareness",
+        "numInfluencers": "15",
+        "followerReqFrom": "100000",
+        "followerReqTo": "500000",
         "referenceInfluencers": [
           {
             "id": 1,
@@ -1012,6 +1015,9 @@ export const briefsSeed = [
         "id": "IG Reel Review",
         "name": "IG Group",
         "pillar": "Interest",
+        "numInfluencers": "10",
+        "followerReqFrom": "50000",
+        "followerReqTo": "200000",
         "referenceInfluencers": [
           {
             "id": 3,
