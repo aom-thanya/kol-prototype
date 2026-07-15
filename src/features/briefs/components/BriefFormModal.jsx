@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Plus, Edit2, Copy, Trash2, Search, ChevronRight, ChevronLeft,
+  Plus, Edit2, Copy, Trash2, Search, ChevronRight, ChevronLeft, ChevronDown,
   X, CheckCircle2, History, AlertCircle, Save, Filter, Upload,
   RefreshCw, Users, FileText, Image, Video, Calendar,
   MoreVertical, ExternalLink, Link as LinkIcon, Download,
@@ -21,6 +21,7 @@ import Button from "../../../components/common/Button";
 import ActivityTimeline from "../../../components/common/ActivityTimeline";
 import RateCardListPage from "../../../components/brief/RateCardListPage";
 import RecapSetup from "../../../components/brief/RecapSetup";
+import InfluencerDetailModal from "./InfluencerDetailModal";
 
 export default function BriefFormModal({ open, onClose, onSubmit, initialData = null, initialStep = 1, customers = [] }) {
   const [currentStep, setCurrentStep] = useState(initialStep);

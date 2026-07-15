@@ -19,6 +19,7 @@ import Button from "../../../components/common/Button";
 import ActivityTimeline from "../../../components/common/ActivityTimeline";
 import RateCardListPage from "../../../components/brief/RateCardListPage";
 import RecapSetup from "../../../components/brief/RecapSetup";
+import TagInput from "./TagInput";
 
 export default function InfluencerDetailModal({ open, onClose, onSave, initialData }) {
   const [data, setData] = useState({

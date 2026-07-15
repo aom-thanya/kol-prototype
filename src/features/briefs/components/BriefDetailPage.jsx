@@ -17,6 +17,9 @@ import Button from "../../../components/common/Button";
 import ActivityTimeline from "../../../components/common/ActivityTimeline";
 import RateCardListPage from "../../../components/brief/RateCardListPage";
 import RecapSetup from "../../../components/brief/RecapSetup";
+import GroupDetailsDisplay from "./shared/GroupDetailsDisplay";
+import ReferenceInfluencerList from "./shared/ReferenceInfluencerList";
+import SowDetailsDisplay from "./shared/SowDetailsDisplay";
 
 export default function BriefDetailPage({ brief, onBack, onUpdateBrief, onStartRecap }) {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
@@ -655,335 +658,32 @@ export default function BriefDetailPage({ brief, onBack, onUpdateBrief, onStartR
 
                   {activeOpt.scopeOfWorks && activeOpt.scopeOfWorks.length > 0 ? (
                     activeOpt.scopeOfWorks.map((sow, idx) => (
-                      <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 text-base shadow-3xs space-y-4.5 hover:shadow-2xs transition">
-
-                        {/* Scope Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                          <span className="font-bold text-slate-900 text-base">
-                            Scope {idx + 1}: {sow.name || "Unnamed Scope"}
-                          </span>
-                          <div className="flex gap-2">
-                            {(sow.platforms || []).map(plat => (
-                              <span key={plat} className={cn(
-                                "text-xs font-bold px-2.5 py-0.5 rounded-full border",
-                                plat === "TikTok" ? "bg-black text-white border-black" :
-                                  plat === "Instagram" ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white border-pink-500" :
-                                    plat === "YouTube" ? "bg-red-50 text-red-750 border-red-200" :
-                                      plat === "Facebook" || plat === "Facebook Page" ? "bg-blue-50 text-blue-750 border-blue-200" :
-                                        plat === "X" ? "bg-slate-900 text-white border-slate-900" :
-                                          plat === "Lemon8" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
-                                            "bg-slate-100 text-slate-700 border-slate-200"
-                              )}>
-                                {plat}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Deliverables Overview */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-1">Content Type</span>
-                            <span className="font-bold text-slate-800 text-base">{renderList(sow.contentType)}</span>
-                          </div>
-
-                          {sow.serviceScope?.selectedVias && sow.serviceScope.selectedVias.length > 0 && (
-                            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                              <span className="text-slate-400 font-bold block mb-1">Via</span>
-                              <span className="font-bold text-slate-800 text-base">{sow.serviceScope.selectedVias.join(', ')}</span>
-                            </div>
-                          )}
-
-                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-slate-400 font-bold block mb-1">Budget Allocation</span>
-                            <span className="font-bold text-slate-800 text-base">
-                              {sow.allocationPercent ? `${sow.allocationPercent}%` : sow.allocation ? `${sow.allocation}%` : "-"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* SOW Details Content */}
-                        {sow.details && (
-                          <div className="text-sm p-4 rounded-xl border border-slate-150 bg-slate-50/30">
-                            <h5 className="font-bold text-slate-400 mb-1.5">Details & Guidelines</h5>
-                            <div className="font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none max-h-[150px] overflow-y-auto text-sm" dangerouslySetInnerHTML={{ __html: sow.details }} />
-                          </div>
-                        )}
-
-                        {/* Columns split for Persona and Active services */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                          {/* Influencer Persona */}
-                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 text-sm">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer details
-                            </h5>
-
-                            {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
-                              <div className="space-y-4">
-                                {sow.influencerDetails.map((detail, dIdx) => (
-                                  <div key={detail.id || dIdx} className="bg-white p-4 rounded-xl border border-slate-200">
-                                    <h6 className="text-sm font-bold text-slate-800 mb-3">Group {dIdx + 1}</h6>
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                      <div><span className="text-slate-400 block mb-1 text-xs">KOL Qty</span> <span className="font-semibold text-slate-800">{detail.numInfluencers || "-"}</span></div>
-                                      <div>
-                                        <span className="text-slate-400 block mb-1 text-xs">Followers</span> <span className="font-semibold text-slate-800">
-                                          {detail.followerReqFrom || detail.followerReqTo ? `${detail.followerReqFrom ? Number(detail.followerReqFrom).toLocaleString() : "0"} - ${detail.followerReqTo ? Number(detail.followerReqTo).toLocaleString() : "Any"}` : "-"}
-                                        </span>
-                                      </div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Demographic</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.demographic)}</span></div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Location</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.location)}</span></div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Occupation</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.occupation)}</span></div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Tone</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.persona)}</span></div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Content Category</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.contentCategory)}</span></div>
-                                      <div><span className="text-slate-400 block mb-1 text-xs">Storytelling</span> <span className="font-semibold text-slate-800">{renderList(detail.persona?.storyTelling)}</span></div>
-                                    </div>
-
-                                    {/* Reference Influencers Display */}
-                                    {detail.referenceInfluencers && detail.referenceInfluencers.length > 0 && (
-                                      <div className="mt-4 pt-4 border-t border-slate-100">
-                                        <div className="text-slate-400 mb-3 text-xs font-semibold uppercase tracking-wider">Reference Influencers</div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                          {detail.referenceInfluencers.map(ref => (
-                                            <div key={ref.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                              <img src={ref.avatar} alt={ref.username} className="h-10 w-10 rounded-full object-cover border border-slate-200 mt-1" />
-                                              <div className="flex-1 min-w-0 space-y-1">
-                                                <div className="flex items-center justify-between">
-                                                  <a href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-800 hover:text-[#6D5DF6] text-sm flex items-center gap-1 transition-colors">
-                                                    {ref.username} <ExternalLink className="h-3 w-3" />
-                                                  </a>
-                                                  <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">{ref.platform}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3 text-xs text-slate-500 pb-1">
-                                                  <span><strong className="text-slate-700">Folls:</strong> {ref.followers}</span>
-                                                  <span><strong className="text-slate-700">ER:</strong> {ref.engagement}</span>
-                                                </div>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                  {ref.category && ref.category.map(c => (
-                                                    <span key={c} className="text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-md">{c}</span>
-                                                  ))}
-                                                  {ref.persona && ref.persona.map(p => (
-                                                    <span key={p} className="text-[10px] font-semibold bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-md">{p}</span>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                <div><span className="text-slate-400">KOL Qty:</span> <span className="font-semibold text-slate-800">{sow.numInfluencers || "-"}</span></div>
-                                <div>
-                                  <span className="text-slate-400">Followers:</span> <span className="font-semibold text-slate-800">
-                                    {sow.followerReqFrom || sow.followerReqTo ? `${sow.followerReqFrom ? Number(sow.followerReqFrom).toLocaleString() : "0"} - ${sow.followerReqTo ? Number(sow.followerReqTo).toLocaleString() : "Any"}` : (sow.followerReq || "-")}
-                                  </span>
+                      <SowDetailsDisplay key={idx} sow={sow} index={idx}>
+                        <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 text-sm h-full">
+                          <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
+                            <span className="w-2 h-2 rounded-full bg-[#6D5DF6]" /> Influencer details
+                          </h5>
+                          {sow.influencerDetails && sow.influencerDetails.length > 0 ? (
+                            <div className="space-y-4">
+                              {sow.influencerDetails.map((detail, dIdx) => (
+                                <div key={detail.id || dIdx} className="space-y-4">
+                                  <GroupDetailsDisplay group={detail} index={dIdx} />
+                                  <ReferenceInfluencerList influencers={detail.referenceInfluencers} />
                                 </div>
-                                <div><span className="text-slate-400">Demographic:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.demographic || sow.persona?.infDemographic)}</span></div>
-                                <div><span className="text-slate-400">Location:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.location || sow.persona?.infLocation)}</span></div>
-                                <div><span className="text-slate-400">Occupation:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.occupation || sow.persona?.infOccupation)}</span></div>
-                                <div><span className="text-slate-400">Tone:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.persona || sow.persona?.infPersona)}</span></div>
-                                <div className="col-span-2"><span className="text-slate-400">Content Category:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.contentCategory || sow.persona?.infContent)}</span></div>
-                                <div className="col-span-2"><span className="text-slate-400">Storytelling:</span> <span className="font-semibold text-slate-800">{renderList(sow.persona?.storyTelling || sow.persona?.infStoryTelling)}</span></div>
-                                {sow.persona?.specialConditions && sow.persona.specialConditions.length > 0 && (
-                                  <div className="col-span-2">
-                                    <span className="text-slate-400">Special Condition:</span> <span className="font-semibold text-slate-800">{sow.persona.specialConditions.join(', ')}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {sow.persona?.infPreference && (
-                              <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
-                                <span className="text-xs text-slate-400 font-bold block mb-1.5 uppercase">Influencer Preferences</span>
-                                <div className="bg-white p-3 rounded-lg border border-slate-250 max-h-[120px] overflow-y-auto text-sm" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference }} />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Active Services */}
-                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-sm">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500" /> Boost by page
-                            </h5>
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {sow.serviceScope?.buyoutRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  buyout: {renderList(sow.serviceScope?.buyoutDuration)}
-                                </span>
-                              )}
-                              {(sow.serviceScope?.boostPostRequired || sow.serviceScope?.boostRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  boost: {renderList(sow.serviceScope?.boostPostDuration || sow.serviceScope?.boostDuration)}
-                                </span>
-                              )}
-                              {sow.serviceScope?.addAdsRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  add ads: {renderList(sow.serviceScope?.addAdsDuration)}
-                                </span>
-                              )}
-                              {sow.serviceScope?.paidPartnershipRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  partnership: {renderList(sow.serviceScope?.paidPartnershipDuration)}
-                                </span>
-                              )}
-                              {sow.serviceScope?.genCodeRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  gen code: {renderList(sow.serviceScope?.genCodeDuration)}
-                                </span>
-                              )}
-                              {sow.serviceScope?.tiktokShopRequired && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  shop: {renderList(sow.serviceScope?.tiktokShopDuration)}
-                                </span>
-                              )}
-                              {(sow.serviceScope?.brandedContentRequired || sow.serviceScope?.fbBrandedContentRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  branded: {renderList(sow.serviceScope?.brandedContentDuration || sow.serviceScope?.fbBrandedContentDuration)}
-                                </span>
-                              )}
-                              {(sow.serviceScope?.discoveryRequired || sow.serviceScope?.youtubeDiscoveryRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  discovery: {renderList(sow.serviceScope?.discoveryDuration || sow.serviceScope?.youtubeDiscoveryDuration)}
-                                </span>
-                              )}
-                              {(sow.serviceScope?.whitelistingRequired || sow.serviceScope?.xWhitelistingRequired) && (
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-md font-semibold text-xs">
-                                  whitelisting: {renderList(sow.serviceScope?.whitelistingDuration || sow.serviceScope?.xWhitelistingDuration)}
-                                </span>
-                              )}
-
-                              {/* Empty State for services */}
-                              {!sow.serviceScope?.buyoutRequired &&
-                                !sow.serviceScope?.boostPostRequired && !sow.serviceScope?.boostRequired &&
-                                !sow.serviceScope?.addAdsRequired &&
-                                !sow.serviceScope?.paidPartnershipRequired &&
-                                !sow.serviceScope?.genCodeRequired &&
-                                !sow.serviceScope?.tiktokShopRequired &&
-                                !sow.serviceScope?.brandedContentRequired && !sow.serviceScope?.fbBrandedContentRequired &&
-                                !sow.serviceScope?.discoveryRequired && !sow.serviceScope?.youtubeDiscoveryRequired &&
-                                !sow.serviceScope?.whitelistingRequired && !sow.serviceScope?.xWhitelistingRequired && (
-                                  <span className="text-slate-400 italic font-semibold">No special rights or whitelisting requested.</span>
-                                )}
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* Brand Support & On-Site Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2">
-                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <Coins className="h-4 w-4 text-[#6D5DF6]" /> Brand Support & Delivery
-                            </h5>
-                            <div className="space-y-2.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Support Type:</span>
-                                <span className="font-bold text-slate-800">
-                                  {sow.brandSupportType || "No Sponsor"}
-                                  {sow.brandSupportType === "Other" && sow.brandSupportTypeOther && ` (${sow.brandSupportTypeOther})`}
-                                </span>
-                              </div>
-                              {sow.productReceiveMethod && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-400">Receive Method:</span>
-                                  <span className="font-semibold text-slate-800">{sow.productReceiveMethod}</span>
-                                </div>
-                              )}
-                              {sow.logisticsPerInfluencer ? (
-                                <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
-                                  <span className="text-slate-400">Logistics Cost / KOL:</span>
-                                  <span className="font-bold text-[#6D5DF6]">{Number(sow.logisticsPerInfluencer).toLocaleString()} บาท</span>
-                                </div>
-                              ) : null}
-                              {sow.reimbursement && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-400">Reimbursement Type:</span>
-                                  <span className="font-semibold text-slate-800">{sow.reimbursement}</span>
-                                </div>
-                              )}
-                              {sow.productValue ? (
-                                <div className="flex justify-between items-center border-t border-slate-200/50 pt-2 font-semibold">
-                                  <span className="text-slate-400 font-normal">Product Value:</span>
-                                  <span className="font-bold text-[#6D5DF6]">{Number(sow.productValue).toLocaleString()} บาท</span>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <MapPin className="h-4 w-4 text-[#6D5DF6]" /> On-Site & Travel Details
-                            </h5>
-                            <div className="space-y-2.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Travel Required:</span>
-                                <span className={cn(
-                                  "text-xs font-bold px-3 py-1 rounded-full border",
-                                  sow.requireTravel && sow.requireTravel.includes("ต้อง") ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"
-                                )}>
-                                  {sow.requireTravel || "ไม่ต้อง"}
-                                </span>
-                              </div>
-                              {sow.requireTravel && sow.requireTravel.includes("ต้อง") && (
-                                <>
-                                  <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
-                                    <span className="text-slate-400">On-Site Type:</span>
-                                    <span className="font-semibold text-slate-800">{sow.onSiteType || "-"}</span>
-                                  </div>
-                                  {sow.onSiteType === "เข้าร่วม Event" && sow.eventDuration && (
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-slate-400">Event Duration:</span>
-                                      <span className="font-semibold text-slate-800">{sow.eventDuration} Hours</span>
-                                    </div>
-                                  )}
-                                  {sow.reviewerTravelExpense && (
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-slate-400">Travel Expense:</span>
-                                      <span className="font-semibold text-slate-800">{sow.reviewerTravelExpense}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-slate-400">Buddy Frontline Support:</span>
-                                    <span className="font-semibold text-slate-800">{sow.buddyReviewSupport || "No"}</span>
-                                  </div>
-                                  {sow.locationDetails && (
-                                    <div className="border-t border-slate-200/50 pt-2 text-xs">
-                                      <span className="text-slate-400 font-bold block mb-1">Location Details</span>
-                                      <p className="text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed whitespace-pre-wrap">{sow.locationDetails}</p>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Reference Influencers Display */}
-                        {sow.referenceInfluencers && sow.referenceInfluencers.length > 0 && (
-                          <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3.5 mt-4">
-                            <h5 className="font-bold text-slate-750 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/50 pb-2">
-                              <Users className="h-4 w-4 text-[#6D5DF6]" /> Reference Influencers
-                            </h5>
-                            <div className="flex flex-wrap gap-3">
-                              {sow.referenceInfluencers.map(ref => (
-                                <a key={ref.id} href={ref.profileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-slate-200 hover:border-[#6D5DF6] rounded-full py-1.5 pl-1.5 pr-4 transition-colors">
-                                  <img src={ref.avatar} alt={ref.username} className="h-8 w-8 rounded-full object-cover border border-slate-100" />
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-slate-800 leading-tight">{ref.username}</span>
-                                    <span className="text-[10px] text-slate-500 leading-tight">{ref.platform}</span>
-                                  </div>
-                                </a>
                               ))}
                             </div>
-                          </div>
-                        )}
-
-                      </div>
+                          ) : (
+                            <GroupDetailsDisplay group={sow} />
+                          )}
+                          
+                          {sow.persona?.infPreference && (
+                            <div className="mt-3 pt-3 border-t border-slate-200/50 text-slate-650">
+                              <span className="text-xs text-slate-400 font-bold block mb-1.5 uppercase">Influencer Preferences</span>
+                              <div className="bg-white p-3 rounded-lg border border-slate-250 max-h-[120px] overflow-y-auto text-sm" dangerouslySetInnerHTML={{ __html: sow.persona?.infPreference }} />
+                            </div>
+                          )}
+                        </div>
+                      </SowDetailsDisplay>
                     ))
                   ) : (
                     <div className="text-slate-400 italic text-center py-8 bg-slate-50 border border-slate-200 rounded-xl text-base">

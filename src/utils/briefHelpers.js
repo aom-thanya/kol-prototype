@@ -111,3 +111,59 @@ export function generateScopeName(platforms = [], contentTypes = [], serviceScop
   
   return name || "Unnamed Scope";
 }
+
+export function transformBriefSowsToRecapGroups(briefSows = []) {
+  const groupedMap = new Map();
+  const getArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+
+  briefSows.forEach((sow, idx) => {
+    // If the SOW has influencerDetails (groups), iterate over them.
+    // Otherwise, create a fallback group so the SOW is not lost.
+    const groupsInSow = sow.influencerDetails && sow.influencerDetails.length > 0 
+      ? sow.influencerDetails 
+      : [{ 
+          groupId: `group_default_${idx}`, 
+          groupName: sow.name || `Default Group ${idx + 1}`, 
+          persona: sow.persona,
+          referenceInfluencers: []
+        }];
+    
+    groupsInSow.forEach((grp, gIdx) => {
+      // Use the stable groupId to deduplicate
+      const gId = grp.groupId || `group_${Date.now()}_${idx}_${gIdx}`;
+      
+      if (!groupedMap.has(gId)) {
+        groupedMap.set(gId, {
+          id: gId,
+          name: grp.groupName || `Group ${gId}`,
+          numInfluencers: grp.numInfluencers || sow.numInfluencers,
+          followerReqFrom: grp.followerReqFrom || sow.followerReqFrom,
+          followerReqTo: grp.followerReqTo || sow.followerReqTo,
+          pillars: {
+            demographic: getArray(grp.persona?.demographic || sow.persona?.demographic),
+            location: getArray(grp.persona?.location || sow.persona?.location),
+            occupation: getArray(grp.persona?.occupation || sow.persona?.occupation),
+            persona: getArray(grp.persona?.persona || sow.persona?.persona),
+            contentCategory: getArray(grp.persona?.contentCategory || sow.persona?.contentCategory),
+            storyTelling: getArray(grp.persona?.storyTelling || sow.persona?.storyTelling)
+          },
+          referenceInfluencers: grp.referenceInfluencers || [],
+          sows: []
+        });
+      }
+      
+      const groupEntry = groupedMap.get(gId);
+      
+      // We push the SOW into this group's sows array.
+      // We don't need to copy the influencerDetails array into the SOW here to avoid circular/redundant data, 
+      // but we will keep the rest of the SOW data intact as requested.
+      const { influencerDetails, ...sowDataWithoutInfluencerDetails } = sow;
+      groupEntry.sows.push({
+        ...sowDataWithoutInfluencerDetails,
+        id: sow.id || `sow_${Date.now()}_${idx}_${gIdx}`
+      });
+    });
+  });
+  
+  return Array.from(groupedMap.values());
+}
