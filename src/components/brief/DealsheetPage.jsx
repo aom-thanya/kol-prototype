@@ -179,7 +179,7 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
   const campaignCost = buddyboostAds + buddyboostFee + totalOtherServicesVal + totalInfluencerRawCost + contingencies;
   const gpPercent = salesPrice > 0 ? (1 - (campaignCost / salesPrice)) * 100 : 0;
 
-  // KPI calculations
+  // KPI calculations (Mock / Options based)
   const kpiTotalInfluencer = totalInfluencers - totalReserveInfs;
   const influencerReach = recalculatedChannels.reduce((acc, c) => acc + (c.social * 10 * c.numInfs), 0);
   const combinedFollower = influencerReach * 3;
@@ -187,6 +187,82 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
   const estimatedReach = influencerReach + adsReach;
   const committedReach = estimatedReach * 0.8;
   const estimatedEngagement = influencerReach * 0.05;
+
+  // NEW KPI CALCULATIONS based on actual tracker data!
+  let kpiSellingPrice = 0;
+  let kpiRawCost = 0;
+  let kpiContingencies = 0;
+  let kpiPageCount = 0;
+  let kpiTotalFollower = 0;
+
+  activeGroups.forEach(grp => {
+    const tracker = brief.groupTrackers[grp];
+    if (!tracker || !tracker.influencers) return;
+    tracker.influencers.forEach(inf => {
+      if (inf.contactStatus === "Selected" || inf.contactStatus === "Done" || inf.lot) {
+        kpiPageCount++;
+        
+        let fStr = String(inf.follower || "0").replace(/,/g, '').replace(/followers?/i, '').trim();
+        let followerNum = 0;
+        if (fStr.toLowerCase().endsWith('m')) followerNum = parseFloat(fStr) * 1000000;
+        else if (fStr.toLowerCase().endsWith('k')) followerNum = parseFloat(fStr) * 1000;
+        else followerNum = parseFloat(fStr);
+        if (!isNaN(followerNum)) kpiTotalFollower += followerNum;
+
+        const rawStr = String(inf.rawCost || "0").replace(/,/g, '');
+        const rawNum = parseFloat(rawStr) || 0;
+        kpiRawCost += rawNum;
+
+        const grossNum = rawNum / 0.97;
+        let cont = grossNum;
+        if (grossNum > 0) {
+          if (grossNum < 5000) cont = 1000;
+          else if (grossNum <= 49999) cont = grossNum * 0.2;
+          else cont = grossNum * 0.1;
+        } else {
+          cont = 0;
+        }
+        kpiContingencies += cont;
+
+        let selectedPrice = 0;
+        if (grossNum > 0) {
+          if (grossNum < 10000) selectedPrice = grossNum * 2.3;
+          else if (grossNum <= 49999) selectedPrice = Math.max(grossNum * 1.3, grossNum + 8000);
+          else selectedPrice = grossNum * 1.15;
+        }
+
+        const influPrice = cont + selectedPrice;
+        let sellingPrice = grossNum > 0 ? Math.ceil(influPrice / 1000) * 1000 : 0;
+        
+        let rowSumOther = 0;
+        if (brief.requiredServices && inf.services) {
+           brief.requiredServices.forEach(srv => {
+             let srvData = inf.services?.[srv.key];
+             if (srvData && (typeof srvData === 'object' ? srvData.status === "รับ" : srvData !== "ไม่รับ")) {
+                const p = typeof srvData === 'object' ? srvData.price : srvData;
+                if (p) rowSumOther += Number(p);
+             }
+           });
+        }
+        const refer = sellingPrice * 0.05;
+        const tp = sellingPrice + rowSumOther + refer;
+        const tsp = Math.ceil(tp / 1000) * 1000;
+
+        kpiSellingPrice += tsp;
+      }
+    });
+  });
+
+  const kpiRemaining = kpiSellingPrice - kpiRawCost;
+  const kpiPercentGP = kpiSellingPrice > 0 ? (kpiRemaining / kpiSellingPrice) * 100 : 0;
+  const kpiPercentContingencies = kpiSellingPrice > 0 ? (kpiContingencies / kpiSellingPrice) * 100 : 0;
+  const kpiPercentSum = kpiPercentGP + kpiPercentContingencies;
+
+  const kpiAdsReach = 0;
+  const kpiPageReach = kpiTotalFollower * 0.08;
+  const kpiEstReach = kpiPageReach + kpiAdsReach;
+  const kpiCommittedReach = kpiEstReach * 0.8;
+  const kpiEstEngagement = kpiPageReach * 0.05;
 
   const formatNumber = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "0";
@@ -288,47 +364,66 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
               </div>
               <div className="p-5 space-y-3.5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-550 font-medium flex items-center gap-1">
-                    <Users className="h-3 w-3 text-slate-400" /> Total Influencer
-                  </span>
-                  <span className="font-semibold text-slate-800">{kpiTotalInfluencer} คน</span>
+                  <span className="text-slate-550">Selling Price</span>
+                  <span className="font-semibold text-[#6D5DF6]">{formatCurrency(kpiSellingPrice)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">Raw Cost</span>
+                  <span className="font-semibold text-slate-800">{formatCurrency(kpiRawCost)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">Remaining</span>
+                  <span className="font-semibold text-slate-800">{formatCurrency(kpiRemaining)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">Contingencies</span>
+                  <span className="font-semibold text-slate-800">{formatCurrency(kpiContingencies)}</span>
                 </div>
                 
-                {/* Channels breakdown lists */}
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-150 space-y-2">
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-450">Channel Breakdown</span>
-                  {recalculatedChannels.map((chan, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-xs">
-                      <span className="text-slate-600 font-medium">{chan.platform || "Platform"}</span>
-                      <span className="font-semibold text-slate-850">{chan.numInfs} คน</span>
-                    </div>
-                  ))}
+                <div className="h-[1px] bg-slate-100 my-2" />
+                
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">%GP</span>
+                  <span className="font-semibold text-emerald-600">{kpiPercentGP.toFixed(2)}%</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">%Contigencies</span>
+                  <span className="font-semibold text-amber-600">{kpiPercentContingencies.toFixed(2)}%</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">%Sum</span>
+                  <span className="font-semibold text-blue-600">{kpiPercentSum.toFixed(2)}%</span>
                 </div>
 
-                <div className="h-[1px] bg-slate-100 my-1" />
+                <div className="h-[1px] bg-slate-100 my-2" />
+
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-550">Combined Follower</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(combinedFollower)}</span>
+                  <span className="text-slate-550">#Page</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiPageCount)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-550">Influencer Reach</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(influencerReach)}</span>
+                  <span className="text-slate-550">Total Follower</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiTotalFollower)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-550">Ads Reach</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(adsReach)}</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiAdsReach)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-550">Estimated Reach</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(estimatedReach)}</span>
+                  <span className="text-slate-550">Page Reach</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiPageReach)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-550">Est. Reach</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiEstReach)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-550">Committed Reach</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(committedReach)}</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiCommittedReach)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-550">Estimated Engagement</span>
-                  <span className="font-semibold text-slate-800">{formatNumber(estimatedEngagement)}</span>
+                  <span className="text-slate-550">Est. Engagement</span>
+                  <span className="font-semibold text-slate-800">{formatNumber(kpiEstEngagement)}</span>
                 </div>
               </div>
             </div>
