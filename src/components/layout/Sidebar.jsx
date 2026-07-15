@@ -22,7 +22,6 @@ function Sidebar({ mobileOpen, setMobileOpen, collapsed, setCollapsed }) {
     { label: "KOL Discovery", icon: Search, Sparkles, href: "https://koldiscovery.buddyreview.co/kol" },
     { label: "Explore", icon: Compass, href: "https://koldiscovery.buddyreview.co/explore" },
     { label: "Example List", path: "/example-list", icon: FileText, active: location.pathname.startsWith("/example-list") },
-    { label: "Rate Card List", path: "/rate-card", icon: CreditCard, active: location.pathname.startsWith("/rate-card") },
   ];
 
   const briefManagementItems = [

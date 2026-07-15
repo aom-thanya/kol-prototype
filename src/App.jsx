@@ -4,7 +4,6 @@ import BriefFlow from "./features/briefs/BriefFlow";
 import StandardPricingFlow from "./features/standard-pricing/StandardPricingFlow";
 import FinalDealsheetFlow from "./features/final-dealsheet/FinalDealsheetFlow";
 import { customersSeed, briefsSeed } from "./data/mockData";
-import RateCardListPage from "./components/brief/RateCardListPage";
 import AppShell from "./components/layout/AppShell";
 import Toast from "./components/common/Toast";
 import ExampleListFlow from "./features/example-list/ExampleListFlow";
@@ -30,7 +29,6 @@ export default function App() {
         
         <Route path="/final-dealsheet" element={<FinalDealsheetFlow briefs={briefs} setBriefs={setBriefs} showToast={showToast} />} />
         <Route path="/standard-pricing" element={<StandardPricingFlow />} />
-        <Route path="/rate-card" element={<RateCardListPage briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />} />
         
         <Route path="/example-list/*" element={<ExampleListFlow briefs={briefs} onUpdateBriefs={setBriefs} showToast={showToast} />} />
       </Routes>

@@ -16,7 +16,6 @@ function AppShell({ children }) {
     if (location.pathname.startsWith("/standard-pricing")) return "Standard Pricing";
     if (location.pathname.startsWith("/final-dealsheet")) return "Final Dealsheet";
     if (location.pathname.startsWith("/example-list")) return "Example List Flow";
-    if (location.pathname.startsWith("/rate-card")) return "Rate Card List";
     return "Buddy Platform";
   };
 
