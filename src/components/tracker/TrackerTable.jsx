@@ -518,8 +518,8 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                   </>
                 )}
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[200px]">Scope of Work</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Influencer</th>
-                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] text-center">Celebrity</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] w-[350px] max-w-[350px] text-center">Influencer</th>
+                <th className="px-3 py-2 border-r border-slate-200 min-w-[200px] w-[350px] max-w-[350px] text-center">Celebrity</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[120px]">Raw Cost</th>
                 <th className="px-3 py-2 border-r border-slate-200 min-w-[150px]">เรทนี้ใช้ได้ถึง</th>
                 {requiredServices.map(srv => <th key={srv.key} className="px-3 py-2 border-r border-slate-200">{srv.label}</th>)}
@@ -876,7 +876,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         </select>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] align-top bg-slate-50">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] w-[350px] max-w-[350px] align-top bg-slate-50">
                       {(() => {
                         const currentGreeting = inf.greetingText !== undefined ? inf.greetingText : generateGreeting(inf);
                         return readOnly ? (
@@ -910,7 +910,7 @@ Buy out นำคลิปไปใช้ต่อในช่องทางข
                         );
                       })()}
                     </td>
-                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] align-top bg-slate-50">
+                    <td className="px-3 py-2 border-r border-slate-100 text-slate-700 text-xs min-w-[300px] w-[350px] max-w-[350px] align-top bg-slate-50">
                       {(() => {
                         const currentCelebGreeting = inf.celebGreetingText !== undefined ? inf.celebGreetingText : generateCelebrityGreeting(inf);
                         return readOnly ? (

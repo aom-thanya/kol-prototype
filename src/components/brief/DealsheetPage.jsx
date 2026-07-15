@@ -35,11 +35,13 @@ export default function DealsheetPage({ brief, onUpdateBrief, showToast }) {
     });
   });
 
-  const sortedLots = Object.keys(lotsData).sort((a, b) => {
-    if (a === "Unassigned Lot") return 1;
-    if (b === "Unassigned Lot") return -1;
-    return a.localeCompare(b, undefined, { numeric: true });
-  });
+  const sortedLots = Object.keys(lotsData)
+    .filter(lotKey => brief.lotDealsheetCreated && brief.lotDealsheetCreated[lotKey])
+    .sort((a, b) => {
+      if (a === "Unassigned Lot") return 1;
+      if (b === "Unassigned Lot") return -1;
+      return a.localeCompare(b, undefined, { numeric: true });
+    });
 
   const hasStandard = brief && (
     Array.isArray(brief.packageType) 
