@@ -27,3 +27,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary and script files
+*.cjs
+lint_output.json
+test.js
+check.js
