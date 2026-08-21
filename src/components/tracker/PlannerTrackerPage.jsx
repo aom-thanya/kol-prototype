@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Save, CheckCircle2 } from "lucide-react";
 import Button from "../common/Button";
 import TrackerTable from "./TrackerTable";
+import GreetingTemplate from "./GreetingTemplate";
 import InfluencerSelectModal from "./InfluencerSelectModal";
 export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActions, readOnly = false, isBriefManagement = false }) {
   // Initialize trackers for each group if they don't exist yet
@@ -490,6 +491,7 @@ export default function PlannerTrackerPage({ brief, onUpdateBrief, setHeaderActi
                 })}
               </div>
             )}
+            {!readOnly && <GreetingTemplate />}
           </div>
         </div>
       </div>
